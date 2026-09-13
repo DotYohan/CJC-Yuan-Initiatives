@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Secure role workspace and student dashboard for the independent CJC portal project." />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#550a18" />
+    <title>Account workspace | CJC Portal Project</title>
+    <link rel="icon" type="image/png" href="/assets/images/cor-jesu-college-seal.png" />
+    <link rel="stylesheet" href="/portal.css" />
+</head>
+
+<body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+
+    <header class="portal-header">
+        <div class="shell portal-header__inner">
+            <a class="brand" href="/index.html" aria-label="Return to the project homepage">
+                <img src="/assets/images/cor-jesu-college-seal.png" width="52" height="52" alt="" />
+                <span><strong>Cor Jesu College</strong><small>Independent portal project</small></span>
+            </a>
+            <div class="portal-header__actions" data-session-actions hidden>
+                <button class="button button--quiet" type="button" data-open-password>Change password</button>
+                <button class="button button--outline" type="button" data-logout>Sign out</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="main-content">
+        <p class="global-alert shell" role="alert" data-global-error hidden></p>
+        <section class="boot-state shell" aria-live="polite" data-boot-state>
+            <span class="spinner" aria-hidden="true"></span>
+            <div>
+                <h1>Opening your workspace</h1>
+                <p data-boot-message>Checking your secure project session…</p>
+            </div>
+        </section>
+
+        <div data-portal-app hidden>
+            <section class="required-banner" role="alert" data-password-required hidden>
+                <div class="shell required-banner__inner">
+                    <div>
+                        <strong>Password change required</strong>
+                        <p>Set a private password before using account services.</p>
+                    </div>
+                    <button class="button button--light" type="button" data-open-password>Change password now</button>
+                </div>
+            </section>
+
+            <section class="workspace-hero">
+                <div class="shell workspace-hero__inner">
+                    <div>
+                        <p class="eyebrow" data-role-label>Signed-in account</p>
+                        <h1 data-workspace-title>Your account workspace</h1>
+                        <p class="workspace-hero__lead" data-workspace-lead>
+                            Authentication and account tools are active. Role dashboards and school-service modules
+                            will be added in a later phase.
+                        </p>
+                    </div>
+                    <div class="user-chip" aria-label="Signed-in account">
+                        <span class="user-chip__avatar" aria-hidden="true" data-user-initial>C</span>
+                        <span><strong data-user-chip-name>Account</strong><small data-user-chip-role>Project user</small></span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="student-dashboard" aria-labelledby="student-dashboard-title" data-student-dashboard hidden>
+                <div class="shell">
+                    <header class="student-dashboard__heading">
+                        <div>
+                            <p class="eyebrow">Student services</p>
+                            <h2 id="student-dashboard-title">Student dashboard</h2>
+                            <p>Your academic and service information from the centralized portal database.</p>
+                        </div>
+                        <button class="button button--quiet" type="button" data-refresh-student>Refresh dashboard</button>
+                    </header>
+
+                    <div class="dashboard-state panel" role="status" aria-live="polite" data-student-loading>
+                        <span class="spinner" aria-hidden="true"></span>
+                        <p>Loading your student record&hellip;</p>
+                    </div>
+
+                    <div class="dashboard-state panel dashboard-state--error" role="alert" data-student-error hidden>
+                        <div>
+                            <strong>Student information could not be loaded</strong>
+                            <p data-student-error-message>Refresh the dashboard to try again.</p>
+                        </div>
+                        <button class="button button--quiet" type="button" data-retry-student>Try again</button>
+                    </div>
+
+                    <div class="dashboard-state panel dashboard-state--empty" data-student-unlinked hidden>
+                        <span class="dashboard-state__icon" aria-hidden="true">!</span>
+                        <div>
+                            <strong>No student profile is linked to this account</strong>
+                            <p>Your login is active, but a Registrar or authorized administrator must connect it to a Student record before academic information can appear.</p>
+                        </div>
+                    </div>
+
+                    <div data-student-content hidden>
+                        <section class="panel student-identity" aria-labelledby="student-profile-title">
+                            <div class="panel__heading">
+                                <div>
+                                    <p class="eyebrow">Student profile</p>
+                                    <h3 id="student-profile-title" data-student-name>Student</h3>
+                                    <p class="student-identity__number" data-student-number>Student number</p>
+                                </div>
+                                <div class="flex-center">
+                                    <span class="status-pill" data-student-status>Active</span>
+                                    <button class="button button--quiet button--compact" type="button" data-open-edit-profile>Edit contact info</button>
+                                </div>
+                            </div>
+                            <dl class="student-profile-grid">
+                                <div><dt>Program</dt><dd data-student-program>&mdash;</dd></div>
+                                <div><dt>Curriculum</dt><dd data-student-curriculum>&mdash;</dd></div>
+                                <div><dt>Year level</dt><dd data-student-year>&mdash;</dd></div>
+                                <div><dt>Institutional email</dt><dd data-student-email>&mdash;</dd></div>
+                            </dl>
+                        </section>
+
+                        <div class="dashboard-metrics" aria-label="Student dashboard summary">
+                            <article class="metric-card"><span>Current term</span><strong data-current-term>No enrollment</strong><small data-enrollment-status>Not enrolled</small></article>
+                            <article class="metric-card"><span>Registered load</span><strong data-registered-load>0 subjects</strong><small data-registered-units>0 units</small></article>
+                            <article class="metric-card"><span>Clearance</span><strong data-clearance-status>No cycle</strong><small data-clearance-progress>No requirements</small></article>
+                            <article class="metric-card"><span>Account balance</span><strong data-account-balance>PHP 0.00</strong><small>Derived from the transaction ledger</small></article>
+                        <article class="metric-card"><span>Application status</span><strong data-application-status></strong><small data-application-feedback></small></article>
+                        </div>
+
+                        <div class="student-forms-grid">
+                            <section class="panel dashboard-module" aria-labelledby="enrollment-form-title">
+                                <div class="dashboard-module__heading">
+                                    <div><p class="eyebrow">Enrollment</p><h3 id="enrollment-form-title">Enrollment form</h3></div>
+                                    <span data-enrollment-form-status>Draft</span>
+                                </div>
+                                <p class="form-intro">Review your current enrollment record and registered subjects. Subject selection and submission will be enabled when offerings are published.</p>
+                                <div class="enrollment-form-summary" data-enrollment-form-summary></div>
+                                <button class="button button--primary" type="button" data-open-enrollment-application>Complete enrollment form</button>
+                                <div data-application-feedback-list></div>
+                            </section>
+
+                            <section class="panel dashboard-module" aria-labelledby="clearance-form-title">
+                                <div class="dashboard-module__heading">
+                                    <div><p class="eyebrow">Clearance</p><h3 id="clearance-form-title">Clearance form</h3></div>
+                                    <span data-clearance-form-status>Not started</span>
+                                </div>
+                                <p class="form-intro">Track each office requirement and see the latest processing remark.</p>
+                                <div class="clearance-form-list" data-clearance-form-list></div>
+                            </section>
+                        </div>
+
+                        <div class="student-dashboard-grid">
+                            <section class="panel dashboard-module" aria-labelledby="schedule-title">
+                                <div class="dashboard-module__heading"><div><p class="eyebrow">Classes</p><h3 id="schedule-title">Weekly schedule</h3></div><span data-schedule-count></span></div>
+                                <div class="dashboard-list" data-schedule-list></div>
+                            </section>
+
+                            <section class="panel dashboard-module" aria-labelledby="grades-title">
+                                <div class="dashboard-module__heading"><div><p class="eyebrow">Academic record</p><h3 id="grades-title">Posted final grades</h3></div><span data-grade-count></span></div>
+                                <div class="dashboard-list" data-grade-list></div>
+                            </section>
+
+                            <section class="panel dashboard-module" aria-labelledby="requests-title">
+                                <div class="dashboard-module__heading">
+                                    <div><p class="eyebrow">Transactions</p><h3 id="requests-title">Recent requests</h3></div>
+                                    <div class="flex-center">
+                                        <button class="button button--primary button--compact" type="button" data-open-new-request>+ Submit request</button>
+                                        <span data-request-count></span>
+                                    </div>
+                                </div>
+                                <div class="dashboard-list" data-request-list></div>
+                            </section>
+
+                            <section class="panel dashboard-module" aria-labelledby="payments-title">
+                                <div class="dashboard-module__heading"><div><p class="eyebrow">Finance</p><h3 id="payments-title">Payment obligations</h3></div><span data-payment-obligation-count></span></div>
+                                <p class="form-intro">Payments are processed and verified securely by the server. Enrollment unlocks after the entrance fee is verified.</p>
+                                <div class="dashboard-list" data-payment-obligation-list></div>
+                                <p class="form-status" role="status" aria-live="polite" data-financial-status></p>
+                                <h4 class="dashboard-module__subheading">Recent verified payments</h4>
+                                <div class="dashboard-list" data-payment-list></div>
+                                <span data-payment-count hidden></span>
+                            </section>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="shell workspace-grid">
+                <section class="panel" aria-labelledby="account-title">
+                    <div class="panel__heading">
+                        <div>
+                            <p class="eyebrow">Profile</p>
+                            <h2 id="account-title">Account information</h2>
+                        </div>
+                        <span class="status-pill" data-account-status>Active</span>
+                    </div>
+                    <dl class="account-details">
+                        <div><dt>Username</dt><dd data-account-username>—</dd></div>
+                        <div><dt>Email</dt><dd data-account-email>—</dd></div>
+                        <div><dt>Primary role</dt><dd data-account-primary-role>—</dd></div>
+                        <div><dt>Assigned roles</dt><dd data-account-roles>—</dd></div>
+                    </dl>
+                    <button class="button button--primary" type="button" data-open-password>Change password</button>
+                </section>
+
+                <aside class="panel security-note" aria-labelledby="security-title">
+                    <span class="security-note__icon" aria-hidden="true">✓</span>
+                    <div>
+                        <p class="eyebrow">Security boundary</p>
+                        <h2 id="security-title">Use only your project account</h2>
+                        <p>
+                            This independent website is not an official CJC system. Never reuse a password from
+                            official CJC services, email, or another account here.
+                        </p>
+                    </div>
+                </aside>
+            </div>
+
+            <section class="shell program-head-panel" aria-labelledby="program-head-title" data-program-head-panel hidden>
+                <div class="program-head-identity">
+                    <div>
+                        <p class="eyebrow">Assigned program</p>
+                        <h2 id="program-head-title" data-program-head-program>Program Head workspace</h2>
+                        <p data-program-head-program-context>Your curriculum, students, offerings, and evaluations are limited to this program.</p>
+                    </div>
+                    <button class="button button--quiet" type="button" data-refresh-program-head>Refresh workspace</button>
+                </div>
+
+                <div class="program-head-metrics" aria-label="Program overview">
+                    <div><strong data-program-head-curriculum-count>0</strong><span>Curriculum versions</span></div>
+                    <div><strong data-program-head-subject-count>0</strong><span>Curriculum subjects</span></div>
+                    <div><strong data-program-head-student-count>0</strong><span>Officially enrolled</span></div>
+                    <div><strong data-program-head-evaluation-count>0</strong><span>Pending evaluations</span></div>
+                </div>
+
+                <p class="form-status" role="status" aria-live="polite" data-program-head-status></p>
+
+                <section class="panel" aria-labelledby="program-head-applications-title">
+                    <div class="panel__heading"><div><p class="eyebrow">Student submissions</p><h3 id="program-head-applications-title">Pending Enrollment Reviews</h3></div></div>
+                    <p class="field-hint">Evaluate selected subjects before forwarding the application to Registrar verification.</p>
+                    <div class="dashboard-list program-head-scroll-list" data-program-head-applications></div>
+                </section>
+
+                <dialog class="portal-dialog program-head-dialog" data-program-head-application-dialog>
+                    <div class="dialog__heading"><div><p class="eyebrow">Subject enrollment review</p><h2 data-program-head-application-title>Student application</h2></div><button class="dialog__close" type="button" data-close-program-head-application aria-label="Close">&#215;</button></div>
+                    <div data-program-head-application-detail></div>
+                    <form class="admin-form" data-program-head-application-decision>
+                        <div class="field"><label for="program-head-application-remarks">Feedback / decision remarks</label><textarea id="program-head-application-remarks" name="remarks" maxlength="2000" placeholder="Required when returning or rejecting the application"></textarea></div>
+                        <p class="form-status" role="status" aria-live="polite" data-program-head-application-status></p>
+                        <div class="action-buttons">
+                            <button class="button button--primary" type="submit" name="decision" value="APPROVED">Approve and forward to Registrar</button>
+                            <button class="button button--warning" type="submit" name="decision" value="RETURNED_FOR_CORRECTION">Return for correction</button>
+                            <button class="button button--danger" type="submit" name="decision" value="REJECTED">Reject</button>
+                        </div>
+                    </form>
+                </dialog>
+
+                <section class="panel program-head-workspace" aria-labelledby="program-head-curricula-title">
+                    <div class="panel__heading">
+                        <div><p class="eyebrow">Curriculum management</p><h3 id="program-head-curricula-title">Curriculum structure</h3></div>
+                        <select aria-label="Curriculum version to view" data-program-head-curriculum-view><option value="">Select a curriculum</option></select>
+                    </div>
+                    <div class="program-head-curriculum-summary" data-program-head-curriculum-summary></div>
+                    <div class="program-head-curriculum-table" data-program-head-curriculum-structure></div>
+                    <details class="program-head-editor">
+                        <summary>Create a curriculum version</summary>
+                        <form class="admin-form" data-create-program-head-curriculum>
+                            <div class="registrar-term-fields">
+                                <div class="field"><label for="program-head-curriculum-code">Code</label><input id="program-head-curriculum-code" name="code" maxlength="50" required></div>
+                                <div class="field"><label for="program-head-curriculum-name">Name</label><input id="program-head-curriculum-name" name="name" maxlength="200" required></div>
+                                <div class="field"><label for="program-head-curriculum-version">Version</label><input id="program-head-curriculum-version" name="version" type="number" min="1" required></div>
+                                <div class="field"><label for="program-head-curriculum-year">Effective from</label><input id="program-head-curriculum-year" name="effectiveFromYear" type="number" min="1900" max="9999" required></div>
+                            </div>
+                            <button class="button button--primary" type="submit">Create draft version</button>
+                        </form>
+                    </details>
+                </section>
+
+                <div class="program-head-grid">
+                    <section class="panel" aria-labelledby="program-head-subject-title">
+                        <div class="panel__heading"><div><p class="eyebrow">Shared subject catalog</p><h3 id="program-head-subject-title">Add curriculum subject</h3></div></div>
+                        <form class="program-head-search" data-program-head-subject-search>
+                            <label class="sr-only" for="program-head-subject-query">Search subjects</label>
+                            <input id="program-head-subject-query" name="query" type="search" placeholder="Search code or subject title">
+                            <button class="button button--quiet" type="submit">Search</button>
+                        </form>
+                        <form class="admin-form" data-add-program-head-subject>
+                            <div class="field"><label for="program-head-subject-curriculum">Draft curriculum</label><select id="program-head-subject-curriculum" name="curriculumId" required><option value="">Select a draft curriculum</option></select></div>
+                            <div class="field"><label for="program-head-subject-id">Catalog subject</label><select id="program-head-subject-id" name="subjectId" required><option value="">Select a subject</option></select></div>
+                            <div class="program-head-inline-fields">
+                                <div class="field"><label for="program-head-subject-year">Year</label><input id="program-head-subject-year" name="yearLevel" type="number" min="1" max="12" required></div>
+                                <div class="field"><label for="program-head-subject-term">Term</label><input id="program-head-subject-term" name="termNumber" type="number" min="1" max="12" required></div>
+                                <div class="field"><label for="program-head-subject-units">Units</label><input id="program-head-subject-units" name="creditUnits" type="number" min="0.01" step="0.01" required></div>
+                                <div class="field"><label for="program-head-subject-lecture">Lecture</label><input id="program-head-subject-lecture" name="lectureHours" type="number" min="0" step="0.01" required></div>
+                                <div class="field"><label for="program-head-subject-lab">Laboratory</label><input id="program-head-subject-lab" name="laboratoryHours" type="number" min="0" step="0.01" required></div>
+                                <div class="field"><label for="program-head-subject-type">Type</label><select id="program-head-subject-type" name="type"><option value="REQUIRED">Required</option><option value="ELECTIVE">Elective</option></select></div>
+                            </div>
+                            <p class="field-hint" data-program-head-subject-details>Select a catalog subject to view its owning department and prerequisites.</p>
+                            <button class="button button--primary" type="submit">Add to curriculum</button>
+                        </form>
+                    </section>
+
+                    <section class="panel" aria-labelledby="program-head-students-title">
+                        <div class="panel__heading"><div><p class="eyebrow">Student management</p><h3 id="program-head-students-title">Officially enrolled students</h3></div></div>
+                        <div class="dashboard-list program-head-scroll-list" data-program-head-students></div>
+                    </section>
+                </div>
+
+                <div class="program-head-grid">
+                    <section class="panel" aria-labelledby="program-head-offering-title">
+                        <div class="panel__heading"><div><p class="eyebrow">Subject offering</p><h3 id="program-head-offering-title">Open a class offering</h3></div></div>
+                        <form class="admin-form" data-create-program-head-offering>
+                            <div class="field"><label for="program-head-offering-term">Academic term</label><select id="program-head-offering-term" name="academicTermId" required><option value="">Select a term</option></select></div>
+                            <div class="field"><label for="program-head-offering-curriculum">Curriculum</label><select id="program-head-offering-curriculum" name="curriculumId" required><option value="">Select a curriculum</option></select></div>
+                            <div class="field"><label for="program-head-offering-subject">Curriculum subject</label><select id="program-head-offering-subject" name="subjectId" required><option value="">Select a subject</option></select></div>
+                            <div class="program-head-inline-fields">
+                                <div class="field"><label for="program-head-offering-section">Section</label><input id="program-head-offering-section" name="sectionCode" placeholder="BSECE 3A" required></div>
+                                <div class="field"><label for="program-head-offering-code">Offering code</label><input id="program-head-offering-code" name="offeringCode" placeholder="ECE312-3A" required></div>
+                                <div class="field"><label for="program-head-offering-capacity">Capacity</label><input id="program-head-offering-capacity" name="capacity" type="number" min="1" max="32767"></div>
+                            </div>
+                            <div class="field"><label for="program-head-offering-faculty">Instructor</label><select id="program-head-offering-faculty" name="facultyId"><option value="">To be assigned</option></select></div>
+                            <div class="program-head-inline-fields">
+                                <div class="field"><label for="program-head-offering-day">Day</label><select id="program-head-offering-day" name="weekday"><option value="">TBA</option><option>MONDAY</option><option>TUESDAY</option><option>WEDNESDAY</option><option>THURSDAY</option><option>FRIDAY</option><option>SATURDAY</option></select></div>
+                                <div class="field"><label for="program-head-offering-start">Start</label><input id="program-head-offering-start" name="startsAt" type="time"></div>
+                                <div class="field"><label for="program-head-offering-end">End</label><input id="program-head-offering-end" name="endsAt" type="time"></div>
+                                <div class="field"><label for="program-head-offering-room">Room</label><select id="program-head-offering-room" name="roomId"><option value="">TBA</option></select></div>
+                            </div>
+                            <button class="button button--primary" type="submit">Open subject offering</button>
+                        </form>
+                        <div class="dashboard-list program-head-scroll-list" data-program-head-offerings></div>
+                    </section>
+
+                    <section class="panel" aria-labelledby="program-head-evaluation-title">
+                        <div class="panel__heading"><div><p class="eyebrow">Enrollment evaluation</p><h3 id="program-head-evaluation-title">Academic review queue</h3></div></div>
+                        <p class="field-hint">Checks prerequisite grades, unresolved INC, corequisites, curriculum placement, and the 29-unit limit.</p>
+                        <div class="dashboard-list program-head-scroll-list" data-program-head-evaluations></div>
+                    </section>
+                </div>
+
+                <dialog class="portal-dialog program-head-dialog" data-program-head-student-dialog>
+                    <div class="dialog__heading"><div><p class="eyebrow">Student academic record</p><h2 data-program-head-student-name>Student</h2></div><button class="dialog__close" type="button" data-close-program-head-student aria-label="Close">×</button></div>
+                    <div data-program-head-student-detail></div>
+                </dialog>
+
+                <dialog class="portal-dialog program-head-dialog" data-program-head-evaluation-dialog>
+                    <div class="dialog__heading"><div><p class="eyebrow">Enrollment evaluation</p><h2 data-program-head-evaluation-name>Student</h2></div><button class="dialog__close" type="button" data-close-program-head-evaluation aria-label="Close">×</button></div>
+                    <div data-program-head-evaluation-detail></div>
+                    <form class="admin-form" data-approve-program-head-evaluation>
+                        <input type="hidden" name="enrollmentId">
+                        <div class="field"><label for="program-head-override-reason">Prerequisite override reason</label><textarea id="program-head-override-reason" name="overrideReason" maxlength="500" placeholder="Required only when approving selected prerequisite overrides"></textarea></div>
+                        <button class="button button--primary" type="submit">Approve academic evaluation</button>
+                    </form>
+                </dialog>
+            </section>
+
+            <section class="shell registrar-panel" aria-labelledby="registrar-title" data-registrar-panel hidden>
+                <div class="admin-panel__heading">
+                    <div><p class="eyebrow">Registrar tools</p><h2 id="registrar-title">Enrollment lifecycle</h2><p>Control enrollment periods and monitor student applications.</p></div>
+                    <button class="button button--quiet" type="button" data-refresh-registrar>Refresh dashboard</button>
+                </div>
+                <div class="registrar-grid">
+                    <section class="panel" aria-labelledby="period-control-title">
+                        <div class="panel__heading"><div><p class="eyebrow">Enrollment period</p><h3 id="period-control-title">Period control</h3></div><span class="status-pill" data-registrar-period-status>Not configured</span></div>
+                        <dl class="account-details registrar-period-details"><div><dt>Academic year</dt><dd data-registrar-year>—</dd></div><div><dt>Academic term</dt><dd data-registrar-term>—</dd></div><div><dt>Opened at</dt><dd data-registrar-opened>—</dd></div><div><dt>Closed at</dt><dd data-registrar-closed>—</dd></div></dl>
+                        <div class="field"><label for="registrar-term-select">Term to control</label><select id="registrar-term-select" data-registrar-term-select><option value="">Loading terms…</option></select></div>
+                        <div class="registrar-actions"><button class="button button--primary" type="button" data-open-registrar-enrollment>Open enrollment</button><button class="button button--quiet" type="button" data-close-registrar-enrollment>Close enrollment</button></div>
+                        <details class="registrar-term-creator">
+                            <summary>Create a new academic year</summary>
+                            <form class="admin-form registrar-year-form" data-create-registrar-year novalidate>
+                                <div class="registrar-term-fields">
+                                    <div class="field"><label for="registrar-year-code">Academic year code</label><input id="registrar-year-code" name="code" maxlength="32" placeholder="2026-2027" required></div>
+                                    <div class="field"><label for="registrar-year-name">Academic year name</label><input id="registrar-year-name" name="name" maxlength="100" placeholder="School Year 2026-2027" required></div>
+                                    <div class="field"><label for="registrar-year-start">Starts on</label><input id="registrar-year-start" name="startsOn" type="date" required></div>
+                                    <div class="field"><label for="registrar-year-end">Ends on</label><input id="registrar-year-end" name="endsOn" type="date" required></div>
+                                </div>
+                                <button class="button button--quiet" type="submit">Create academic year</button>
+                            </form>
+                        </details>
+                        <details class="registrar-term-creator">
+                            <summary>Create a new semester or term</summary>
+                            <form class="admin-form registrar-term-form" data-create-registrar-term novalidate>
+                                <div class="field"><label for="registrar-academic-year">Academic year</label><select id="registrar-academic-year" name="academicYearId" required><option value="">Select an academic year</option></select></div>
+                                <div class="registrar-term-fields">
+                                    <div class="field"><label for="registrar-term-code">Term code</label><input id="registrar-term-code" name="code" maxlength="32" placeholder="2026-SUMMER" required></div>
+                                    <div class="field"><label for="registrar-term-name">Term name</label><input id="registrar-term-name" name="name" maxlength="100" placeholder="Summer" required></div>
+                                    <div class="field"><label for="registrar-term-number">Sequence</label><input id="registrar-term-number" name="termNumber" type="number" min="1" max="32767" required></div>
+                                    <div class="field"><label for="registrar-term-start">Term starts</label><input id="registrar-term-start" name="startsOn" type="date" required></div>
+                                    <div class="field"><label for="registrar-term-end">Term ends</label><input id="registrar-term-end" name="endsOn" type="date" required></div>
+                                    <div class="field"><label for="registrar-enrollment-start">Enrollment opens</label><input id="registrar-enrollment-start" name="enrollmentStarts" type="datetime-local" required></div>
+                                    <div class="field"><label for="registrar-enrollment-end">Enrollment closes</label><input id="registrar-enrollment-end" name="enrollmentEnds" type="datetime-local" required></div>
+                                </div>
+                                <button class="button button--quiet" type="submit">Create planned term</button>
+                            </form>
+                        </details>
+                        <p class="form-message form-message--error" role="alert" data-registrar-error hidden></p><p class="form-status" role="status" aria-live="polite" data-registrar-status></p>
+                    </section>
+                    <section class="panel registrar-applications" aria-labelledby="application-summary-title">
+                        <div class="panel__heading">
+                            <div><p class="eyebrow">Student applications</p><h3 id="application-summary-title">Application review queue</h3></div>
+                            <button class="button button--quiet button--small" type="button" data-refresh-registrar-applications>Refresh</button>
+                        </div>
+                        <div class="registrar-counts">
+                            <div><strong data-registrar-pending>0</strong><span>Pending</span></div>
+                            <div><strong data-registrar-approved>0</strong><span>Approved</span></div>
+                            <div><strong data-registrar-rejected>0</strong><span>Rejected</span></div>
+                            <div><strong data-registrar-returned>0</strong><span>Returned for correction</span></div>
+                        </div>
+                        <div class="application-filters" role="tablist" aria-label="Filter applications by status">
+                            <button class="application-filter-button active" type="button" role="tab" aria-selected="true" data-application-filter="">All</button>
+                            <button class="application-filter-button" type="button" role="tab" aria-selected="false" data-application-filter="PENDING">Pending</button>
+                            <button class="application-filter-button" type="button" role="tab" aria-selected="false" data-application-filter="APPROVED">Approved</button>
+                            <button class="application-filter-button" type="button" role="tab" aria-selected="false" data-application-filter="RETURNED_FOR_CORRECTION">Returned for correction</button>
+                            <button class="application-filter-button" type="button" role="tab" aria-selected="false" data-application-filter="REJECTED">Rejected</button>
+                        </div>
+                        <p class="form-status" role="status" aria-live="polite" data-registrar-applications-status></p>
+                        <div class="registrar-application-list" data-registrar-application-list></div>
+                    </section>
+                </div>
+            </section>
+
+            <section class="shell admin-panel" aria-labelledby="admin-title" data-admin-panel hidden>
+                <div class="admin-panel__heading">
+                    <div>
+                        <p class="eyebrow">Administrator tools</p>
+                        <h2 id="admin-title">Project account management</h2>
+                        <p>Create accounts and change active/disabled status. Authorization is enforced by the server.</p>
+                    </div>
+                    <button class="button button--quiet" type="button" data-refresh-users>Refresh accounts</button>
+                </div>
+
+                <div class="admin-grid">
+                    <section class="panel" aria-labelledby="create-account-title">
+                        <h3 id="create-account-title">Create project account</h3>
+                        <form class="admin-form" data-create-user novalidate>
+                            <div class="field">
+                                <label for="create-display-name">Display name</label>
+                                <input id="create-display-name" name="displayName" autocomplete="off"
+                                    minlength="2" maxlength="120" required />
+                            </div>
+                            <div class="field">
+                                <label for="create-username">Username</label>
+                                <input id="create-username" name="username" autocomplete="off" autocapitalize="none"
+                                    spellcheck="false" minlength="3" maxlength="64" pattern="[A-Za-z0-9._-]{3,64}"
+                                    aria-describedby="create-username-hint" required />
+                                <small id="create-username-hint">Use 3–64 letters, numbers, periods, underscores, or hyphens.</small>
+                            </div>
+                            <div class="field">
+                                <label for="create-email">Email <span class="optional-label">(optional)</span></label>
+                                <input id="create-email" name="email" type="email" autocomplete="off"
+                                    autocapitalize="none" spellcheck="false" maxlength="254"
+                                    aria-describedby="create-email-hint" />
+                                <small id="create-email-hint">Add an address only if this project account should receive recovery email.</small>
+                            </div>
+                            <div class="field">
+                                <label for="create-password">Temporary password</label>
+                                <span class="password-field">
+                                    <input id="create-password" name="password" type="password" autocomplete="new-password"
+                                        aria-describedby="create-password-hint" required />
+                                    <button type="button" aria-label="Show temporary password" aria-pressed="false"
+                                        data-password-toggle data-password-target="create-password">Show</button>
+                                </span>
+                                <small id="create-password-hint">Use 12–128 characters. Passphrases and spaces are allowed.</small>
+                            </div>
+                            <div class="field">
+                                <label for="create-role">Initial role</label>
+                                <select id="create-role" name="role" required disabled>
+                                    <option value="">Loading roles…</option>
+                                </select>
+                            </div>
+                            <div class="field" data-program-assignment hidden>
+                                <label for="create-program">Assigned Program</label>
+                                <select id="create-program" name="programId" disabled>
+                                    <option value="">Loading programs…</option>
+                                </select>
+                            </div>
+                            <label class="checkbox">
+                                <input type="checkbox" name="mustChangePassword" checked />
+                                <span>Require a password change at first sign-in</span>
+                            </label>
+                            <button class="button button--primary" type="submit">
+                                <span data-submit-label>Create account</span>
+                            </button>
+                            <p class="form-message form-message--error" role="alert" data-create-error hidden></p>
+                            <p class="form-status" role="status" aria-live="polite" data-create-status></p>
+                        </form>
+                    </section>
+
+                    <section class="panel account-list" aria-labelledby="account-list-title">
+                        <div class="account-list__heading">
+                            <h3 id="account-list-title">Project accounts</h3>
+                            <span data-user-count></span>
+                        </div>
+                        <p class="form-status" role="status" aria-live="polite" data-users-status>
+                            Loading accounts…
+                        </p>
+                        <button class="button button--quiet" type="button" data-retry-users hidden>Try again</button>
+                        <div class="table-wrap" data-users-table hidden>
+                            <table>
+                                <caption class="visually-hidden">Project accounts with role and status controls</caption>
+                                <thead><tr><th scope="col">Account</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead>
+                                <tbody data-users-body></tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </section>
+
+            <footer class="portal-footer">
+                <div class="shell">
+                    <strong>Independent website notice</strong>
+                    <p>This website is not affiliated with or endorsed by Cor Jesu College, Inc. and is not an official source of information. Made by Naldrelle Yuan Briones.</p>
+                </div>
+            </footer>
+        </div>
+    </main>
+
+    <dialog class="password-dialog" aria-labelledby="password-title" data-password-dialog>
+        <button class="dialog-close" type="button" aria-label="Close password dialog" data-close-password>×</button>
+        <p class="eyebrow">Account security</p>
+        <h2 id="password-title">Change your password</h2>
+        <p data-password-intro>Choose a password used only for this independent project.</p>
+        <form data-password-form novalidate>
+            <div class="field">
+                <label for="current-password">Current password</label>
+                <span class="password-field">
+                    <input id="current-password" name="currentPassword" type="password" autocomplete="current-password" required />
+                    <button type="button" aria-label="Show current password" aria-pressed="false"
+                        data-password-toggle data-password-target="current-password">Show</button>
+                </span>
+            </div>
+            <div class="field">
+                <label for="new-password">New password</label>
+                <span class="password-field">
+                    <input id="new-password" name="newPassword" type="password" autocomplete="new-password"
+                        aria-describedby="password-policy" required />
+                    <button type="button" aria-label="Show new password" aria-pressed="false"
+                        data-password-toggle data-password-target="new-password">Show</button>
+                </span>
+                <small id="password-policy">Use 12–128 characters. Passphrases and spaces are allowed.</small>
+            </div>
+            <div class="field">
+                <label for="confirm-password">Confirm new password</label>
+                <span class="password-field">
+                    <input id="confirm-password" name="confirmPassword" type="password" autocomplete="new-password" required />
+                    <button type="button" aria-label="Show confirmed password" aria-pressed="false"
+                        data-password-toggle data-password-target="confirm-password">Show</button>
+                </span>
+            </div>
+            <button class="button button--primary button--full" type="submit">
+                <span data-submit-label>Update password</span>
+            </button>
+            <p class="form-message form-message--error" role="alert" data-password-error hidden></p>
+            <p class="form-status" role="status" aria-live="polite" data-password-status></p>
+        </form>
+        <button class="text-button" type="button" data-dialog-logout>Sign out instead</button>
+    </dialog>
+
+    <dialog class="registrar-dialog" aria-labelledby="registrar-applications-title" data-registrar-applications-dialog>
+        <button class="dialog-close" type="button" aria-label="Close applications" data-close-registrar-dialog>&times;</button>
+        <p class="eyebrow">Registrar application review</p><h2 id="registrar-applications-title" data-review-title>Student application</h2>
+        <p class="form-status" role="status" aria-live="polite" data-registrar-review-status></p>
+        
+        <!-- Application Review Section -->
+        <section class="application-review-section" id="application-review-section" data-application-review-section hidden>
+            <div class="application-review-meta">
+                <span class="status-pill" data-review-status>Pending</span>
+                <span data-review-attempt>Attempt 1</span>
+                <span class="status-pill" data-review-tag hidden>Resubmission</span>
+            </div>
+            <div class="review-sections">
+                
+                <!-- SECTION 1: Student Application Information -->
+                <section class="review-section review-panel review-panel--student" id="student-info-section">
+                    <div class="section-header review-panel__header">
+                        <h3>Student Application Information</h3>
+                        <span class="read-only-badge">Read-only</span>
+                    </div>
+                    <div class="review-information-grid">
+                        <section class="review-info-card">
+                            <h4>Personal Information</h4>
+                            <dl class="review-data-list">
+                                <div><dt>Full Name</dt><dd data-student-fullname></dd></div>
+                                <div><dt>Birthday</dt><dd data-student-birthdate></dd></div>
+                                <div><dt>Sex</dt><dd data-student-sex></dd></div>
+                                <div><dt>Nationality</dt><dd data-student-nationality></dd></div>
+                                <div><dt>Religion</dt><dd data-student-religion></dd></div>
+                                <div><dt>Place of Birth</dt><dd data-student-birthplace></dd></div>
+                                <div><dt>Civil Status</dt><dd data-student-civilstatus></dd></div>
+                            </dl>
+                        </section>
+                        <section class="review-info-card">
+                            <h4>Contact Information</h4>
+                            <dl class="review-data-list">
+                                <div><dt>Mobile Number</dt><dd data-student-mobile></dd></div>
+                                <div><dt>Telephone Number</dt><dd data-student-phone></dd></div>
+                                <div><dt>Personal Email</dt><dd data-student-email></dd></div>
+                                <div><dt>Present Address</dt><dd data-student-presentaddr></dd></div>
+                                <div><dt>Permanent Address</dt><dd data-student-permanentaddr></dd></div>
+                            </dl>
+                        </section>
+                        <section class="review-info-card review-info-card--wide">
+                            <h4>Family Information</h4>
+                            <div class="review-family-grid">
+                                <div>
+                                    <h5>Father</h5>
+                                    <dl class="review-data-list">
+                                        <div><dt>Full Name</dt><dd data-father-name></dd></div>
+                                        <div><dt>Occupation</dt><dd data-father-occupation></dd></div>
+                                        <div><dt>Mobile Number</dt><dd data-father-contact></dd></div>
+                                        <div><dt>Email</dt><dd data-father-email></dd></div>
+                                    </dl>
+                                </div>
+                                <div>
+                                    <h5>Mother</h5>
+                                    <dl class="review-data-list">
+                                        <div><dt>Full Name</dt><dd data-mother-name></dd></div>
+                                        <div><dt>Occupation</dt><dd data-mother-occupation></dd></div>
+                                        <div><dt>Mobile Number</dt><dd data-mother-contact></dd></div>
+                                        <div><dt>Email</dt><dd data-mother-email></dd></div>
+                                    </dl>
+                                </div>
+                            </div>
+                        </section>
+                        <section class="review-info-card review-info-card--wide">
+                            <h4>Academic Information</h4>
+                            <dl class="review-data-list review-data-list--academic">
+                                <div><dt>Program Applied</dt><dd data-program-name></dd></div>
+                                <div><dt>Major</dt><dd data-major-name></dd></div>
+                                <div><dt>Year Level</dt><dd data-year-level></dd></div>
+                                <div><dt>College</dt><dd data-college-name></dd></div>
+                                <div><dt>Previous School</dt><dd data-previous-school></dd></div>
+                                <div><dt>Previous School Address</dt><dd data-previous-school-address></dd></div>
+                                <div><dt>Year Graduated</dt><dd data-previous-school-year></dd></div>
+                                <div><dt>Academic Period</dt><dd><span data-academic-year></span> <span data-semester></span></dd></div>
+                            </dl>
+                        </section>
+                    </div>
+                </section>
+
+                <!-- SECTION 2: Supporting Document Review -->
+                <section class="review-section review-panel review-panel--documents" id="document-review-section">
+                    <div class="section-header review-panel__header">
+                        <h3>Supporting Document Review</h3>
+                    </div>
+                    <div class="document-review-toolbar">
+                        <label for="registrar-document-selector">View Document Selection</label>
+                        <div class="document-review-toolbar__row">
+                            <select id="registrar-document-selector" data-document-selector aria-label="Select a submitted document"></select>
+                            <div class="document-review-actions">
+                                <button class="button document-action document-action--verify" type="button" data-selected-document-action="VERIFIED">Verify</button>
+                                <button class="button document-action document-action--invalid" type="button" data-selected-document-action="REJECTED">Invalid</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="document-invalid-reason" data-document-invalid-reason hidden>
+                        <label for="document-invalid-remark">Reason or remark <span>(optional)</span></label>
+                        <textarea id="document-invalid-remark" rows="3" maxlength="1000" data-document-invalid-remark placeholder="Explain why this document is invalid."></textarea>
+                        <div>
+                            <button class="button button--danger button--small" type="button" data-confirm-document-invalid>Confirm invalid</button>
+                            <button class="button button--quiet button--small" type="button" data-cancel-document-invalid>Cancel</button>
+                        </div>
+                    </div>
+                    <div class="document-preview-heading"><span>Document Preview</span></div>
+                    <div class="document-preview" data-document-preview>
+                        <div class="document-preview__placeholder">
+                            <span aria-hidden="true">&#128196;</span>
+                            <p>Select a document to preview</p>
+                        </div>
+                    </div>
+                    <section class="document-review-details" aria-labelledby="document-details-title">
+                        <h4 id="document-details-title">Document Details</h4>
+                        <dl>
+                            <div><dt>Document Type</dt><dd data-document-detail-type>-</dd></div>
+                            <div><dt>File Name</dt><dd data-document-detail-name>-</dd></div>
+                            <div><dt>Date Submitted</dt><dd data-document-detail-date>-</dd></div>
+                            <div><dt>Current Status</dt><dd><span class="status-pill" data-document-detail-status>Not selected</span></dd></div>
+                        </dl>
+                    </section>
+                </section>
+                
+                <!-- SECTION 3: Registrar Action Panel -->
+                <section class="review-section enrollment-section-assignments" data-enrollment-section-review hidden>
+                    <div class="section-header"><h3>Approved subjects and class sections</h3></div>
+                    <p data-enrollment-section-summary></p>
+                    <p class="field-hint">Choose an open section for each subject before final approval. Returning an application sends it back through Program Head evaluation after correction.</p>
+                    <div class="admin-form" data-enrollment-section-assignments></div>
+                </section>
+                <section class="review-section" id="action-panel-section">
+                    <div class="section-header">
+                        <h3>Registrar Actions</h3>
+                    </div>
+                    <div class="action-buttons" data-review-actions>
+                        <button class="button button--primary" type="button" data-registrar-action="APPROVED">Approve</button>
+                        <button class="button button--warning" type="button" data-registrar-action="RETURNED_FOR_CORRECTION">Return for correction</button>
+                        <button class="button button--danger" type="button" data-registrar-action="REJECTED">Reject</button>
+                    </div>
+                    <div class="action-footer" id="action-footer">
+                        <label for="feedback-message">Feedback or decision remarks</label>
+                        <textarea id="feedback-message" rows="4" maxlength="4000" placeholder="Required when returning for correction or rejecting an application."></textarea>
+                        <small>Student-submitted information remains read only. Remarks are recorded permanently in application history.</small>
+                    </div>
+                </section>
+
+                <section class="review-section application-history" aria-labelledby="application-history-title">
+                    <div class="section-header"><h3 id="application-history-title">Application history</h3></div>
+                    <div class="review-history" data-review-history></div>
+                </section>
+                
+            </div>
+        </section>
+        
+    </dialog>
+
+    <dialog class="registrar-dialog" aria-labelledby="registrar-documents-title" data-registrar-documents-dialog>
+        <button class="dialog-close" type="button" aria-label="Close document review" data-close-registrar-documents>&times;</button>
+        <p class="eyebrow">Registrar tools</p><h2 id="registrar-documents-title">Document review</h2>
+        <p class="form-status">Document submission is not available yet because no document records exist in the current database schema.</p>
+        <p class="form-status">The Registrar permission <strong>VIEW_DOCUMENTS</strong> is ready for the document workflow phase.</p>
+    </dialog>
+
+    <dialog class="role-dialog" aria-labelledby="role-dialog-title" data-role-dialog>
+        <button class="dialog-close" type="button" aria-label="Close role editor" data-close-role-dialog>×</button>
+        <p class="eyebrow">Administrator tools</p>
+        <h2 id="role-dialog-title">Edit account roles</h2>
+        <p>Update roles for <strong data-role-account-name>this project account</strong>. The server validates every assignment.</p>
+        <form data-role-form novalidate>
+            <fieldset class="role-fieldset">
+                <legend>Assigned roles</legend>
+                <div class="role-options" data-role-options></div>
+            </fieldset>
+            <div class="field">
+                <label for="primary-role">Primary role</label>
+                <select id="primary-role" name="primaryRole" required disabled>
+                    <option value="">Select at least one assigned role</option>
+                </select>
+                <small>The primary role controls the account's default portal landing page.</small>
+            </div>
+            <button class="button button--primary button--full" type="submit">
+                <span data-submit-label>Save role assignments</span>
+            </button>
+            <p class="form-message form-message--error" role="alert" data-role-error hidden></p>
+            <p class="form-status" role="status" aria-live="polite" data-role-status></p>
+        </form>
+    </dialog>
+
+    <dialog class="profile-dialog" aria-labelledby="profile-dialog-title" data-profile-dialog>
+        <button class="dialog-close" type="button" aria-label="Close profile editor" data-close-profile-dialog>&times;</button>
+        <p class="eyebrow">Student profile</p>
+        <h2 id="profile-dialog-title">Edit contact information</h2>
+        <p>Update the information fields you are permitted to edit. Academic records are controlled by the Registrar.</p>
+        <form data-profile-form novalidate>
+            <div class="field">
+                <label for="edit-institutional-email">Institutional email</label>
+                <input id="edit-institutional-email" type="email" name="institutionalEmail" autocomplete="email" />
+                <small>Must end in @cjc.edu.ph or your assigned institutional domain.</small>
+            </div>
+            <div class="field">
+                <label for="edit-date-of-birth">Date of birth</label>
+                <input id="edit-date-of-birth" type="date" name="dateOfBirth" />
+            </div>
+            <button class="button button--primary button--full" type="submit">
+                <span data-submit-label>Save changes</span>
+            </button>
+            <p class="form-message form-message--error" role="alert" data-profile-error hidden></p>
+            <p class="form-status" role="status" aria-live="polite" data-profile-status></p>
+        </form>
+    </dialog>
+
+    <dialog class="request-dialog" aria-labelledby="request-dialog-title" data-request-dialog>
+        <button class="dialog-close" type="button" aria-label="Close request dialog" data-close-request-dialog>&times;</button>
+        <p class="eyebrow">Student services</p>
+        <h2 id="request-dialog-title">Submit a request</h2>
+        <p>Choose the service you need. Your request will be reviewed by the appropriate office.</p>
+        <form data-request-form novalidate>
+            <div class="field">
+                <label for="request-type">Request type</label>
+                <select id="request-type" name="requestCode" required>
+                    <option value="">Select a request type&hellip;</option>
+                </select>
+                <small data-request-type-desc></small>
+            </div>
+            <div class="field">
+                <label for="request-copies">Number of copies</label>
+                <input id="request-copies" type="number" name="copies" min="1" max="10" value="1" />
+            </div>
+            <div class="field">
+<label for="request-purpose">Purpose <span class="label-muted">(optional)</span></label>
+                <textarea id="request-purpose" name="purpose" rows="3" maxlength="500" placeholder="e.g., For scholarship application, employment requirement&hellip;" class="textarea-style"></textarea>
+                <small><span data-purpose-remaining>500</span> characters remaining</small>
+            </div>
+            <p class="panel panel-style">
+                Estimated processing fee: <strong data-estimated-fee>PHP 0.00</strong> &middot; Processing time: <strong data-service-days>–</strong>
+            </p>
+            <button class="button button--primary button--full" type="submit">
+                <span data-submit-label>Submit request</span>
+            </button>
+            <p class="form-message form-message--error" role="alert" data-request-error hidden></p>
+            <p class="form-status" role="status" aria-live="polite" data-request-status></p>
+        </form>
+    </dialog>
+
+    <dialog class="enrollment-dialog" aria-labelledby="enrollment-dialog-title" data-enrollment-dialog>
+        <button class="dialog-close" type="button" aria-label="Close enrollment form" data-close-enrollment>&times;</button>
+        <p class="eyebrow">Student services</p>
+        <h2 id="enrollment-dialog-title">Enrollment application</h2>
+        <p>Complete your information, save a draft, and submit it for review. Student number and school email are read-only.</p>
+        <p class="form-status" role="status" aria-live="polite" data-enrollment-window></p>
+        <form data-enrollment-form novalidate>
+            <fieldset><legend>Student identity</legend><div class="enrollment-fields enrollment-fields--three">
+                <div class="field"><label for="enrollment-student-number">Student number</label><input id="enrollment-student-number" name="studentNumber" readonly /></div>
+                <div class="field"><label for="enrollment-school-email">School email</label><input id="enrollment-school-email" name="schoolEmail" type="email" readonly /></div>
+                <div class="field"><label for="enrollment-full-name">Full name</label><input id="enrollment-full-name" name="personal.fullName" required /></div>
+            </div></fieldset>
+            <fieldset><legend>Personal information</legend><div class="enrollment-fields enrollment-fields--three">
+                <div class="field"><label for="enrollment-birthday">Birthday</label><input id="enrollment-birthday" name="personal.birthday" type="date" required /></div>
+                <div class="field"><label for="enrollment-sex">Sex</label><select id="enrollment-sex" name="personal.sex" required><option value="">Select</option><option>Female</option><option>Male</option><option>Prefer not to say</option></select></div>
+                <div class="field"><label for="enrollment-civil-status">Civil status</label><select id="enrollment-civil-status" name="personal.civilStatus" required><option value="">Select</option><option>Single</option><option>Married</option><option>Widowed</option><option>Separated</option></select></div>
+                <div class="field"><label for="enrollment-nationality">Nationality</label><input id="enrollment-nationality" name="personal.nationality" required /></div>
+                <div class="field"><label for="enrollment-religion">Religion</label><input id="enrollment-religion" name="personal.religion" required /></div>
+                <div class="field"><label for="enrollment-birth-place">Place of birth</label><input id="enrollment-birth-place" name="personal.placeOfBirth" required /></div>
+            </div></fieldset>
+            <fieldset><legend>Contact information</legend><div class="enrollment-fields enrollment-fields--two">
+                <div class="field"><label for="enrollment-mobile">Mobile number</label><input id="enrollment-mobile" name="contact.mobileNumber" type="tel" required /></div>
+                <div class="field"><label for="enrollment-telephone">Telephone number</label><input id="enrollment-telephone" name="contact.telephoneNumber" type="tel" /></div>
+                <div class="field"><label for="enrollment-personal-email">Personal email</label><input id="enrollment-personal-email" name="contact.personalEmail" type="email" required /></div>
+                <div class="field"><label for="enrollment-present-address">Present address</label><textarea id="enrollment-present-address" name="contact.presentAddress" rows="2" required></textarea></div>
+                <div class="field"><label for="enrollment-permanent-address">Permanent address</label><textarea id="enrollment-permanent-address" name="contact.permanentAddress" rows="2" required></textarea></div>
+            </div></fieldset>
+            <fieldset><legend>Family and emergency information</legend><div class="enrollment-fields enrollment-fields--two">
+                <div class="field"><label for="enrollment-father">Father name</label><input id="enrollment-father" name="family.father.name" /></div><div class="field"><label for="enrollment-father-contact">Father contact</label><input id="enrollment-father-contact" name="family.father.contactNumber" /></div>
+                <div class="field"><label for="enrollment-mother">Mother name</label><input id="enrollment-mother" name="family.mother.name" /></div><div class="field"><label for="enrollment-mother-contact">Mother contact</label><input id="enrollment-mother-contact" name="family.mother.contactNumber" /></div>
+                <div class="field"><label for="enrollment-guardian">Guardian name</label><input id="enrollment-guardian" name="family.guardian.name" /></div><div class="field"><label for="enrollment-guardian-relationship">Guardian relationship</label><input id="enrollment-guardian-relationship" name="family.guardian.relationship" /></div>
+                <div class="field"><label for="enrollment-emergency">Emergency contact</label><input id="enrollment-emergency" name="emergency.name" required /></div><div class="field"><label for="enrollment-emergency-contact">Emergency number</label><input id="enrollment-emergency-contact" name="emergency.contactNumber" required /></div>
+            </div></fieldset>
+            <fieldset><legend>Educational background</legend><div class="enrollment-fields enrollment-fields--two">
+                <div class="field"><label for="enrollment-elementary">Elementary school</label><input id="enrollment-elementary" name="education.elementary.school" /></div><div class="field"><label for="enrollment-elementary-year">Elementary year graduated</label><input id="enrollment-elementary-year" name="education.elementary.yearGraduated" type="number" /></div>
+                <div class="field"><label for="enrollment-junior-high">Junior high school</label><input id="enrollment-junior-high" name="education.juniorHigh.school" /></div><div class="field"><label for="enrollment-junior-high-year">Junior high year graduated</label><input id="enrollment-junior-high-year" name="education.juniorHigh.yearGraduated" type="number" /></div>
+                <div class="field"><label for="enrollment-senior-high">Senior high school</label><input id="enrollment-senior-high" name="education.seniorHigh.school" /></div><div class="field"><label for="enrollment-senior-high-strand">Senior high strand</label><input id="enrollment-senior-high-strand" name="education.seniorHigh.strand" /></div>
+            </div></fieldset>
+            <fieldset><legend>Program enrollment</legend><div class="enrollment-fields enrollment-fields--three">
+                <div class="field"><label for="enrollment-program">Program</label><select id="enrollment-program" name="programId" required><option value="">Loading programs...</option></select></div>
+                <div class="field"><label for="enrollment-term">Academic term</label><select id="enrollment-term" name="academicTermId" required><option value="">Loading terms...</option></select></div>
+                <div class="field"><label for="enrollment-year-level">Year level</label><select id="enrollment-year-level" name="yearLevel" required><option value="">Select</option><option value="1">Year 1</option><option value="2">Year 2</option><option value="3">Year 3</option><option value="4">Year 4</option><option value="5">Year 5</option></select></div>
+            </div></fieldset>
+            <fieldset class="subject-cart-fieldset"><legend>Subject cart</legend>
+                <div class="subject-cart" aria-label="Subject selection cart">
+                    <div class="subject-cart__header">
+                        <div>
+                            <strong>Available subjects</strong>
+                            <small>Select a program to view the curriculum match for this term</small>
+                        </div>
+                        <span class="status-pill status-pill--neutral" data-subject-count>0 selected</span>
+                    </div>
+                    <div class="subject-cart__summary">
+                        <div><span>Total units</span><strong data-subject-total>0 units</strong></div>
+                        <div><span>Program</span><strong data-subject-program>Choose a program</strong></div>
+                        <div><span>Load status</span><strong data-subject-load-status>Not started</strong></div>
+                    </div>
+                    <div class="subject-picker" data-subject-picker>
+                        <div class="subject-picker__header">
+                            <strong>Course catalog</strong>
+                            <small>Click add to move a subject into your cart</small>
+                        </div>
+                        <div class="subject-picker__list" data-subject-catalog></div>
+                    </div>
+                    <div class="subject-cart__items" data-subject-cart></div>
+                </div>
+            </fieldset>
+            <fieldset><legend>Required documents</legend>
+                <div class="documents-list" data-documents-list></div>
+                <p class="form-message form-message--info" data-documents-hint hidden>Upload all required documents before submitting your application.</p>
+            </fieldset>
+            <div class="enrollment-actions"><button class="button button--quiet" type="button" data-save-enrollment>Save draft</button><button class="button button--primary" type="button" data-submit-enrollment>Submit application</button></div>
+            <p class="form-message form-message--error" role="alert" data-enrollment-error hidden></p><p class="form-status" role="status" aria-live="polite" data-enrollment-status></p>
+        </form>
+    </dialog>
+
+    <script src="/auth-client.js" defer></script>
+    <script src="/portal.js" defer></script>
+</body>
+
+</html>

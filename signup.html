@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Student enrollment | CJC Portal Project</title>
+    <link rel="icon" type="image/png" href="/assets/images/cor-jesu-college-seal.png" />
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/signup.css" />
+</head>
+<body class="signup-page">
+    <header class="signup-header">
+        <a class="brand" href="/index.html" aria-label="Return to the project homepage">
+            <img class="brand__seal" src="/assets/images/cor-jesu-college-seal.png" width="56" height="56" alt="" />
+            <span class="brand__copy"><strong>Cor Jesu College</strong><small>Independent portal project</small></span>
+        </a>
+        <a class="button button--outline button--compact" href="/index.html">Back home</a>
+    </header>
+    <main class="signup-main">
+        <section class="signup-intro">
+            <p class="eyebrow"><span aria-hidden="true"></span>New student enrollment</p>
+            <h1>Start your CJC student journey.</h1>
+            <p>Create your project account first. Your permanent student number and simulated school email will be generated automatically.</p>
+        </section>
+        <section class="signup-panel panel" aria-labelledby="signup-title">
+            <div class="panel__heading">
+                <div><p class="eyebrow">Student sign up</p><h2 id="signup-title">Create your account</h2></div>
+                <span class="status-pill">Applicant</span>
+            </div>
+            <form data-signup-form novalidate>
+                <fieldset>
+                    <legend>Personal information</legend>
+                    <div class="signup-fields signup-fields--three">
+                        <div class="field"><label for="first-name">First name</label><input id="first-name" name="firstName" required autocomplete="given-name" /></div>
+                        <div class="field"><label for="middle-name">Middle name <span class="optional-label">(optional)</span></label><input id="middle-name" name="middleName" autocomplete="additional-name" /></div>
+                        <div class="field"><label for="last-name">Last name</label><input id="last-name" name="lastName" required autocomplete="family-name" /></div>
+                    </div>
+                    <div class="signup-fields signup-fields--three">
+                        <div class="field"><label for="birth-date">Birthday</label><input id="birth-date" name="birthDate" type="date" required autocomplete="bday" /></div>
+                        <div class="field"><label for="mobile-number">Mobile number</label><input id="mobile-number" name="mobileNumber" type="tel" required autocomplete="tel" /></div>
+                        <div class="field"><label for="personal-email">Personal email</label><input id="personal-email" name="personalEmail" type="email" required autocomplete="email" /></div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend>Account security</legend>
+                    <div class="signup-fields signup-fields--two">
+                        <div class="field"><label for="password">Password</label><span class="password-field"><input id="password" name="password" type="password" required autocomplete="new-password" /><button type="button" aria-label="Show password" aria-pressed="false" data-signup-password-toggle data-password-target="password">Show</button></span><small>Use at least 12 characters.</small></div>
+                        <div class="field"><label for="confirm-password">Confirm password</label><span class="password-field"><input id="confirm-password" name="confirmPassword" type="password" required autocomplete="new-password" /><button type="button" aria-label="Show confirmed password" aria-pressed="false" data-signup-password-toggle data-password-target="confirm-password">Show</button></span></div>
+                    </div>
+                </fieldset>
+                <button class="button button--primary button--full" type="submit"><span>Create student account</span><span aria-hidden="true">→</span></button>
+                <p class="form-message form-message--error" role="alert" data-signup-error hidden></p>
+                <p class="form-status" role="status" aria-live="polite" data-signup-status></p>
+            </form>
+            <section class="signup-success" data-signup-success hidden aria-live="polite">
+                <p class="eyebrow">Registration complete</p>
+                <h2>Your student portal identity is ready.</h2>
+                <dl><div><dt>Student number</dt><dd data-student-number></dd></div><div><dt>School email</dt><dd data-school-email></dd></div><div><dt>Application number</dt><dd data-application-number></dd></div></dl>
+                <p>Sign in with your generated school email and the password you created. Your account is ready to use immediately.</p>
+                <a class="button button--primary" href="/index.html?signin=1">Continue to sign in</a>
+            </section>
+        </section>
+    </main>
+    <script src="/auth-client.js" defer></script>
+    <script src="/signup.js" defer></script>
+</body>
+</html>

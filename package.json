@@ -1,0 +1,39 @@
+{
+  "name": "cjc-student-services-portal",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "PostgreSQL-backed CJC student portal prototype with secure authentication, RBAC, and a Student dashboard.",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server/server.mjs",
+    "dev": "node --env-file-if-exists=.env --watch server/server.mjs",
+    "seed:demo": "node --env-file-if-exists=.env server/seed.mjs",
+    "seed:term": "node --env-file-if-exists=.env prisma/seeds/scripts/seed-demo-term.mjs",
+    "seed:registrar": "node --env-file-if-exists=.env prisma/seeds/scripts/create-registrar-demo.mjs",
+    "seed:security": "node --env-file-if-exists=.env prisma/seeds/scripts/seed-security-catalog.mjs",
+    "seed:ece:dry": "node --env-file-if-exists=.env prisma/seeds/academic/seed-ece-prospectus.mjs",
+    "seed:ece": "node --env-file-if-exists=.env prisma/seeds/academic/seed-ece-prospectus.mjs --commit",
+    "seed:prisma": "node --env-file-if-exists=.env prisma/seed.mjs",
+    "seed:plan": "node --env-file-if-exists=.env prisma/seeds/seed-plan.mjs",
+    "repair:program-head:dry": "node --env-file-if-exists=.env prisma/seeds/scripts/repair-program-head-assignments.mjs",
+    "repair:program-head": "node --env-file-if-exists=.env prisma/seeds/scripts/repair-program-head-assignments.mjs --commit",
+    "import:sqlite:dry": "node --env-file-if-exists=.env scripts/import-sqlite-auth.mjs",
+    "import:sqlite:cutover": "node --env-file-if-exists=.env scripts/import-sqlite-auth.mjs --commit --merge-seeded-demos --invalidate-sessions",
+    "test": "node --env-file-if-exists=.env --test --test-concurrency=1 tests/auth-client.test.mjs tests/auth.test.mjs tests/admission.test.mjs tests/registrar.test.mjs tests/program-head.test.mjs tests/prerequisite.test.mjs"
+  },
+  "prisma": {
+    "seed": "node --env-file-if-exists=.env prisma/seed.mjs"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
+    "dotenv": "^17.4.2",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "prisma": "^7.10.0"
+  }
+}

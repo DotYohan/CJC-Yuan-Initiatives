@@ -1,0 +1,9 @@
+{
+  "scripts": [
+    "script.js"
+  ],
+  "styles": [
+    "style.css"
+  ],
+  "readmeBehavior": "none"
+}
