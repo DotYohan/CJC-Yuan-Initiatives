@@ -1,5 +1,8 @@
-import { db } from "./db.mjs";
+let db = null;
 
+export function setDatabase(database) {
+  db = database;
+}
 export const Severity = {
   INFO: "INFO",
   WARNING: "WARNING",
@@ -30,6 +33,10 @@ function sanitizeData(data) {
 }
 
 export async function logSystemEvent(params) {
+  if (!db) {
+    console.error("System Logger Error: Database connection is not set.");
+    return;
+  }
   try {
     const errorId = `ERR-${new Date().toISOString().slice(0,10).replace(/-/g, "")}-${Math.floor(Math.random()*10000).toString().padStart(4, "0")}`;
     
