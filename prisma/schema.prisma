@@ -121,6 +121,7 @@ model User {
   requestsProcessed              StudentRequest[]                    @relation("RequestProcessedBy")
   requestStatusChanges           StudentRequestStatusHistory[]       @relation("RequestStatusChangedBy")
   documentVerifications          DocumentVerificationHistory[]       @relation("DocumentVerificationsPerformed")
+  systemLogs                     SystemLog[]                         @relation("SystemLogUser")
 
   @@map("users")
 }
@@ -1905,4 +1906,34 @@ model StudentRequestStatusHistory {
   @@index([studentRequestId, changedAt])
   @@index([changedByUserId])
   @@map("student_request_status_history")
+}
+
+/// Platform-level system event log. Records application errors, security
+/// incidents, and telemetry events for the admin monitoring dashboard.
+model SystemLog {
+  id              String    @id @default(uuid()) @db.Uuid
+  errorId         String?   @unique @map("error_id") @db.VarChar(50)
+  requestId       String?   @map("request_id") @db.VarChar(50)
+  sessionId       String?   @map("session_id") @db.VarChar(64)
+  severity        String    @db.VarChar(20)
+  category        String    @db.VarChar(50)
+  module          String?   @db.VarChar(100)
+  userId          String?   @map("user_id") @db.Uuid
+  ipHash          String?   @map("ip_hash") @db.Char(64)
+  userAgent       String?   @map("user_agent") @db.Text
+  requestUrl      String?   @map("request_url") @db.VarChar(500)
+  httpMethod      String?   @map("http_method") @db.VarChar(10)
+  message         String    @db.Text
+  technicalDetail String?   @map("technical_detail") @db.Text
+  stackTrace      String?   @map("stack_trace") @db.Text
+  status          String    @default("OPEN") @db.VarChar(20)
+  durationMs      Int?      @map("duration_ms")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User? @relation("SystemLogUser", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([severity, createdAt])
+  @@index([category, createdAt])
+  @@index([status, createdAt])
+  @@map("system_logs")
 }

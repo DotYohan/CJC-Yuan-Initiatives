@@ -3,6 +3,7 @@ let db = null;
 export function setDatabase(database) {
   db = database;
 }
+
 export const Severity = {
   INFO: "INFO",
   WARNING: "WARNING",
@@ -38,26 +39,23 @@ export async function logSystemEvent(params) {
     return;
   }
   try {
-    const errorId = `ERR-${new Date().toISOString().slice(0,10).replace(/-/g, "")}-${Math.floor(Math.random()*10000).toString().padStart(4, "0")}`;
-    
+    const errorId = `ERR-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${Math.floor(Math.random() * 10000).toString().padStart(4, "0")}`;
+
+    // Columns match the actual system_logs table in the database
     await db.systemLog.create({
       data: {
         errorId,
         severity: params.severity || Severity.INFO,
         category: params.category || Category.APPLICATION,
-        moduleName: params.moduleName || "General",
-        functionName: params.functionName || null,
+        module: params.moduleName || "General",
         userId: params.userId || null,
-        userRole: params.userRole || null,
-        ipAddress: params.ipAddress || null,
-        deviceInfo: params.deviceInfo || null,
-        browserInfo: params.browserInfo || null,
         requestUrl: params.requestUrl || null,
         httpMethod: params.httpMethod || null,
         message: params.message || "Unknown error",
-        technicalDetail: typeof params.technicalDetail === "string" ? params.technicalDetail : JSON.stringify(sanitizeData(params.technicalDetail), null, 2),
+        technicalDetail: typeof params.technicalDetail === "string"
+          ? params.technicalDetail
+          : JSON.stringify(sanitizeData(params.technicalDetail), null, 2),
         stackTrace: params.stackTrace || null,
-        relatedQuery: params.relatedQuery || null,
         status: "OPEN"
       }
     });

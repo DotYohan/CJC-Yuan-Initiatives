@@ -96,7 +96,7 @@ function setSecurityHeaders(response, requestId) {
   response.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
   response.setHeader(
     "Content-Security-Policy",
-    "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+    "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
   );
 }
 
@@ -206,6 +206,7 @@ export async function createApp(options = {}) {
   const config = options.config ?? createConfig(options);
   const database = options.prisma ?? options.database ?? createDatabase();
   const ownsDatabase = !options.prisma && !options.database;
+  systemLogger.setDatabase(database);
   const store = options.store ?? new AuthenticationStore(database);
   const studentStore = options.studentStore ?? new StudentDashboardStore(database);
   const admissionStore = options.admissionStore ?? new AdmissionStore(database);
@@ -936,17 +937,16 @@ export async function createApp(options = {}) {
     const severity = url.searchParams.get("severity");
     const status = url.searchParams.get("status");
 
+    const VALID_SEVERITIES = ["INFO", "WARNING", "HIGH", "CRITICAL"];
+    const VALID_STATUSES = ["OPEN", "INVESTIGATING", "RESOLVED", "IGNORED"];
     const where = {};
-    if (severity) where.severity = severity;
-    if (status) where.status = status;
+    if (severity && VALID_SEVERITIES.includes(severity)) where.severity = severity;
+    if (status && VALID_STATUSES.includes(status)) where.status = status;
 
     const entries = await database.systemLog.findMany({
       where,
       orderBy: { createdAt: "desc" },
       take: limit,
-      include: {
-        user: { select: { username: true, email: true, displayName: true } }
-      }
     });
     sendJson(response, 200, { data: { entries } });
   }
@@ -2337,6 +2337,13 @@ export async function createApp(options = {}) {
       }
       if (method === "GET" && pathname === "/api/v1/admin/audit-logs") {
         return await listAudit(request, response, context, url);
+      }
+      if (method === "GET" && pathname === "/api/v1/admin/system-logs") {
+        return await listSystemLogs(request, response, context, url);
+      }
+      const systemLogStatusMatch = pathname.match(/^\/api\/v1\/admin\/system-logs\/([0-9a-f-]{36})\/status$/i);
+      if (method === "PATCH" && systemLogStatusMatch) {
+        return await updateSystemLogStatus(request, response, context, systemLogStatusMatch[1]);
       }
       if (method === "GET" && pathname === "/api/v1/admin/academic-term-removal-requests") {
         return await listAcademicTermRemovalRequests(request, response, context);

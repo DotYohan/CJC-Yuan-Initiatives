@@ -12,6 +12,7 @@
     const passwordError = select("[data-password-error]");
     const passwordStatus = select("[data-password-status]");
     const adminPanel = select("[data-admin-panel]");
+    const monitoringPanel = select("[data-monitoring-panel]");
     const registrarPanel = select("[data-registrar-panel]");
     const programHeadPanel = select("[data-program-head-panel]");
     const programHeadCurriculumForm = select("[data-create-program-head-curriculum]");
@@ -566,6 +567,7 @@
         const canManageRegistrar = isRegistrar() && !required;
         const canManageProgramHead = isProgramHead() && !required;
         adminPanel.hidden = !canManageAccounts;
+        if (monitoringPanel) monitoringPanel.hidden = !canManageAccounts;
         registrarPanel.hidden = !canManageRegistrar;
         programHeadPanel.hidden = !canManageProgramHead;
         studentDashboard.hidden = !studentWorkspace || required;
@@ -1074,7 +1076,7 @@
         usersTable.hidden = false;
     };
 
-    const loadUsers = async () => {
+    let loadUsers = async () => {
         if (!isAdministrator() || needsPasswordChange()) return;
         if (usersStatus) usersStatus.textContent = "Loading accounts…";
         usersTable.hidden = true;
@@ -3214,11 +3216,8 @@ const renderSystemLogs = () => {
         
         const dateStr = new Date(log.createdAt).toLocaleString();
         
-        let severityBadge = "status-pill";
-        if (log.severity === "INFO") severityBadge += " status-verified";
-        if (log.severity === "WARNING") severityBadge += " status-pending";
-        if (log.severity === "HIGH") severityBadge += " status-rejected";
-        if (log.severity === "CRITICAL") severityBadge += " status-rejected";
+        const severityMap = { INFO: "status-pill--info", WARNING: "status-pill--warning", HIGH: "status-pill--high", CRITICAL: "status-pill--critical" };
+        const severityBadge = "status-pill " + (severityMap[log.severity] || "");
 
         tr.innerHTML = `
             <td>

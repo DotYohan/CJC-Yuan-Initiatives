@@ -494,7 +494,7 @@
                             Loading accounts…
                         </p>
                         <button class="button button--quiet" type="button" data-retry-users hidden>Try again</button>
-                        <div class="table-wrap" data-users-table hidden>
+                        <div class="accounts-scroll-box" data-users-table hidden>
                             <table>
                                 <caption class="visually-hidden">Project accounts with role and status controls</caption>
                                 <thead><tr><th scope="col">Account</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead>
@@ -505,49 +505,54 @@
                 </div>
             </section>
 
-                <div class="admin-panel__heading" style="margin-top: 40px;">
+                            <section class="shell admin-panel monitoring-panel" aria-labelledby="monitoring-title" data-monitoring-panel hidden>
+                <div class="admin-panel__heading">
                     <div>
                         <p class="eyebrow">Administrator tools</p>
-                        <h2 id="monitoring-title">System & Security Monitoring</h2>
+                        <h2 id="monitoring-title">System &amp; Security Monitoring</h2>
                         <p>View system errors, security incidents, and platform telemetry.</p>
                     </div>
                     <button class="button button--quiet" type="button" data-refresh-system-logs>Refresh logs</button>
                 </div>
 
-                <div class="admin-grid" style="grid-template-columns: 1fr;">
-                    <section class="panel system-logs-list" aria-labelledby="system-logs-title">
-                        <div class="account-list__heading">
+                <section class="panel system-logs-panel" aria-labelledby="system-logs-title">
+                    <div class="system-logs-panel__header">
+                        <div>
                             <h3 id="system-logs-title">System Logs</h3>
-                            <div class="field" style="margin: 0; width: auto;">
-                                <select id="log-severity-filter" data-log-filter>
-                                    <option value="">All Severities</option>
-                                    <option value="INFO">INFO</option>
-                                    <option value="WARNING">WARNING</option>
-                                    <option value="HIGH">HIGH</option>
-                                    <option value="CRITICAL">CRITICAL</option>
-                                </select>
-                            </div>
+                            <p class="system-logs-panel__desc">Recent events, errors, and security incidents.</p>
                         </div>
-                        <p class="form-status" role="status" aria-live="polite" data-system-logs-status>
-                            Loading system logs...
-                        </p>
-                        <div class="table-wrap" data-system-logs-table hidden>
-                            <table>
-                                <caption class="visually-hidden">System logs and errors</caption>
-                                <thead>
-                                    <tr>
-                                        <th scope="col">ID / Date</th>
-                                        <th scope="col">Severity</th>
-                                        <th scope="col">Category</th>
-                                        <th scope="col">Message</th>
-                                        <th scope="col">Status</th>
-                                        <th scope="col">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody data-system-logs-body></tbody>
-                            </table>
+                        <div class="system-logs-panel__controls">
+                            <label class="visually-hidden" for="log-severity-filter">Filter by severity</label>
+                            <select id="log-severity-filter" class="log-filter-select" data-log-filter>
+                                <option value="">All Severities</option>
+                                <option value="INFO">INFO</option>
+                                <option value="WARNING">WARNING</option>
+                                <option value="HIGH">HIGH</option>
+                                <option value="CRITICAL">CRITICAL</option>
+                            </select>
                         </div>
-                    </section>
+                    </div>
+                    <p class="form-status" role="status" aria-live="polite" data-system-logs-status>
+                        Loading system logs...
+                    </p>
+                    <div class="system-logs-scroll-box" data-system-logs-table hidden>
+                        <table class="system-logs-table">
+                            <caption class="visually-hidden">System logs and errors</caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">ID / Date</th>
+                                    <th scope="col">Severity</th>
+                                    <th scope="col">Category</th>
+                                    <th scope="col">Message</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody data-system-logs-body></tbody>
+                        </table>
+                    </div>
+                </section>
+            </section>
                 </div>
             </section>
 
