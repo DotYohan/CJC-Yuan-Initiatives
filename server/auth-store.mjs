@@ -343,6 +343,16 @@ export class AuthenticationStore {
       method: entry.method, path: entry.path, metadata: entry.metadata, createdAt: entry.createdAt.getTime()
     }));
   }
+
+  async deleteUser(userId) {
+    return this.transaction(async (store) => {
+      const user = await store.userById(userId);
+      if (!user) return false;
+      await store.revokeUserSessions(userId, store.config.now());
+      await store.prisma.user.delete({ where: { id: userId } });
+      return true;
+    });
+  }
 }
 
 export function isUniqueConstraint(error) {

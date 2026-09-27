@@ -118,6 +118,36 @@ async function createStudentProfile(transaction, userId, suffix) {
       durationYears: 4
     }
   });
+  const curriculum = await transaction.curriculum.create({
+    data: {
+      id: newId(), programId: program.id, code: `SY2023-${suffix}`,
+      version: 1, effectiveFromYear: 2023, name: "Test Curriculum", status: "DRAFT"
+    }
+  });
+  const subject = await transaction.subject.create({
+    data: {
+      id: newId(), departmentId: department.id, code: `SUB-${suffix}`, codeNormalized: normalizeIdentifier(`SUB-${suffix}`),
+      title: "Test Subject", defaultCreditUnits: 3, defaultLectureHours: 3, status: "ACTIVE"
+    }
+  });
+  const profileSubject = await transaction.curriculumSubject.create({
+    data: {
+      id: newId(), curriculumId: curriculum.id, subjectId: subject.id, yearLevel: 1, termNumber: 1,
+      creditUnits: 3, lectureHours: 3, type: "REQUIRED"
+    }
+  });
+  const subject2 = await transaction.subject.create({
+    data: {
+      id: newId(), departmentId: department.id, code: `SUB2-${suffix}`, codeNormalized: normalizeIdentifier(`SUB2-${suffix}`),
+      title: "Test Subject 2", defaultCreditUnits: 3, defaultLectureHours: 3, status: "ACTIVE"
+    }
+  });
+  const profileSubject2 = await transaction.curriculumSubject.create({
+    data: {
+      id: newId(), curriculumId: curriculum.id, subjectId: subject2.id, yearLevel: 1, termNumber: 2,
+      creditUnits: 3, lectureHours: 3, type: "REQUIRED"
+    }
+  });
   const student = await transaction.student.create({
     data: {
       userId,
@@ -131,7 +161,7 @@ async function createStudentProfile(transaction, userId, suffix) {
       status: "ACTIVE"
     }
   });
-  return { college, department, program, student };
+  return { college, department, program, student, profileSubject, profileSubject2 };
 }
 
 async function recordVerifiedEnrollmentFee(transaction, obligation, studentId, enrollmentPeriodId, suffix) {
@@ -275,7 +305,7 @@ test("Student enrollment accepts curriculum-subject IDs from the selected curric
       const suffix = newId().slice(0, 8);
       const password = "Correct horse battery 2026";
       const studentUser = await createTestUser(transaction, config, "student", `legacy.curriculum.${suffix}`, password);
-      const { program, student } = await createStudentProfile(transaction, studentUser.id, `legacy-${suffix}`);
+      const { program, student, profileSubject, profileSubject2 } = await createStudentProfile(transaction, studentUser.id, `legacy-${suffix}`);
       const term = await createAcademicTerm(transaction, `legacy-${suffix}`);
       const curriculum = await transaction.curriculum.create({
         data: {
@@ -592,8 +622,8 @@ test("Registrar controls the enrollment lifecycle and students see the period st
       const lateStudentUser = await createTestUser(transaction, config, "student", `test.lateenrollee.${suffix}`, password);
       const outsider = await createTestUser(transaction, config, "faculty", `test.faculty.${suffix}`, password);
       const term = await createAcademicTerm(transaction, suffix);
-      const { program, student } = await createStudentProfile(transaction, studentUser.id, suffix);
-      const { program: lateProgram } = await createStudentProfile(transaction, lateStudentUser.id, `${suffix}b`);
+      const { program, student, profileSubject, profileSubject2 } = await createStudentProfile(transaction, studentUser.id, suffix);
+      const { program: lateProgram, profileSubject: lateProfileSubject, profileSubject2: lateProfileSubject2 } = await createStudentProfile(transaction, lateStudentUser.id, `${suffix}b`);
 
       await transaction.paymentType.upsert({
         where: { name: "Entrance Fee" },
@@ -712,6 +742,7 @@ test("Registrar controls the enrollment lifecycle and students see the period st
               programId: program.id,
               academicTermId: term.id,
               yearLevel: 1,
+              selectedSubjectIds: [profileSubject.id],
               formData: completeFormData()
             }
           });
@@ -724,6 +755,7 @@ test("Registrar controls the enrollment lifecycle and students see the period st
               programId: program.id,
               academicTermId: term.id,
               yearLevel: 1,
+              selectedSubjectIds: [profileSubject.id],
               formData: completeFormData()
             }
           });
@@ -761,6 +793,7 @@ test("Registrar controls the enrollment lifecycle and students see the period st
               programId: lateProgram.id,
               academicTermId: term.id,
               yearLevel: 1,
+              selectedSubjectIds: [lateProfileSubject.id],
               formData: completeFormData()
             }
           });
@@ -793,7 +826,8 @@ test("Registrar controls the enrollment lifecycle and students see the period st
             json: {
               programId: program.id,
               academicTermId: secondTerm.id,
-              yearLevel: 1,
+                yearLevel: 1,
+                selectedSubjectIds: [profileSubject2.id],
               formData: completeFormData()
             }
           });
@@ -811,11 +845,13 @@ test("Registrar controls the enrollment lifecycle and students see the period st
           method: "POST",
           json: {
             programId: program.id,
-            academicTermId: secondTerm.id,
-            yearLevel: 1,
-            formData: completeFormData()
+              academicTermId: secondTerm.id,
+                yearLevel: 1,
+                selectedSubjectIds: [profileSubject2.id],
+              formData: completeFormData()
           }
         });
+        if (paidSecondTermSubmit.response.status !== 200) console.log(paidSecondTermSubmit.payload);
         assert.equal(paidSecondTermSubmit.response.status, 200, "verified current-semester payment permits enrollment");
         await registrarClient.request("/api/v1/registrar/enrollment-period/close", {
           method: "POST", json: { periodId: openedSecondTerm.payload.data.period.id }
@@ -988,7 +1024,7 @@ test("Registrar reviews, returns, receives a resubmission, and permanently appro
       const registrar = await createTestUser(transaction, config, "registrar", `review.registrar.${suffix}`, password);
       const studentUser = await createTestUser(transaction, config, "student", `review.student.${suffix}`, password);
       const term = await createAcademicTerm(transaction, `review-${suffix}`);
-      const { program, student } = await createStudentProfile(transaction, studentUser.id, `review-${suffix}`);
+      const { program, student, profileSubject, profileSubject2 } = await createStudentProfile(transaction, studentUser.id, `review-${suffix}`);
 
       await transaction.paymentType.upsert({
         where: { name: "Entrance Fee" },
@@ -1074,7 +1110,11 @@ test("Registrar reviews, returns, receives a resubmission, and permanently appro
 
         const unpaidSubmit = await studentClient.request("/api/v1/student/enrollment/submit", {
           method: "POST",
-          json: { programId: program.id, academicTermId: term.id, yearLevel: 1, formData: completeFormData() }
+          json: { programId: program.id,
+              academicTermId: term.id,
+              yearLevel: 1,
+              selectedSubjectIds: [profileSubject.id],
+              formData: completeFormData() }
         });
         assert.equal(unpaidSubmit.response.status, 402);
         const termFee = await transaction.studentObligation.findFirstOrThrow({
@@ -1094,12 +1134,23 @@ test("Registrar reviews, returns, receives a resubmission, and permanently appro
         );
         const submitted = await studentClient.request("/api/v1/student/enrollment/submit", {
           method: "POST",
-          json: { programId: program.id, academicTermId: term.id, yearLevel: 1, formData: completeFormData() }
+          json: { programId: program.id,
+              academicTermId: term.id,
+              yearLevel: 1,
+              selectedSubjectIds: [profileSubject.id],
+              formData: completeFormData() }
         });
         assert.equal(submitted.response.status, 200);
 
+        // Fake program head approval for Registrar tests
+        await transaction.enrollmentApplication.updateMany({
+          where: { studentId: student.id, academicTermId: term.id },
+          data: { status: "UNDER_REVIEW" }
+        });
+
         const pending = await registrarClient.request("/api/v1/registrar/applications?status=PENDING");
         assert.equal(pending.response.status, 200);
+        if (!pending.payload.data.applications.some((entry) => entry.id === admissionApplication.id)) console.log("Missing admission. Applications:", pending.payload.data.applications);
         assert.ok(pending.payload.data.applications.some((entry) => entry.id === admissionApplication.id));
 
         const review = await registrarClient.request(`/api/v1/registrar/applications/${admissionApplication.id}`);
@@ -1124,19 +1175,48 @@ test("Registrar reviews, returns, receives a resubmission, and permanently appro
 
         const resubmitted = await studentClient.request("/api/v1/student/enrollment/submit", {
           method: "POST",
-          json: { programId: program.id, academicTermId: term.id, yearLevel: 1, formData: completeFormData() }
+          json: { programId: program.id,
+              academicTermId: term.id,
+              yearLevel: 1,
+              selectedSubjectIds: [profileSubject.id],
+              formData: completeFormData() }
         });
         assert.equal(resubmitted.response.status, 200);
+
+        // Fake program head approval for resubmission
+        await transaction.enrollmentApplication.updateMany({
+          where: { studentId: student.id, academicTermId: term.id },
+          data: { status: "UNDER_REVIEW" }
+        });
 
         const resubmissionQueue = await registrarClient.request("/api/v1/registrar/applications?status=PENDING");
         const queuedApplication = resubmissionQueue.payload.data.applications.find((entry) => entry.id === admissionApplication.id);
         assert.equal(queuedApplication.attemptNumber, 2);
         assert.equal(queuedApplication.tag, "RESUBMISSION");
 
+        const section = await transaction.classSection.create({
+          data: {
+            id: newId(), academicTermId: term.id, programId: program.id, code: "TEST-SEC", yearLevel: 1, curriculumId: profileSubject.curriculumId, capacity: 40, isActive: true
+          }
+        });
+        const offering = await transaction.courseOffering.create({
+          data: {
+            id: newId(), academicTermId: term.id, subjectId: profileSubject.subjectId, classSectionId: section.id,
+            offeringCode: "TEST-OFFER", creditUnits: 3, capacity: 40, status: "OPEN"
+          }
+        });
+
         const approved = await registrarClient.request(`/api/v1/registrar/applications/${admissionApplication.id}`, {
           method: "PATCH",
-          json: { status: "APPROVED", decisionNotes: "Admission requirements verified." }
+          json: { 
+            status: "APPROVED", 
+            decisionNotes: "Admission requirements verified.",
+            sectionAssignments: [
+              { curriculumSubjectId: profileSubject.id, courseOfferingId: offering.id }
+            ]
+          }
         });
+        if (approved.response.status !== 200) console.log(approved.payload);
         assert.equal(approved.response.status, 200);
         assert.equal(approved.payload.data.application.status, "APPROVED");
 
@@ -1181,7 +1261,7 @@ test("Registrar can reject a pending admission while its enrollment remains a dr
       const registrar = await createTestUser(transaction, config, "registrar", `draft.registrar.${suffix}`, password);
       const studentUser = await createTestUser(transaction, config, "student", `draft.student.${suffix}`, password);
       const term = await createAcademicTerm(transaction, `draft-${suffix}`);
-      const { program, student } = await createStudentProfile(transaction, studentUser.id, `draft-${suffix}`);
+      const { program, student, profileSubject, profileSubject2 } = await createStudentProfile(transaction, studentUser.id, `draft-${suffix}`);
       const applicationNumber = `APP-DRAFT-${suffix}`;
       const admissionApplication = await transaction.admissionApplication.create({
         data: {

@@ -833,7 +833,7 @@ export class RegistrarStore {
       const enrollmentApplication = current.convertedStudentId ? await transaction.enrollmentApplication.findUnique({
         where: { studentId_academicTermId: { studentId: current.convertedStudentId, academicTermId: current.academicTermId } }
       }) : null;
-      if (enrollmentApplication && enrollmentApplication.status !== "UNDER_REVIEW") throw new Error("PROGRAM_HEAD_APPROVAL_REQUIRED");
+      if (status === "APPROVED" && enrollmentApplication && enrollmentApplication.status !== "UNDER_REVIEW") throw new Error("PROGRAM_HEAD_APPROVAL_REQUIRED");
 
       if (status === "APPROVED" && current.convertedStudentId) {
         const entranceFee = await transaction.paymentType.findFirst({

@@ -904,6 +904,21 @@ export async function createApp(options = {}) {
     sendJson(response, 200, { data: { user: publicUser(updatedUser) } });
   }
 
+    async function deleteUser(request, response, context, userId) {
+      const adminSession = await requireStatePermission(request, context, "users.manage");
+      if (adminSession.user.id === userId) {
+        error(409, "SELF_DELETION_FORBIDDEN", "Administrators cannot delete their own account.");
+      }
+      const success = await store.deleteUser(userId);
+      if (!success) error(404, "ACCOUNT_NOT_FOUND", "Account not found.");
+      
+      await audit(context, request, "account.deleted", "success", {
+        actorUserId: adminSession.user.id,
+        targetUserId: userId
+      });
+      sendJson(response, 200, { data: { success: true } });
+    }
+
   async function listAudit(request, response, context, url) {
     await requirePermission(request, context, "audit.read");
     const requestedLimit = Number(url.searchParams.get("limit") ?? 50);
@@ -2296,6 +2311,8 @@ export async function createApp(options = {}) {
       if (method === "PATCH" && statusMatch) return await updateStatus(request, response, context, statusMatch[1]);
       const rolesMatch = pathname.match(/^\/api\/v1\/admin\/users\/([0-9a-f-]{36})\/roles$/i);
       if (method === "PUT" && rolesMatch) return await updateRoles(request, response, context, rolesMatch[1]);
+      const deleteUserMatch = pathname.match(/^\/api\/v1\/admin\/users\/([0-9a-f-]{36})$/i);
+      if (method === "DELETE" && deleteUserMatch) return await deleteUser(request, response, context, deleteUserMatch[1]);
 
       const portalRole = ROLE_BY_PORTAL_PATH.get(pathname);
       if (method === "GET" && portalRole) return await portalHtml(request, response, context, portalRole);
