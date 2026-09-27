@@ -2077,145 +2077,6 @@
         if (event.target === registrarApplicationsDialog) closeRegistrarDialog(registrarApplicationsDialog);
     });
 
-    // --- Program & Curriculum Override ---
-    const programOverrideDialog = select("[data-program-override-dialog]");
-    const programOverrideForm = select("[data-program-override-form]");
-    const programOverrideSelect = select("#override-program-select");
-    const curriculumOverrideSelect = select("#override-curriculum-select");
-    const programOverrideReason = select("#override-reason");
-    const programOverrideError = select("[data-program-override-error]");
-    const programOverrideStatus = select("[data-program-override-status]");
-    let overrideProgramsList = [];
-
-    const loadProgramsForOverride = async () => {
-        if (overrideProgramsList.length) return overrideProgramsList;
-        try {
-            const res = await auth.getRegistrarProgramsWithCurricula();
-            overrideProgramsList = res.programs || [];
-            return overrideProgramsList;
-        } catch (e) {
-            return [];
-        }
-    };
-
-    const updateCurriculumOverrideSelect = () => {
-        if (!curriculumOverrideSelect || !programOverrideSelect) return;
-        const selectedProgId = programOverrideSelect.value;
-        curriculumOverrideSelect.replaceChildren();
-        if (!selectedProgId) {
-            curriculumOverrideSelect.append(new Option("Select a program first", ""));
-            curriculumOverrideSelect.disabled = true;
-            return;
-        }
-        const prog = overrideProgramsList.find((p) => p.id === selectedProgId);
-        const curricula = prog?.curricula || [];
-        if (!curricula.length) {
-            curriculumOverrideSelect.append(new Option("No active curricula found for this program", ""));
-            curriculumOverrideSelect.disabled = true;
-            return;
-        }
-        curriculumOverrideSelect.disabled = false;
-        curriculumOverrideSelect.append(new Option("Choose a curriculum", ""));
-        curricula.forEach((cur) => {
-            curriculumOverrideSelect.append(new Option(`${cur.code} (${cur.name})`, cur.id));
-        });
-    };
-
-    const populateProgramOverrideSelects = async () => {
-        const programs = await loadProgramsForOverride();
-        if (!programOverrideSelect) return;
-        programOverrideSelect.replaceChildren(new Option("Choose a program", ""));
-        programs.forEach((prog) => {
-            programOverrideSelect.append(new Option(`${prog.code} — ${prog.name}`, prog.id));
-        });
-        updateCurriculumOverrideSelect();
-    };
-
-    const openProgramOverride = async () => {
-        if (!programOverrideDialog || !state.currentReview) return;
-        const app = state.currentReview.application;
-        if (!app.studentId) {
-            alert("This application is not associated with an existing student record yet.");
-            return;
-        }
-        clearMessage(programOverrideError);
-        if (programOverrideStatus) programOverrideStatus.textContent = "";
-        setText("[data-override-student-name]", app.applicantName);
-        setText("[data-override-student-number]", app.studentNumber || app.applicationNumber);
-        setText("[data-override-current-program]", app.currentProgram ? `${app.currentProgram.code} — ${app.currentProgram.name}` : (app.intendedProgram ? `${app.intendedProgram.code} — ${app.intendedProgram.name} (Intended)` : "Not assigned"));
-        setText("[data-override-current-curriculum]", app.currentCurriculum ? `${app.currentCurriculum.code} (${app.currentCurriculum.name})` : "Not assigned");
-
-        if (programOverrideReason) programOverrideReason.value = "";
-
-        await populateProgramOverrideSelects();
-        if (typeof programOverrideDialog.showModal === "function") {
-            programOverrideDialog.showModal();
-        } else {
-            programOverrideDialog.setAttribute("open", "");
-        }
-    };
-
-    const closeProgramOverride = () => {
-        if (!programOverrideDialog) return;
-        if (typeof programOverrideDialog.close === "function" && programOverrideDialog.open) {
-            programOverrideDialog.close();
-        } else {
-            programOverrideDialog.removeAttribute("open");
-        }
-        clearMessage(programOverrideError);
-        if (programOverrideStatus) programOverrideStatus.textContent = "";
-    };
-
-    const submitProgramOverride = async (event) => {
-        event.preventDefault();
-        clearMessage(programOverrideError);
-        const app = state.currentReview?.application;
-        if (!app?.studentId) {
-            showError(programOverrideError, "Missing student record identifier.");
-            return;
-        }
-        const programId = programOverrideSelect?.value;
-        const curriculumId = curriculumOverrideSelect?.value;
-        const reason = programOverrideReason?.value.trim();
-        if (!programId || !curriculumId) {
-            showError(programOverrideError, "Please select both a Program and a Curriculum.");
-            return;
-        }
-        if (!reason) {
-            showError(programOverrideError, "Reason for override is required.");
-            programOverrideReason?.focus();
-            return;
-        }
-        if (!window.confirm("Are you sure you want to override this student's program and curriculum? This will update their official academic records and create an audit log entry.")) {
-            return;
-        }
-        setBusy(programOverrideForm, true);
-        if (programOverrideStatus) programOverrideStatus.textContent = "Applying override...";
-        try {
-            await auth.overrideStudentProgram(app.studentId, { programId, curriculumId, reason });
-            if (programOverrideStatus) programOverrideStatus.textContent = "Override applied successfully!";
-            const updatedReview = await auth.getRegistrarApplicationReview(app.id);
-            renderApplicationReview(updatedReview);
-            window.setTimeout(() => {
-                closeProgramOverride();
-            }, 1200);
-        } catch (err) {
-            if (handleExpiredSession(err)) return;
-            showError(programOverrideError, err.message || "Failed to override program.");
-            if (programOverrideStatus) programOverrideStatus.textContent = "";
-        } finally {
-            setBusy(programOverrideForm, false);
-        }
-    };
-
-    select("[data-open-program-override]")?.addEventListener("click", openProgramOverride);
-    selectAll("[data-close-program-override]").forEach((btn) => btn.addEventListener("click", closeProgramOverride));
-    programOverrideDialog?.addEventListener("click", (event) => {
-        if (event.target === programOverrideDialog) closeProgramOverride();
-    });
-    programOverrideSelect?.addEventListener("change", updateCurriculumOverrideSelect);
-    programOverrideForm?.addEventListener("submit", submitProgramOverride);
-
 
     const updateRegistrarPeriod = async (action) => {
         clearMessage(registrarError);
@@ -2963,6 +2824,7 @@ const fillEnrollmentForm = (application, profile) => {
     enrollmentInput("contact.mobileNumber").value ||= profile?.mobileNumber || "";
     if (application) {
         enrollmentInput("programId").value = application.programId || "";
+        if (application.programId) updateYearLevelOptionsForProgram(application.programId);
         enrollmentInput("academicTermId").value = application.academicTermId || "";
         enrollmentInput("yearLevel").value = application.yearLevel || profile?.currentYearLevel || "";
         selectedSubjectState.items = (application.formData?.selection?.subjectIds || [])
@@ -2973,20 +2835,18 @@ const fillEnrollmentForm = (application, profile) => {
     }
     setSubjectSelectionState();
 };
-const updateEnrollmentYearLevels = (progId) => {
+const updateYearLevelOptionsForProgram = (programId) => {
     const yearSelect = enrollmentInput("yearLevel");
     if (!yearSelect) return;
-    const prog = (enrollmentOptions?.programs || []).find((item) => item.id === progId);
-    const duration = Number(prog?.durationYears || 4);
-    const prev = yearSelect.value;
-    yearSelect.replaceChildren(new Option("Select Year Level", ""));
-    for (let year = 1; year <= duration; year += 1) {
+    const prog = (enrollmentOptions?.programs || []).find((p) => p.id === programId);
+    const maxYears = Number(prog?.durationYears || 4);
+    const currentVal = yearSelect.value;
+    yearSelect.replaceChildren(new Option("Select", ""));
+    for (let year = 1; year <= maxYears; year += 1) {
         yearSelect.append(new Option(`Year ${year}`, String(year)));
     }
-    if (enrollmentOptions?.studentContext?.currentYearLevel) {
-        yearSelect.value = String(enrollmentOptions.studentContext.currentYearLevel);
-    } else if (prev && Number(prev) <= duration) {
-        yearSelect.value = prev;
+    if (currentVal && Number(currentVal) <= maxYears) {
+        yearSelect.value = currentVal;
     } else {
         yearSelect.value = "1";
     }
@@ -3003,32 +2863,27 @@ const populateEnrollmentOptions = (options) => {
             : item.periodStatus === "CLOSED" ? `${item.name} (enrollment closed)` : item.name;
         termSelect.append(new Option(label, item.id));
     });
-    const hasAssignedProgram = Boolean(options?.studentContext?.programId);
     const assignedProgram = (options?.programs || []).find((item) => item.id === options?.studentContext?.programId);
     if (assignedProgram) {
         programSelect.value = assignedProgram.id;
-        programSelect.dataset.enrollmentLocked = "true";
-        programSelect.disabled = true;
+        if (yearSelect) {
+            yearSelect.replaceChildren(new Option("Select", ""));
+            for (let year = 1; year <= Number(assignedProgram.durationYears || 0); year += 1) {
+                yearSelect.append(new Option(`Year ${year}`, String(year)));
+            }
+            yearSelect.value = String(options?.studentContext?.currentYearLevel || "");
+        }
     } else {
-        programSelect.dataset.enrollmentLocked = "false";
-        programSelect.disabled = false;
+        if (yearSelect && !yearSelect.value) {
+            yearSelect.replaceChildren(new Option("Select", ""));
+            for (let year = 1; year <= 4; year += 1) {
+                yearSelect.append(new Option(`Year ${year}`, String(year)));
+            }
+            yearSelect.value = "1";
+        }
     }
-
-    if (assignedProgram) {
-        updateEnrollmentYearLevels(assignedProgram.id);
-        yearSelect.dataset.enrollmentLocked = "true";
-        yearSelect.disabled = true;
-    } else if (programSelect.value) {
-        updateEnrollmentYearLevels(programSelect.value);
-        yearSelect.dataset.enrollmentLocked = "false";
-        yearSelect.disabled = false;
-    } else {
-        yearSelect.replaceChildren(new Option("Select Year Level", ""));
-        yearSelect.append(new Option("Year 1", "1"));
-        yearSelect.value = "1";
-        yearSelect.dataset.enrollmentLocked = "false";
-        yearSelect.disabled = false;
-    }
+    programSelect.dataset.enrollmentLocked = assignedProgram ? "true" : "false";
+    yearSelect.dataset.enrollmentLocked = assignedProgram ? "true" : "false";
     setSubjectSelectionState();
 };
 const selectedEnrollmentTerm = () => (enrollmentOptions?.terms || []).find(
@@ -3363,10 +3218,9 @@ select("[data-open-enrollment-application]")?.addEventListener("click", openEnro
 select("[data-close-enrollment]")?.addEventListener("click", closeEnrollmentDialog);
 enrollmentDialog?.addEventListener("click", (event) => { if (event.target === enrollmentDialog) closeEnrollmentDialog(); });
 enrollmentInput("academicTermId")?.addEventListener("change", updateEnrollmentWindow);
-enrollmentInput("programId")?.addEventListener("change", () => {
-    const progId = enrollmentInput("programId")?.value;
-    if (progId) {
-        updateEnrollmentYearLevels(progId);
+enrollmentInput("programId")?.addEventListener("change", (event) => {
+    if (event.target.value) {
+        updateYearLevelOptionsForProgram(event.target.value);
     }
     setSubjectSelectionState();
     updateEnrollmentWindow();

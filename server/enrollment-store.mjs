@@ -22,24 +22,14 @@ function assignmentApplies(assignment, term) {
   return startsOn <= termStartsOn && (!endsOn || endsOn >= termStartsOn);
 }
 
-function curriculumForProgramAndTerm(student, curricula, programId, term) {
-  const isAssigned = student?.programId === programId;
-  const assignedId = isAssigned
-    ? (student.curriculumAssignments?.find((assignment) => assignmentApplies(assignment, term))?.curriculumId ?? student.curriculumId)
-    : null;
+function curriculumForTerm(student, curricula, term) {
+  const assignedId = student.curriculumAssignments?.find((assignment) => assignmentApplies(assignment, term))?.curriculumId
+    ?? student.curriculumId;
   if (assignedId) return curricula.find((curriculum) => curriculum.id === assignedId) ?? null;
   const year = academicYearNumber(term);
-  const programCurricula = curricula.filter((c) => c.programId === programId);
-  return programCurricula.find((curriculum) => year != null
+  return curricula.find((curriculum) => year != null
     && curriculum.effectiveFromYear <= year
-    && (curriculum.effectiveToYear == null || curriculum.effectiveToYear >= year)
-    && curriculum.status === "ACTIVE")
-    ?? programCurricula.find((c) => c.status === "ACTIVE")
-    ?? programCurricula.find((curriculum) => year != null
-      && curriculum.effectiveFromYear <= year
-      && (curriculum.effectiveToYear == null || curriculum.effectiveToYear >= year))
-    ?? programCurricula[0]
-    ?? null;
+    && (curriculum.effectiveToYear == null || curriculum.effectiveToYear >= year)) ?? null;
 }
 
 const formFields = {
@@ -106,26 +96,24 @@ export class EnrollmentApplicationStore {
         }
       }
     }) : null;
-
-    const hasAssignedProgram = Boolean(student?.programId && student?.program?.isActive && student.program.department?.isActive && student.program.department?.college?.isActive);
-
     let programs = [];
-
-    if (hasAssignedProgram) {
-      programs = [{
+    if (student?.programId) {
+      const programAvailable = Boolean(student.program?.isActive && student.program.department?.isActive && student.program.department?.college?.isActive);
+      programs = programAvailable ? [{
         id: student.program.id,
         code: student.program.code,
         name: student.program.name,
         credential: student.program.credential,
         durationYears: student.program.durationYears,
         termsPerYear: student.program.termsPerYear
-      }];
+      }] : [];
     } else {
-      const activePrograms = await this.prisma.program.findMany({
+      const allActivePrograms = await this.prisma.program.findMany({
         where: {
           isActive: true,
           department: { is: { isActive: true, college: { is: { isActive: true } } } }
         },
+        orderBy: [{ code: "asc" }, { name: "asc" }],
         select: {
           id: true,
           code: true,
@@ -133,13 +121,11 @@ export class EnrollmentApplicationStore {
           credential: true,
           durationYears: true,
           termsPerYear: true
-        },
-        orderBy: { code: "asc" }
+        }
       });
-      programs = activePrograms;
+      programs = allActivePrograms;
     }
-
-    const [terms, fetchedCurricula, history] = await Promise.all([
+    const [terms, curricula, history] = await Promise.all([
       this.prisma.academicTerm.findMany({
         where: {
           status: { not: "ARCHIVED" },
@@ -155,9 +141,9 @@ export class EnrollmentApplicationStore {
       this.prisma.curriculum.findMany({
         where: {
           status: { in: ["ACTIVE", "DRAFT"] },
-          ...(hasAssignedProgram
-            ? { programId: student.programId }
-            : { programId: { in: programs.map((p) => p.id) } })
+          ...(student?.programId ? { programId: student.programId } : {
+            program: { is: { isActive: true, department: { is: { isActive: true, college: { is: { isActive: true } } } } } }
+          })
         },
         orderBy: [{ effectiveFromYear: "desc" }, { version: "desc" }, { createdAt: "desc" }],
         select: {
@@ -217,37 +203,63 @@ export class EnrollmentApplicationStore {
       }) : Promise.resolve(null)
     ]);
 
-    const curricula = fetchedCurricula;
     const academicRecords = buildAcademicRecordIndex((history?.enrollments || []).flatMap((enrollment) => enrollment.items));
 
     const curriculumSubjects = terms.flatMap((term) => {
-      return programs.flatMap((prog) => {
-        const curriculum = curriculumForProgramAndTerm(student ?? {}, curricula, prog.id, term);
+      if (student?.programId) {
+        const curriculum = curriculumForTerm(student ?? {}, curricula, term);
         if (!curriculum) return [];
         return curriculum.subjects.map((item) => ({
-          id: item.id,
-          academicTermId: term.id,
-          curriculumId: curriculum.id,
-          programId: curriculum.programId,
-          curriculumCode: curriculum.code,
-          curriculumName: curriculum.name,
-          yearLevel: item.yearLevel,
-          termNumber: item.termNumber,
-          subjectId: item.subjectId,
-          subjectCode: item.subject.code,
-          subjectTitle: item.subject.title,
-          subjectDescription: item.subject.description,
-          creditUnits: Number(item.creditUnits),
-          lectureHours: Number(item.lectureHours),
-          laboratoryHours: Number(item.laboratoryHours),
-          type: item.type,
-          isRequired: item.isRequired,
-          sortOrder: item.sortOrder,
-          requirements: requirementEligibility(item.subject.requirements, academicRecords),
-          prerequisites: requirementEligibility(item.subject.requirements, academicRecords).filter((requirement) => requirement.type === "PREREQUISITE")
-        }));
-      });
+      id: item.id,
+      academicTermId: term.id,
+      curriculumId: curriculum.id,
+      programId: curriculum.programId,
+      curriculumCode: curriculum.code,
+      curriculumName: curriculum.name,
+      yearLevel: item.yearLevel,
+      termNumber: item.termNumber,
+      subjectId: item.subjectId,
+      subjectCode: item.subject.code,
+      subjectTitle: item.subject.title,
+      subjectDescription: item.subject.description,
+      creditUnits: Number(item.creditUnits),
+      lectureHours: Number(item.lectureHours),
+      laboratoryHours: Number(item.laboratoryHours),
+      type: item.type,
+      isRequired: item.isRequired,
+      sortOrder: item.sortOrder,
+      requirements: requirementEligibility(item.subject.requirements, academicRecords),
+      prerequisites: requirementEligibility(item.subject.requirements, academicRecords).filter((requirement) => requirement.type === "PREREQUISITE")
+      }));
+    }
+    return programs.flatMap((prog) => {
+      const progCurricula = curricula.filter((c) => c.programId === prog.id);
+      const curriculum = curriculumForTerm({ programId: prog.id }, progCurricula, term);
+      if (!curriculum) return [];
+      return curriculum.subjects.map((item) => ({
+        id: item.id,
+        academicTermId: term.id,
+        curriculumId: curriculum.id,
+        programId: curriculum.programId,
+        curriculumCode: curriculum.code,
+        curriculumName: curriculum.name,
+        yearLevel: item.yearLevel,
+        termNumber: item.termNumber,
+        subjectId: item.subjectId,
+        subjectCode: item.subject.code,
+        subjectTitle: item.subject.title,
+        subjectDescription: item.subject.description,
+        creditUnits: Number(item.creditUnits),
+        lectureHours: Number(item.lectureHours),
+        laboratoryHours: Number(item.laboratoryHours),
+        type: item.type,
+        isRequired: item.isRequired,
+        sortOrder: item.sortOrder,
+        requirements: requirementEligibility(item.subject.requirements, academicRecords),
+        prerequisites: requirementEligibility(item.subject.requirements, academicRecords).filter((requirement) => requirement.type === "PREREQUISITE")
+      }));
     });
+  });
 
     return {
       programs,
@@ -263,16 +275,6 @@ export class EnrollmentApplicationStore {
         endsOn: dateOnly(term.endsOn),
         periodStatus: term.enrollmentPeriods[0]?.status ?? null,
         enrollmentOpen: term.enrollmentPeriods[0]?.status === "OPEN"
-      })),
-      curricula: curricula.map((c) => ({
-        id: c.id,
-        programId: c.programId,
-        code: c.code,
-        name: c.name,
-        version: c.version,
-        status: c.status,
-        effectiveFromYear: c.effectiveFromYear,
-        effectiveToYear: c.effectiveToYear
       })),
       curriculumSubjects
     };
@@ -351,7 +353,7 @@ export class EnrollmentApplicationStore {
         isActive: true,
         department: { is: { isActive: true, college: { is: { isActive: true } } } }
       },
-      select: { id: true }
+      select: { id: true, durationYears: true }
     });
     const term = await this.prisma.academicTerm.findFirst({
       where: { id: input.academicTermId, status: { not: "ARCHIVED" } },
@@ -371,7 +373,7 @@ export class EnrollmentApplicationStore {
     if (existing && !allowedStatuses.has(existing.status)) throw new Error("APPLICATION_LOCKED");
     if (submit && term.enrollmentPeriods[0]?.status !== "OPEN") throw new Error("ENROLLMENT_CLOSED");
     const yearLevel = Number(input.yearLevel);
-    if (!Number.isInteger(yearLevel) || yearLevel < 1 || yearLevel > 8) throw new Error("YEAR_LEVEL_INVALID");
+    if (!Number.isInteger(yearLevel) || yearLevel < 1 || yearLevel > (program.durationYears || 8)) throw new Error("YEAR_LEVEL_INVALID");
     if (student.programId && yearLevel !== student.currentYearLevel) throw new Error("STUDENT_YEAR_LEVEL_MISMATCH");
     const selectedSubjectIds = [...new Set(Array.isArray(input.selectedSubjectIds) ? input.selectedSubjectIds.filter((id) => typeof id === "string" && id.trim()).map((id) => id.trim()) : [])];
     const formData = copyFormData(input.formData, selectedSubjectIds);
