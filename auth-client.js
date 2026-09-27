@@ -214,6 +214,7 @@
                 roles,
                 primaryRole,
             }, options),
+        deleteUser: (userId, options = {}) => mutate(`/admin/users/${encodeURIComponent(userId)}`, "DELETE", {}, options),
         getDocumentTypes: (options = {}) => request("/student/documents/types", options),
         getStudentDocuments: (options = {}) => request("/student/documents", options),
         uploadStudentDocument: (documentTypeId, applicationId, file, options = {}) => {
@@ -234,6 +235,7 @@
             return request(`/admin/system-logs?${query.toString()}`, options);
         },
         updateSystemLogStatus: (id, status, options = {}) => mutate(`/admin/system-logs/${encodeURIComponent(id)}/status`, "PATCH", { status }, options),
+        getMonitoringHealth: (options = {}) => request("/admin/monitoring/health", options),
 
         safeLandingPath,
         clearCsrf: () => {

@@ -41,6 +41,7 @@ function mapUser(user) {
     authorization_version: user.authorizationVersion,
     password_changed_at: asMillis(user.passwordChangedAt),
     last_login_at: asMillis(user.lastLoginAt),
+    deleted_at: asMillis(user.deletedAt),
     created_at: asMillis(user.createdAt),
     updated_at: asMillis(user.updatedAt),
     assigned_program: user.programAssignments?.[0]?.program ?? null,
@@ -65,14 +66,15 @@ function mapSession(session) {
 }
 
 export class AuthenticationStore {
-  constructor(prisma) {
+  constructor(prisma, config = {}) {
     this.prisma = prisma;
+    this.config = { now: () => Date.now(), ...config };
   }
 
   async transaction(operation) {
     if (typeof this.prisma.$transaction !== "function") return operation(this);
     return this.prisma.$transaction(
-      (transaction) => operation(new AuthenticationStore(transaction)),
+      (transaction) => operation(new AuthenticationStore(transaction, this.config)),
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
     );
   }
@@ -80,14 +82,14 @@ export class AuthenticationStore {
   async userByIdentifier(identifier) {
     return mapUser(
       await this.prisma.user.findFirst({
-        where: { OR: [{ usernameNormalized: identifier }, { emailNormalized: identifier }] },
+        where: { deletedAt: null, OR: [{ usernameNormalized: identifier }, { emailNormalized: identifier }] },
         include: userInclude
       })
     );
   }
 
   async userById(id) {
-    return mapUser(await this.prisma.user.findUnique({ where: { id }, include: userInclude }));
+    return mapUser(await this.prisma.user.findFirst({ where: { id, deletedAt: null }, include: userInclude }));
   }
 
   rolesForUser(user) {
@@ -298,7 +300,7 @@ export class AuthenticationStore {
   }
 
   async listUsers() {
-    return (await this.prisma.user.findMany({ include: userInclude, orderBy: [{ createdAt: "desc" }, { username: "asc" }] })).map(mapUser);
+    return (await this.prisma.user.findMany({ where: { deletedAt: null }, include: userInclude, orderBy: [{ createdAt: "desc" }, { username: "asc" }] })).map(mapUser);
   }
 
   async listRoles() {
@@ -306,7 +308,7 @@ export class AuthenticationStore {
   }
 
   async updateStatus(userId, status, now) {
-    const result = await this.prisma.user.updateMany({ where: { id: userId }, data: { status: status.toUpperCase(), authorizationVersion: { increment: 1 }, updatedAt: asDate(now) } });
+    const result = await this.prisma.user.updateMany({ where: { id: userId, deletedAt: null }, data: { status: status.toUpperCase(), authorizationVersion: { increment: 1 }, updatedAt: asDate(now) } });
     if (result.count !== 1) return null;
     await this.revokeUserSessions(userId, now);
     return this.userById(userId);
@@ -348,8 +350,25 @@ export class AuthenticationStore {
     return this.transaction(async (store) => {
       const user = await store.userById(userId);
       if (!user) return false;
-      await store.revokeUserSessions(userId, store.config.now());
-      await store.prisma.user.delete({ where: { id: userId } });
+      const now = store.config.now();
+      const tombstone = `deleted-${userId.replace(/-/g, "")}`.slice(0, 64);
+      await store.revokeUserSessions(userId, now);
+      await store.prisma.user.update({
+        where: { id: userId },
+        data: {
+          username: tombstone,
+          usernameNormalized: tombstone,
+          displayName: "Deleted account",
+          email: null,
+          emailNormalized: null,
+          status: "DISABLED",
+          mustChangePassword: true,
+          passwordHash: "deleted-account",
+          authorizationVersion: { increment: 1 },
+          deletedAt: asDate(now),
+          updatedAt: asDate(now)
+        }
+      });
       return true;
     });
   }

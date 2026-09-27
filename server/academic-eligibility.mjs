@@ -42,3 +42,15 @@ export function prerequisiteEligibility(requirements = [], academicRecords) {
       };
     });
 }
+
+export function requirementEligibility(requirements = [], academicRecords) {
+  return requirements.map((requirement) => {
+    const state = prerequisiteState(requirement.requiredSubject.id, academicRecords);
+    return {
+      type: requirement.type,
+      requiredSubject: requirement.requiredSubject,
+      state,
+      eligible: state === "PASSED"
+    };
+  });
+}

@@ -107,6 +107,11 @@ export function createConfig(overrides = {}) {
       250,
       "cleanupBatchSize"
     ),
+    slowRequestThresholdMs: integer(
+      overrides.slowRequestThresholdMs ?? process.env.CJC_SLOW_REQUEST_MS,
+      1_000,
+      "slowRequestThresholdMs"
+    ),
     revokedSessionRetentionMs: integer(
       overrides.revokedSessionRetentionMs ?? process.env.CJC_REVOKED_SESSION_RETENTION_MS,
       24 * 60 * 60 * 1000,

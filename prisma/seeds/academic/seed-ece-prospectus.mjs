@@ -79,7 +79,7 @@ export async function seedEceProspectus(database, source) {
       data: {
         id: newId(), programId: inspected.program.id, code: source.curriculum.code,
         name: source.curriculum.name, version: source.curriculum.version,
-        effectiveFromYear: source.curriculum.effectiveFromYear, status: "DRAFT"
+        effectiveFromYear: source.curriculum.effectiveFromYear, effectiveToYear: source.curriculum.effectiveToYear ?? null, status: "DRAFT"
       }
     });
     if (curriculum.status !== "DRAFT") throw new Error("The target curriculum is published and cannot receive imported subjects.");

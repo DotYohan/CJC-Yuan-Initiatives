@@ -95,6 +95,7 @@
         registrarApplications: [],
         currentReview: null,
         selectedDocumentId: null,
+        monitoringHealth: null,
     };
     let mandatoryPrompted = false;
     let roleDialogReturnFocus = null;
@@ -1067,6 +1068,14 @@
                 if (!state.roleCatalog.length) editRoles.title = "Roles are still loading";
                 editRoles.addEventListener("click", () => openRoleDialog(user, editRoles));
                 actions.append(editRoles);
+
+                const deleteButton = document.createElement("button");
+                deleteButton.type = "button";
+                deleteButton.className = "button button--quiet status-control account-delete-control";
+                deleteButton.textContent = "Delete";
+                deleteButton.setAttribute("aria-label", `Delete ${displayName(user)}`);
+                deleteButton.addEventListener("click", () => deleteUser(user, deleteButton));
+                actions.append(deleteButton);
             }
             appendCell(row, "Actions", actions);
             usersBody?.append(row);
@@ -2621,6 +2630,8 @@ const availableSubjectsForSelection = () => {
     const term = selectedAcademicTerm();
     if (!programId || yearLevel == null || !term) return [];
     return (enrollmentOptions?.curriculumSubjects || []).filter((item) => (
+        item.academicTermId === term.id
+        &&
         item.programId === programId
         && Number(item.yearLevel) === yearLevel
         && Number(item.termNumber) === Number(term.termNumber)
@@ -2668,7 +2679,9 @@ const renderSubjectSelection = () => {
     catalog.forEach((item) => {
         const card = document.createElement("article");
         const selected = selectedIds.has(item.id || item.subjectId);
-        const blockedPrerequisites = (item.prerequisites || []).filter((requirement) => !requirement.eligible);
+        const requirements = item.requirements || item.prerequisites || [];
+        const blockedPrerequisites = requirements.filter((requirement) => requirement.type !== "COREQUISITE" && !requirement.eligible);
+        const pendingCorequisites = requirements.filter((requirement) => requirement.type === "COREQUISITE" && !requirement.eligible);
         card.className = `subject-card${selected ? " is-selected" : ""}`;
         const meta = document.createElement("div");
         meta.className = "subject-card__meta";
@@ -2678,6 +2691,12 @@ const renderSubjectSelection = () => {
             prerequisiteMessage.textContent = blockedPrerequisites.map((requirement) => `${requirement.requiredSubject.code}: ${humanize(requirement.state)}`).join(" · ");
             prerequisiteMessage.className = "subject-card__warning";
             meta.append(prerequisiteMessage);
+        }
+        if (pendingCorequisites.length) {
+            const corequisiteMessage = document.createElement("small");
+            corequisiteMessage.textContent = pendingCorequisites.map((requirement) => `Corequisite: ${requirement.requiredSubject.code}`).join(" · ");
+            corequisiteMessage.className = "subject-card__warning";
+            meta.append(corequisiteMessage);
         }
         const details = document.createElement("div");
         details.className = "subject-card__details";
@@ -2808,7 +2827,7 @@ const fillEnrollmentForm = (application, profile) => {
         enrollmentInput("academicTermId").value = application.academicTermId || "";
         enrollmentInput("yearLevel").value = application.yearLevel || profile?.currentYearLevel || "";
         selectedSubjectState.items = (application.formData?.selection?.subjectIds || [])
-            .map((subjectId) => (enrollmentOptions?.curriculumSubjects || []).find((item) => item.subjectId === subjectId || item.id === subjectId))
+            .map((subjectId) => (enrollmentOptions?.curriculumSubjects || []).find((item) => item.academicTermId === application.academicTermId && (item.subjectId === subjectId || item.id === subjectId)))
             .filter(Boolean);
     } else if (profile?.currentYearLevel) {
         enrollmentInput("yearLevel").value = profile.currentYearLevel;
@@ -2818,6 +2837,7 @@ const fillEnrollmentForm = (application, profile) => {
 const populateEnrollmentOptions = (options) => {
     const programSelect = enrollmentInput("programId");
     const termSelect = enrollmentInput("academicTermId");
+    const yearSelect = enrollmentInput("yearLevel");
     programSelect.replaceChildren(new Option("Choose a program", ""));
     termSelect.replaceChildren(new Option("Choose an academic term", ""));
     (options?.programs || []).forEach((item) => programSelect.append(new Option(`${item.code} — ${item.name}`, item.id)));
@@ -2826,6 +2846,17 @@ const populateEnrollmentOptions = (options) => {
             : item.periodStatus === "CLOSED" ? `${item.name} (enrollment closed)` : item.name;
         termSelect.append(new Option(label, item.id));
     });
+    const assignedProgram = (options?.programs || []).find((item) => item.id === options?.studentContext?.programId);
+    if (assignedProgram) programSelect.value = assignedProgram.id;
+    if (yearSelect && assignedProgram) {
+        yearSelect.replaceChildren(new Option("Select", ""));
+        for (let year = 1; year <= Number(assignedProgram.durationYears || 0); year += 1) {
+            yearSelect.append(new Option(`Year ${year}`, String(year)));
+        }
+        yearSelect.value = String(options?.studentContext?.currentYearLevel || "");
+    }
+    programSelect.dataset.enrollmentLocked = assignedProgram ? "true" : "false";
+    yearSelect.dataset.enrollmentLocked = assignedProgram ? "true" : "false";
     setSubjectSelectionState();
 };
 const selectedEnrollmentTerm = () => (enrollmentOptions?.terms || []).find(
@@ -2844,7 +2875,7 @@ const updateEnrollmentWindow = () => {
 const setEnrollmentLocked = (locked) => {
     selectedSubjectState.locked = locked;
     selectAll("input, select, textarea", enrollmentForm).forEach((input) => {
-        input.disabled = locked || input.readOnly;
+        input.disabled = locked || input.readOnly || input.dataset.enrollmentLocked === "true";
     });
     enrollmentSave.disabled = locked;
     enrollmentSubmit.disabled = locked;
@@ -3180,6 +3211,67 @@ const systemLogsBody = select("[data-system-logs-body]");
 const systemLogsStatus = select("[data-system-logs-status]");
 const logSeverityFilter = select("[data-log-filter]");
 const refreshLogsBtn = select("[data-refresh-system-logs]");
+const monitoringHealthStatus = select("[data-monitoring-health-status]");
+
+const renderMonitoringHealth = (health) => {
+    state.monitoringHealth = health;
+    const performance = health?.performance || {};
+    const incidents = health?.incidents || {};
+    setText("[data-monitoring-database]", health?.database?.status === "available" ? "Available" : "Unavailable");
+    setText("[data-monitoring-database-latency]", health?.database?.latencyMs == null ? "Latency unavailable" : `${health.database.latencyMs} ms latency`);
+    setText("[data-monitoring-requests]", String(performance.requestsTotal || 0));
+    setText("[data-monitoring-average]", `${performance.averageDurationMs || 0} ms average`);
+    setText("[data-monitoring-errors]", String(performance.serverErrorsTotal || 0));
+    setText("[data-monitoring-slow]", `${performance.slowRequestsTotal || 0} slow requests`);
+    setText("[data-monitoring-incidents]", String(incidents.openHighPriority ?? 0));
+    setText("[data-monitoring-critical]", `${incidents.criticalLast24Hours ?? 0} critical in 24 hours`);
+    if (monitoringHealthStatus) {
+        monitoringHealthStatus.textContent = health?.status === "healthy" ? "Healthy" : "Degraded";
+        monitoringHealthStatus.className = `status-pill ${health?.status === "healthy" ? "status-pill--info" : "status-pill--critical"}`;
+    }
+    setText("[data-monitoring-health-updated]", health?.checkedAt ? `Last checked ${new Date(health.checkedAt).toLocaleString()}` : "");
+};
+
+const deleteUser = async (user, button) => {
+    if (!isAdministrator() || needsPasswordChange()) return;
+    const name = displayName(user);
+    if (!window.confirm(`Delete ${name}'s account? This permanently removes sign-in access and anonymizes the account while retaining required audit references. Disable it instead if you need to keep the account identifiable.`)) return;
+
+    button.disabled = true;
+    button.setAttribute("aria-busy", "true");
+    const priorLabel = button.textContent;
+    button.textContent = "Deleting…";
+    if (usersStatus) usersStatus.textContent = "Deleting account…";
+    try {
+        await auth.deleteUser(user.id);
+        state.users = state.users.filter((candidate) => String(candidate.id) !== String(user.id));
+        renderUsers();
+        if (usersStatus) usersStatus.textContent = `${name}'s account was deleted.`;
+    } catch (error) {
+        if (handleExpiredSession(error)) return;
+        button.disabled = false;
+        button.setAttribute("aria-busy", "false");
+        button.textContent = priorLabel;
+        if (usersStatus) {
+            usersStatus.textContent = error.code === "ACCOUNT_DELETE_BLOCKED"
+                ? "That account has protected records. Disable it instead of deleting it."
+                : error.message || "The account could not be deleted.";
+        }
+    }
+};
+
+const loadMonitoringHealth = async () => {
+    try {
+        renderMonitoringHealth(await auth.getMonitoringHealth());
+    } catch (error) {
+        if (handleExpiredSession(error)) return;
+        if (monitoringHealthStatus) {
+            monitoringHealthStatus.textContent = "Unavailable";
+            monitoringHealthStatus.className = "status-pill status-pill--critical";
+        }
+        setText("[data-monitoring-health-updated]", "Health data could not be loaded.");
+    }
+};
 
 const loadSystemLogs = async () => {
     if (!systemLogsTable) return;
@@ -3269,12 +3361,14 @@ systemLogsBody?.addEventListener("change", async (event) => {
 });
 
 logSeverityFilter?.addEventListener("change", loadSystemLogs);
-refreshLogsBtn?.addEventListener("click", loadSystemLogs);
+refreshLogsBtn?.addEventListener("click", () => {
+    void Promise.allSettled([loadSystemLogs(), loadMonitoringHealth()]);
+});
 
 // Hook into existing load routine
 const originalLoadUsers = loadUsers;
 loadUsers = async () => {
-    await Promise.allSettled([originalLoadUsers(), loadSystemLogs()]);
+    await Promise.allSettled([originalLoadUsers(), loadSystemLogs(), loadMonitoringHealth()]);
 };
 
 void bootstrap();

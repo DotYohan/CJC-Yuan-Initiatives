@@ -423,7 +423,7 @@
                     <div>
                         <p class="eyebrow">Administrator tools</p>
                         <h2 id="admin-title">Project account management</h2>
-                        <p>Create accounts and change active/disabled status. Authorization is enforced by the server.</p>
+                        <p>Create accounts, change active/disabled status, or delete accounts. Deleted accounts lose access and are retained only as anonymized audit references.</p>
                     </div>
                     <button class="button button--quiet" type="button" data-refresh-users>Refresh accounts</button>
                 </div>
@@ -496,7 +496,7 @@
                         <button class="button button--quiet" type="button" data-retry-users hidden>Try again</button>
                         <div class="accounts-scroll-box" data-users-table hidden>
                             <table>
-                                <caption class="visually-hidden">Project accounts with role and status controls</caption>
+                                <caption class="visually-hidden">Project accounts with role, status, and deletion controls</caption>
                                 <thead><tr><th scope="col">Account</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead>
                                 <tbody data-users-body></tbody>
                             </table>
@@ -514,6 +514,23 @@
                     </div>
                     <button class="button button--quiet" type="button" data-refresh-system-logs>Refresh logs</button>
                 </div>
+
+                <section class="monitoring-overview" aria-labelledby="monitoring-overview-title">
+                    <div class="system-logs-panel__header monitoring-overview__header">
+                        <div>
+                            <h3 id="monitoring-overview-title">Operational overview</h3>
+                            <p class="system-logs-panel__desc">Live process health and performance since the server started.</p>
+                        </div>
+                        <span class="status-pill" data-monitoring-health-status>Checking</span>
+                    </div>
+                    <div class="monitoring-metrics" aria-live="polite">
+                        <article class="metric-card"><span>Database</span><strong data-monitoring-database>Checking</strong><small data-monitoring-database-latency>—</small></article>
+                        <article class="metric-card"><span>Requests observed</span><strong data-monitoring-requests>0</strong><small data-monitoring-average>0 ms average</small></article>
+                        <article class="metric-card"><span>Server errors</span><strong data-monitoring-errors>0</strong><small data-monitoring-slow>0 slow requests</small></article>
+                        <article class="metric-card"><span>Open incidents</span><strong data-monitoring-incidents>0</strong><small data-monitoring-critical>0 critical in 24 hours</small></article>
+                    </div>
+                    <p class="form-status" role="status" aria-live="polite" data-monitoring-health-updated></p>
+                </section>
 
                 <section class="panel system-logs-panel" aria-labelledby="system-logs-title">
                     <div class="system-logs-panel__header">

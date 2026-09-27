@@ -13,6 +13,7 @@
     "seed:demo": "node --env-file-if-exists=.env server/seed.mjs",
     "seed:term": "node --env-file-if-exists=.env prisma/seeds/scripts/seed-demo-term.mjs",
     "seed:registrar": "node --env-file-if-exists=.env prisma/seeds/scripts/create-registrar-demo.mjs",
+    "restore:programs": "node --env-file-if-exists=.env prisma/seeds/scripts/restore-canonical-programs.mjs",
     "seed:security": "node --env-file-if-exists=.env prisma/seeds/scripts/seed-security-catalog.mjs",
     "seed:ece:dry": "node --env-file-if-exists=.env prisma/seeds/academic/seed-ece-prospectus.mjs",
     "seed:ece": "node --env-file-if-exists=.env prisma/seeds/academic/seed-ece-prospectus.mjs --commit",
@@ -22,7 +23,7 @@
     "repair:program-head": "node --env-file-if-exists=.env prisma/seeds/scripts/repair-program-head-assignments.mjs --commit",
     "import:sqlite:dry": "node --env-file-if-exists=.env scripts/import-sqlite-auth.mjs",
     "import:sqlite:cutover": "node --env-file-if-exists=.env scripts/import-sqlite-auth.mjs --commit --merge-seeded-demos --invalidate-sessions",
-    "test": "node --env-file-if-exists=.env --test --test-concurrency=1 tests/auth-client.test.mjs tests/auth.test.mjs tests/admission.test.mjs tests/registrar.test.mjs tests/program-head.test.mjs tests/prerequisite.test.mjs"
+    "test": "node --env-file-if-exists=.env --test --test-concurrency=1 tests/auth-client.test.mjs tests/auth.test.mjs tests/admission.test.mjs tests/registrar.test.mjs tests/program-head.test.mjs tests/prerequisite.test.mjs tests/monitoring.test.mjs"
   },
   "prisma": {
     "seed": "node --env-file-if-exists=.env prisma/seed.mjs"

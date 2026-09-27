@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { extname, join, resolve, sep } from "node:path";
 import { createConfig } from "./config.mjs";
 import * as systemLogger from "./logger.mjs";
+import { RequestMonitor } from "./monitoring.mjs";
 import { AuthenticationStore, isUniqueConstraint } from "./auth-store.mjs";
 import { createDatabase, ROLE_DEFINITIONS } from "./db.mjs";
 import { StudentDashboardStore } from "./student-store.mjs";
@@ -207,7 +208,11 @@ export async function createApp(options = {}) {
   const database = options.prisma ?? options.database ?? createDatabase();
   const ownsDatabase = !options.prisma && !options.database;
   systemLogger.setDatabase(database);
-  const store = options.store ?? new AuthenticationStore(database);
+  const requestMonitor = options.requestMonitor ?? new RequestMonitor({
+    now: config.now,
+    slowRequestThresholdMs: config.slowRequestThresholdMs
+  });
+  const store = options.store ?? new AuthenticationStore(database, config);
   const studentStore = options.studentStore ?? new StudentDashboardStore(database);
   const admissionStore = options.admissionStore ?? new AdmissionStore(database);
   const enrollmentApplicationStore = options.enrollmentApplicationStore ?? new EnrollmentApplicationStore(database);
@@ -918,7 +923,15 @@ export async function createApp(options = {}) {
       if (adminSession.user.id === userId) {
         error(409, "SELF_DELETION_FORBIDDEN", "Administrators cannot delete their own account.");
       }
-      const success = await store.deleteUser(userId);
+      let success;
+      try {
+        success = await store.deleteUser(userId);
+      } catch (caught) {
+        if (caught?.code === "P2003" || caught?.code === "P2014") {
+          error(409, "ACCOUNT_DELETE_BLOCKED", "This account is linked to protected records and cannot be deleted. Disable it instead.");
+        }
+        throw caught;
+      }
       if (!success) error(404, "ACCOUNT_NOT_FOUND", "Account not found.");
       
       await audit(context, request, "account.deleted", "success", {
@@ -962,6 +975,56 @@ export async function createApp(options = {}) {
       data: { status: body.status }
     });
     sendJson(response, 200, { data: { log } });
+  }
+
+  async function systemHealth(request, response, context) {
+    await requirePermission(request, context, "portal.access.administrator");
+    const checkedAt = config.now();
+    const databaseStartedAt = performance.now();
+    let databaseStatus = "available";
+    let databaseLatencyMs = null;
+    let incidentCounts = {
+      criticalLast24Hours: null,
+      openHighPriority: null,
+      slowRequestsLast24Hours: null
+    };
+
+    try {
+      await database.$queryRawUnsafe("SELECT 1");
+      databaseLatencyMs = Math.max(0, Math.round(performance.now() - databaseStartedAt));
+      const since = new Date(checkedAt - 24 * 60 * 60 * 1_000);
+      const [criticalLast24Hours, openHighPriority, slowRequestsLast24Hours] = await Promise.all([
+        database.systemLog.count({ where: { severity: "CRITICAL", createdAt: { gte: since } } }),
+        database.systemLog.count({
+          where: { severity: { in: ["HIGH", "CRITICAL"] }, status: { in: ["OPEN", "INVESTIGATING"] } }
+        }),
+        database.systemLog.count({
+          where: {
+            category: systemLogger.Category.API,
+            durationMs: { gte: config.slowRequestThresholdMs },
+            createdAt: { gte: since }
+          }
+        })
+      ]);
+      incidentCounts = { criticalLast24Hours, openHighPriority, slowRequestsLast24Hours };
+    } catch (caught) {
+      databaseStatus = "unavailable";
+      if (!config.isTest) {
+        const details = caught instanceof Error ? caught.message : String(caught);
+        process.stderr.write(`Monitoring database check ${context.requestId} failed: ${details}\n`);
+      }
+    }
+
+    sendJson(response, 200, {
+      data: {
+        status: databaseStatus === "available" ? "healthy" : "degraded",
+        checkedAt: new Date(checkedAt).toISOString(),
+        database: { status: databaseStatus, latencyMs: databaseLatencyMs },
+        runtime: { nodeVersion: process.version, environment: config.nodeEnv },
+        performance: requestMonitor.snapshot(),
+        incidents: incidentCounts
+      }
+    });
   }
 
   async function listAudit(request, response, context, url) {
@@ -1686,6 +1749,7 @@ export async function createApp(options = {}) {
         STUDENT_PROFILE_REQUIRED: [404, "STUDENT_NOT_FOUND", "No student profile is linked to this account."],
         APPLICATION_LOCKED: [409, "APPLICATION_LOCKED", "This application cannot be edited in its current status."],
         PROGRAM_INVALID: [422, "PROGRAM_INVALID", "Select an active program."],
+        STUDENT_PROGRAM_MISMATCH: [422, "STUDENT_PROGRAM_MISMATCH", "Enrollment must use the program assigned to your student record."],
         TERM_INVALID: [422, "TERM_INVALID", "Select an available academic term."],
         ENROLLMENT_CLOSED: [409, "ENROLLMENT_CLOSED", "Enrollment is not open for the selected academic term."],
         ENTRANCE_FEE_REQUIRED: [402, "ENTRANCE_FEE_REQUIRED", "Pay and verify the entrance fee before submitting enrollment."],
@@ -1693,7 +1757,10 @@ export async function createApp(options = {}) {
         SUBJECT_SELECTION_INVALID: [422, "SUBJECT_SELECTION_INVALID", "Select only subjects from the curriculum for the chosen program, year, and term."],
         SUBJECT_SELECTION_REQUIRED: [422, "SUBJECT_SELECTION_REQUIRED", "Select at least one subject before submitting your enrollment."],
         PREREQUISITE_NOT_MET: [422, "PREREQUISITE_NOT_MET", "One or more selected subjects have prerequisites that are failed, incomplete, or not yet taken."],
+        COREQUISITE_NOT_MET: [422, "COREQUISITE_NOT_MET", "Select every required corequisite or complete it with a passing final grade."],
+        MAX_UNITS_EXCEEDED: [422, "MAX_UNITS_EXCEEDED", "The selected load exceeds the 29-unit enrollment limit."],
         YEAR_LEVEL_INVALID: [422, "YEAR_LEVEL_INVALID", "Select a valid year level."],
+        STUDENT_YEAR_LEVEL_MISMATCH: [422, "STUDENT_YEAR_LEVEL_MISMATCH", "Enrollment must use the current year level in your student record."],
         FORM_INCOMPLETE: [422, "FORM_INCOMPLETE", "Complete all required enrollment information before submitting."],
         FORM_TOO_LARGE: [413, "FORM_TOO_LARGE", "The enrollment form is too large. Remove some content and try again."]
       };
@@ -2131,7 +2198,34 @@ export async function createApp(options = {}) {
   }
 
   async function handler(request, response) {
+    const requestStartedAt = requestMonitor.begin();
     let pathname = "/";
+    let context = null;
+    let requestFinalized = false;
+    const finalizeRequest = () => {
+      if (requestFinalized) return;
+      requestFinalized = true;
+      const statusCode = response.writableFinished ? response.statusCode : 499;
+      const measurement = requestMonitor.finish(requestStartedAt, statusCode);
+      if (!measurement.slow) return;
+      void systemLogger.logSystemEvent({
+        severity: systemLogger.Severity.WARNING,
+        category: systemLogger.Category.API,
+        moduleName: "HTTP Server",
+        requestId: context?.requestId,
+        sessionId: context?.session?.id,
+        userId: context?.session?.user?.id,
+        ipHash: context?.ipHash,
+        userAgent: cleanText(request.headers["user-agent"], 500),
+        requestUrl: pathname,
+        httpMethod: cleanText(request.method, 10),
+        message: "Slow request detected",
+        technicalDetail: { statusCode, thresholdMs: config.slowRequestThresholdMs },
+        durationMs: measurement.durationMs
+      });
+    };
+    response.once("finish", finalizeRequest);
+    response.once("close", finalizeRequest);
     let url;
     try {
       const rawRequestUrl = request.url;
@@ -2162,7 +2256,7 @@ export async function createApp(options = {}) {
       return;
     }
 
-    const context = requestContext(request, pathname);
+    context = requestContext(request, pathname);
     setSecurityHeaders(response, context.requestId);
     try {
       await pruneSecurityState();
@@ -2341,6 +2435,9 @@ export async function createApp(options = {}) {
       if (method === "GET" && pathname === "/api/v1/admin/system-logs") {
         return await listSystemLogs(request, response, context, url);
       }
+      if (method === "GET" && pathname === "/api/v1/admin/monitoring/health") {
+        return await systemHealth(request, response, context);
+      }
       const systemLogStatusMatch = pathname.match(/^\/api\/v1\/admin\/system-logs\/([0-9a-f-]{36})\/status$/i);
       if (method === "PATCH" && systemLogStatusMatch) {
         return await updateSystemLogStatus(request, response, context, systemLogStatusMatch[1]);
@@ -2391,6 +2488,21 @@ export async function createApp(options = {}) {
         const details = caught instanceof Error ? caught.stack || caught.message : String(caught);
         process.stderr.write(`Request ${context.requestId} failed unexpectedly: ${details}\n`);
       }
+      await systemLogger.logSystemEvent({
+        severity: systemLogger.Severity.HIGH,
+        category: systemLogger.Category.APPLICATION,
+        moduleName: "HTTP Server",
+        requestId: context.requestId,
+        sessionId: context.session?.id,
+        userId: context.session?.user?.id,
+        ipHash: context.ipHash,
+        userAgent: cleanText(request.headers["user-agent"], 500),
+        requestUrl: pathname,
+        httpMethod: cleanText(request.method, 10),
+        message: "Unhandled request error",
+        technicalDetail: caught instanceof Error ? caught.message : String(caught),
+        stackTrace: caught instanceof Error ? caught.stack : null
+      });
       sendJson(response, 500, { error: { code: "INTERNAL_ERROR", message: "An unexpected error occurred." } });
     }
   }
@@ -2399,6 +2511,7 @@ export async function createApp(options = {}) {
     handler,
     database,
     config,
+    requestMonitor,
     async close() {
       if (ownsDatabase) await database.$disconnect();
     }

@@ -1,0 +1,29 @@
+[
+  {
+    "code": "BSECE",
+    "name": "Bachelor of Science in Electronics and Communication Engineering",
+    "credential": "Bachelor Degree",
+    "departmentCode": "COE",
+    "durationYears": 4,
+    "termsPerYear": 2,
+    "isActive": true
+  },
+  {
+    "code": "BSCOE",
+    "name": "Bachelor of Science in Computer Engineering",
+    "credential": "Bachelor Degree",
+    "departmentCode": "COE",
+    "durationYears": 4,
+    "termsPerYear": 2,
+    "isActive": true
+  },
+  {
+    "code": "BSCE",
+    "name": "Bachelor of Science in Civil Engineering",
+    "credential": "Bachelor Degree",
+    "departmentCode": "COE",
+    "durationYears": 4,
+    "termsPerYear": 2,
+    "isActive": true
+  }
+]

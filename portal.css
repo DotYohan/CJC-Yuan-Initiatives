@@ -2039,6 +2039,10 @@ p {
     color: var(--danger);
     background: #fff0f2;
 }
+.status-pill--info { color: #176b4d; background: #e9f7f0; }
+.status-pill--warning { color: #8a5a00; background: #fff6dc; }
+.status-pill--high { color: #9b3c16; background: #ffebe1; }
+.status-pill--critical { color: #a42335; background: #ffe3e7; }
 
 .account-details {
     display: grid;
@@ -2833,6 +2837,33 @@ td:first-child small {
     border-top: 1px solid var(--line);
 }
 .system-logs-panel { min-width: 0; }
+.monitoring-overview {
+    margin-bottom: 24px;
+    padding: 20px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--white);
+}
+
+.account-delete-control {
+    color: var(--danger);
+    border-color: rgba(164, 35, 53, 0.35);
+}
+
+.account-delete-control:hover,
+.account-delete-control:focus-visible {
+    color: var(--white);
+    background: var(--danger);
+    border-color: var(--danger);
+}
+.monitoring-overview__header { margin-bottom: 16px; padding-bottom: 12px; }
+.monitoring-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+.monitoring-metrics .metric-card { min-height: 106px; }
+.monitoring-overview [data-monitoring-health-updated] { margin: 14px 0 0; }
 .system-logs-panel__header {
     display: flex;
     align-items: flex-start;
@@ -2886,4 +2917,8 @@ td:first-child small {
 @media (max-width: 860px) {
     .system-logs-panel__header { flex-direction: column; }
     .log-filter-select { width: 100%; }
+    .monitoring-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 500px) {
+    .monitoring-metrics { grid-template-columns: 1fr; }
 }
