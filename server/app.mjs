@@ -919,6 +919,43 @@ export async function createApp(options = {}) {
       sendJson(response, 200, { data: { success: true } });
     }
 
+  async function listSystemLogs(request, response, context, url) {
+    await requirePermission(request, context, "portal.access.administrator");
+    const requestedLimit = Number(url.searchParams.get("limit") ?? 50);
+    const limit = Number.isSafeInteger(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 200) : 50;
+    
+    // Default filtering logic can be added later
+    const severity = url.searchParams.get("severity");
+    const status = url.searchParams.get("status");
+
+    const where = {};
+    if (severity) where.severity = severity;
+    if (status) where.status = status;
+
+    const entries = await database.systemLog.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      include: {
+        user: { select: { username: true, email: true, displayName: true } }
+      }
+    });
+    sendJson(response, 200, { data: { entries } });
+  }
+
+  async function updateSystemLogStatus(request, response, context, logId) {
+    await requirePermission(request, context, "portal.access.administrator");
+    const body = await readJson(request, config.bodyLimitBytes);
+    if (!body || !["OPEN", "INVESTIGATING", "RESOLVED", "IGNORED"].includes(body.status)) {
+      error(422, "INVALID_STATUS", "Invalid status provided.");
+    }
+    const log = await database.systemLog.update({
+      where: { id: logId },
+      data: { status: body.status }
+    });
+    sendJson(response, 200, { data: { log } });
+  }
+
   async function listAudit(request, response, context, url) {
     await requirePermission(request, context, "audit.read");
     const requestedLimit = Number(url.searchParams.get("limit") ?? 50);

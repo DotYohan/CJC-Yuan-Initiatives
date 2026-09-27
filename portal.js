@@ -3170,5 +3170,113 @@ document.addEventListener("click", handleSubjectSelectionToggle);
 enrollmentSave?.addEventListener("click", () => saveEnrollment(false));
 enrollmentSubmit?.addEventListener("click", () => saveEnrollment(true));
 
+// --- System Monitoring ---
+const escapeHtml = (unsafe) => (unsafe || "").toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+
+const systemLogsTable = select("[data-system-logs-table]");
+const systemLogsBody = select("[data-system-logs-body]");
+const systemLogsStatus = select("[data-system-logs-status]");
+const logSeverityFilter = select("[data-log-filter]");
+const refreshLogsBtn = select("[data-refresh-system-logs]");
+
+const loadSystemLogs = async () => {
+    if (!systemLogsTable) return;
+    try {
+        systemLogsStatus.textContent = "Loading system logs...";
+        systemLogsStatus.hidden = false;
+        systemLogsTable.hidden = true;
+        
+        const options = {};
+        if (logSeverityFilter?.value) options.severity = logSeverityFilter.value;
+
+        const { data } = await auth.getSystemLogs(options);
+        state.systemLogs = data.entries || [];
+        renderSystemLogs();
+        systemLogsStatus.hidden = true;
+        systemLogsTable.hidden = false;
+    } catch (error) {
+        if (handleExpiredSession(error)) return;
+        systemLogsStatus.textContent = "Failed to load system logs.";
+    }
+};
+
+const renderSystemLogs = () => {
+    if (!systemLogsBody) return;
+    systemLogsBody.innerHTML = "";
+    
+    if (!state.systemLogs || state.systemLogs.length === 0) {
+        systemLogsBody.insertAdjacentHTML("beforeend", `<tr><td colspan="6" class="empty-state">No system logs found.</td></tr>`);
+        return;
+    }
+    
+    for (const log of state.systemLogs) {
+        const tr = document.createElement("tr");
+        
+        const dateStr = new Date(log.createdAt).toLocaleString();
+        
+        let severityBadge = "status-pill";
+        if (log.severity === "INFO") severityBadge += " status-verified";
+        if (log.severity === "WARNING") severityBadge += " status-pending";
+        if (log.severity === "HIGH") severityBadge += " status-rejected";
+        if (log.severity === "CRITICAL") severityBadge += " status-rejected";
+
+        tr.innerHTML = `
+            <td>
+                <small>${log.errorId || log.id}</small><br/>
+                <span class="muted">${dateStr}</span>
+            </td>
+            <td><span class="${severityBadge}">${log.severity}</span></td>
+            <td>${escapeHtml(log.category)}</td>
+            <td>
+                <strong>${escapeHtml(log.message)}</strong>
+                <details>
+                    <summary>Technical Details</summary>
+                    <pre><code>${escapeHtml(log.technicalDetail || "")}</code></pre>
+                </details>
+            </td>
+            <td><span class="status-pill">${escapeHtml(log.status)}</span></td>
+            <td>
+                <select data-log-id="${log.id}" class="status-select">
+                    <option value="OPEN" ${log.status === "OPEN" ? "selected" : ""}>OPEN</option>
+                    <option value="INVESTIGATING" ${log.status === "INVESTIGATING" ? "selected" : ""}>INVESTIGATING</option>
+                    <option value="RESOLVED" ${log.status === "RESOLVED" ? "selected" : ""}>RESOLVED</option>
+                    <option value="IGNORED" ${log.status === "IGNORED" ? "selected" : ""}>IGNORED</option>
+                </select>
+            </td>
+        `;
+        systemLogsBody.appendChild(tr);
+    }
+};
+
+systemLogsBody?.addEventListener("change", async (event) => {
+    if (event.target.classList.contains("status-select")) {
+        const select = event.target;
+        const logId = select.dataset.logId;
+        const newStatus = select.value;
+        select.disabled = true;
+        try {
+            await auth.updateSystemLogStatus(logId, newStatus);
+            const log = state.systemLogs.find(l => l.id === logId);
+            if (log) log.status = newStatus;
+            renderSystemLogs();
+        } catch (error) {
+            handleExpiredSession(error);
+            select.value = state.systemLogs.find(l => l.id === logId)?.status || "OPEN";
+            alert("Failed to update status.");
+        } finally {
+            select.disabled = false;
+        }
+    }
+});
+
+logSeverityFilter?.addEventListener("change", loadSystemLogs);
+refreshLogsBtn?.addEventListener("click", loadSystemLogs);
+
+// Hook into existing load routine
+const originalLoadUsers = loadUsers;
+loadUsers = async () => {
+    await Promise.allSettled([originalLoadUsers(), loadSystemLogs()]);
+};
+
 void bootstrap();
 })();

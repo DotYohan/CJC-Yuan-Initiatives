@@ -225,6 +225,16 @@
         },
         deleteStudentDocument: (id, options = {}) => mutate(`/student/documents/${encodeURIComponent(id)}`, "DELETE", {}, options),
         viewStudentDocument: (id, options = {}) => request(`/student/documents/${encodeURIComponent(id)}/view`, options),
+        
+        getSystemLogs: (options = {}) => {
+            const query = new URLSearchParams();
+            if (options.limit) query.set("limit", options.limit);
+            if (options.severity) query.set("severity", options.severity);
+            if (options.status) query.set("status", options.status);
+            return request(`/admin/system-logs?${query.toString()}`, options);
+        },
+        updateSystemLogStatus: (id, status, options = {}) => mutate(`/admin/system-logs/${encodeURIComponent(id)}/status`, "PATCH", { status }, options),
+
         safeLandingPath,
         clearCsrf: () => {
             csrfToken = "";
