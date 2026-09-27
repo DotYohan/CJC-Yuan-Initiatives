@@ -692,7 +692,9 @@ export class RegistrarStore {
         },
         student: {
           select: {
-            id: true, studentNumber: true, institutionalEmail: true, currentYearLevel: true
+            id: true, studentNumber: true, institutionalEmail: true, currentYearLevel: true,
+            program: { select: { id: true, code: true, name: true } },
+            curriculum: { select: { id: true, code: true, name: true } }
           }
         },
         documents: {
@@ -762,8 +764,11 @@ export class RegistrarStore {
         decisionNotes: application.decisionNotes,
         attemptNumber: application.attemptNumber,
         tag: application.attemptNumber > 1 ? "RESUBMISSION" : null,
+        studentId: application.student?.id ?? application.convertedStudentId ?? null,
         studentNumber: application.student?.studentNumber ?? null,
         institutionalEmail: application.student?.institutionalEmail ?? null,
+        currentProgram: application.student?.program ? { id: application.student.program.id, code: application.student.program.code, name: application.student.program.name } : null,
+        currentCurriculum: application.student?.curriculum ? { id: application.student.curriculum.id, code: application.student.curriculum.code, name: application.student.curriculum.name } : null,
         yearLevel: enrollmentApplication?.yearLevel ?? application.student?.currentYearLevel ?? null,
         intendedProgram: application.intendedProgram,
         academicTerm: application.academicTerm,
@@ -877,8 +882,9 @@ export class RegistrarStore {
       if (changed.count !== 1) throw new Error("APPLICATION_CONFLICT");
 
       let enrollmentId = null;
+      let review = null;
       if (status === "APPROVED" && enrollmentApplication) {
-        const review = await buildApplicationReview(transaction, enrollmentApplication.id);
+        review = await buildApplicationReview(transaction, enrollmentApplication.id);
         const assignments = Array.isArray(sectionAssignments) ? sectionAssignments : [];
         if (!review.curriculum || !review.items.length || review.items.length !== (review.application.formData?.selection?.subjectIds?.length ?? 0)
           || assignments.length !== review.items.length
@@ -930,8 +936,39 @@ export class RegistrarStore {
         if (status === "APPROVED") {
           await transaction.student.update({
             where: { id: current.convertedStudentId },
-            data: { status: "ACTIVE" }
+            data: {
+              status: "ACTIVE",
+              ...(enrollmentApplication?.programId ? { programId: enrollmentApplication.programId } : {}),
+              ...(enrollmentApplication && review?.curriculum?.id ? { curriculumId: review.curriculum.id } : {})
+            }
           });
+
+          if (enrollmentApplication?.programId) {
+            await transaction.studentProgramHistory.create({
+              data: {
+                id: newId(),
+                studentId: current.convertedStudentId,
+                programId: enrollmentApplication.programId,
+                academicTermId: current.academicTermId,
+                startsOn: now,
+                reason: "Official program assignment upon Registrar enrollment approval",
+                assignedByUserId: userId
+              }
+            });
+          }
+
+          if (review?.curriculum?.id) {
+            await transaction.studentCurriculumAssignment.create({
+              data: {
+                id: newId(),
+                studentId: current.convertedStudentId,
+                curriculumId: review.curriculum.id,
+                startsOn: now,
+                reason: "Curriculum assigned upon Registrar enrollment approval",
+                assignedByUserId: userId
+              }
+            });
+          }
 
           const entranceFee = await transaction.paymentType.findFirst({
             where: { name: "Entrance Fee", isActive: true },
@@ -1045,6 +1082,127 @@ export class RegistrarStore {
         }
       });
       return updated;
+    });
+  }
+
+  async listProgramsWithCurricula() {
+    return this.prisma.program.findMany({
+      where: {
+        isActive: true,
+        department: { is: { isActive: true, college: { is: { isActive: true } } } }
+      },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        curricula: {
+          where: { status: { in: ["ACTIVE", "DRAFT"] } },
+          select: { id: true, code: true, name: true, version: true, status: true },
+          orderBy: [{ effectiveFromYear: "desc" }, { version: "desc" }]
+        }
+      },
+      orderBy: { code: "asc" }
+    });
+  }
+
+  async overrideStudentProgram(actorUserId, studentId, { programId, curriculumId, reason }) {
+    if (!studentId || !/^[0-9a-f-]{36}$/i.test(studentId)) throw new Error("STUDENT_NOT_FOUND");
+    if (!programId || !curriculumId) throw new Error("PROGRAM_OR_CURRICULUM_REQUIRED");
+    const trimmedReason = typeof reason === "string" ? reason.trim() : "";
+    if (!trimmedReason) throw new Error("REASON_REQUIRED");
+
+    const student = await this.prisma.student.findUnique({
+      where: { id: studentId },
+      include: {
+        program: { select: { id: true, code: true, name: true } },
+        curriculum: { select: { id: true, code: true, version: true } }
+      }
+    });
+    if (!student) throw new Error("STUDENT_NOT_FOUND");
+
+    const program = await this.prisma.program.findFirst({
+      where: {
+        id: programId,
+        isActive: true,
+        department: { is: { isActive: true, college: { is: { isActive: true } } } }
+      }
+    });
+    if (!program) throw new Error("PROGRAM_NOT_FOUND");
+
+    const curriculum = await this.prisma.curriculum.findFirst({
+      where: {
+        id: curriculumId,
+        programId: program.id,
+        status: { in: ["ACTIVE", "DRAFT"] }
+      }
+    });
+    if (!curriculum) throw new Error("CURRICULUM_NOT_FOUND");
+
+    const now = new Date();
+    return this.transaction(async (transaction) => {
+      // Close active program history
+      await transaction.studentProgramHistory.updateMany({
+        where: { studentId: student.id, endsOn: null },
+        data: { endsOn: now }
+      });
+      // Create new program history
+      await transaction.studentProgramHistory.create({
+        data: {
+          id: newId(),
+          studentId: student.id,
+          programId: program.id,
+          startsOn: now,
+          reason: trimmedReason,
+          assignedByUserId: actorUserId
+        }
+      });
+
+      // Close active curriculum assignment
+      await transaction.studentCurriculumAssignment.updateMany({
+        where: { studentId: student.id, endsOn: null },
+        data: { endsOn: now }
+      });
+      // Create new curriculum assignment
+      await transaction.studentCurriculumAssignment.create({
+        data: {
+          id: newId(),
+          studentId: student.id,
+          curriculumId: curriculum.id,
+          startsOn: now,
+          reason: trimmedReason,
+          assignedByUserId: actorUserId
+        }
+      });
+
+      // Update student
+      const updatedStudent = await transaction.student.update({
+        where: { id: student.id },
+        data: {
+          programId: program.id,
+          curriculumId: curriculum.id
+        },
+        include: {
+          program: { select: { id: true, code: true, name: true } },
+          curriculum: { select: { id: true, code: true, version: true } }
+        }
+      });
+
+      return {
+        student: {
+          id: updatedStudent.id,
+          userId: updatedStudent.userId,
+          studentNumber: updatedStudent.studentNumber,
+          firstName: updatedStudent.firstName,
+          lastName: updatedStudent.lastName,
+          program: updatedStudent.program,
+          curriculum: updatedStudent.curriculum
+        },
+        previous: {
+          program: student.program,
+          curriculum: student.curriculum
+        },
+        reason: trimmedReason
+      };
     });
   }
 }

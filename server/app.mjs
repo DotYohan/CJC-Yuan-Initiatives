@@ -1491,6 +1491,52 @@ export async function createApp(options = {}) {
     }
   }
 
+  async function listRegistrarProgramsWithCurricula(request, response, context) {
+    await requirePermission(request, context, "VIEW_STUDENT_APPLICATION");
+    const programs = await registrarStore.listProgramsWithCurricula();
+    sendJson(response, 200, { data: { programs } });
+  }
+
+  async function overrideRegistrarStudentProgram(request, response, context, studentId) {
+    const session = await requireAuthentication(request, context);
+    await requireCsrf(request, context);
+    const user = publicUser(session.user);
+    const authorized = ["registrar", "administrator"].includes(user.primaryRole)
+      || session.user.permissions?.some((p) => ["APPROVE_STUDENT_APPLICATION", "users.manage"].includes(p));
+    if (!authorized) {
+      error(403, "FORBIDDEN", "Only Registrar and Administrator accounts can override student program assignments.");
+    }
+    const body = await readJson(request, config.bodyLimitBytes);
+    try {
+      const result = await registrarStore.overrideStudentProgram(session.user.id, studentId, {
+        programId: body.programId,
+        curriculumId: body.curriculumId,
+        reason: body.reason
+      });
+      await audit(context, request, "registrar.program_override", "success", {
+        actorUserId: session.user.id,
+        targetUserId: result.student.userId ?? null,
+        metadata: {
+          studentId: result.student.id,
+          studentNumber: result.student.studentNumber,
+          previousProgram: result.previous.program?.code || null,
+          newProgram: result.student.program?.code || null,
+          previousCurriculum: result.previous.curriculum?.code || null,
+          newCurriculum: result.student.curriculum?.code || null,
+          reason: result.reason
+        }
+      });
+      sendJson(response, 200, { data: result });
+    } catch (caught) {
+      if (caught.message === "STUDENT_NOT_FOUND") error(404, "STUDENT_NOT_FOUND", "Student record not found.");
+      if (caught.message === "PROGRAM_NOT_FOUND") error(404, "PROGRAM_NOT_FOUND", "The selected program is not active or recognized.");
+      if (caught.message === "CURRICULUM_NOT_FOUND") error(404, "CURRICULUM_NOT_FOUND", "The selected curriculum does not belong to this program.");
+      if (caught.message === "REASON_REQUIRED") error(422, "REASON_REQUIRED", "A reason for overriding the program assignment is required.");
+      if (caught.message === "PROGRAM_OR_CURRICULUM_REQUIRED") error(422, "PROGRAM_OR_CURRICULUM_REQUIRED", "Select both a program and curriculum.");
+      throw caught;
+    }
+  }
+
   async function viewRegistrarDocument(request, response, context, documentId) {
     const session = await requirePermission(request, context, "VIEW_DOCUMENTS");
     const document = await documentStore.getDocumentForView(documentId);
@@ -2412,6 +2458,13 @@ export async function createApp(options = {}) {
       }
       const registrarDocumentMatch = pathname.match(/^\/api\/v1\/registrar\/documents\/([0-9a-f-]{36})$/i);
       if (method === "PATCH" && registrarDocumentMatch) return await updateRegistrarDocument(request, response, context, registrarDocumentMatch[1]);
+      if (method === "GET" && pathname === "/api/v1/registrar/programs-with-curricula") {
+        return await listRegistrarProgramsWithCurricula(request, response, context);
+      }
+      const registrarStudentOverrideMatch = pathname.match(/^\/api\/v1\/registrar\/students\/([0-9a-f-]{36})\/override-program$/i);
+      if (method === "PATCH" && registrarStudentOverrideMatch) {
+        return await overrideRegistrarStudentProgram(request, response, context, registrarStudentOverrideMatch[1]);
+      }
       if (method === "POST" && pathname === "/api/v1/registrar/enrollment-period/open") {
         return await openRegistrarPeriod(request, response, context);
       }

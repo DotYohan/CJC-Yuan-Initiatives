@@ -149,6 +149,8 @@
             return mutate(`/registrar/applications/${encodeURIComponent(id)}`, "PATCH", { status, decisionNotes, sectionAssignments }, requestOptions);
         },
         reviewRegistrarDocument: (id, status, remarks, options = {}) => mutate(`/registrar/documents/${encodeURIComponent(id)}`, "PATCH", { status, remarks }, options),
+        getRegistrarProgramsWithCurricula: (options = {}) => request("/registrar/programs-with-curricula", options),
+        overrideStudentProgram: (studentId, data, options = {}) => mutate(`/registrar/students/${encodeURIComponent(studentId)}/override-program`, "PATCH", data, options),
         createRegistrarAcademicYear: (data, options = {}) => mutate("/registrar/academic-years", "POST", data, options),
         createRegistrarAcademicTerm: (data, options = {}) => mutate("/registrar/academic-terms", "POST", data, options),
         openRegistrarEnrollment: (academicTermId, options = {}) => mutate("/registrar/enrollment-period/open", "POST", { academicTermId }, options),
