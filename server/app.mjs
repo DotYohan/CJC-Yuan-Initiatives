@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { extname, join, resolve, sep } from "node:path";
 import { createConfig } from "./config.mjs";
+import * as systemLogger from "./logger.mjs";
 import { AuthenticationStore, isUniqueConstraint } from "./auth-store.mjs";
 import { createDatabase, ROLE_DEFINITIONS } from "./db.mjs";
 import { StudentDashboardStore } from "./student-store.mjs";
@@ -182,7 +183,14 @@ async function readJson(request, limit) {
     chunks.push(chunk);
   }
   try {
-    const body = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    const rawString = Buffer.concat(chunks).toString("utf8");
+    const upperRaw = rawString.toUpperCase();
+    const isSqli = upperRaw.includes(" OR 1=1") || upperRaw.includes("UNION SELECT") || upperRaw.includes("DROP TABLE") || upperRaw.includes("--");
+    const isXss = upperRaw.includes("<SCRIPT>") || upperRaw.includes("JAVASCRIPT:") || upperRaw.includes("ONERROR=");
+    if (isSqli || isXss) {
+      await systemLogger.logSystemEvent({ severity: systemLogger.Severity.CRITICAL, category: systemLogger.Category.SECURITY, moduleName: "Core API", functionName: "readJson", requestUrl: request.url, httpMethod: request.method, message: isSqli ? "SQL Injection Attempt Detected" : "Cross-Site Scripting (XSS) Attempt Detected", technicalDetail: `Malicious payload pattern detected in request body: ${rawString.substring(0, 200)}...` });
+    }
+    const body = JSON.parse(rawString);
     if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("not an object");
     return body;
   } catch {
