@@ -36,3 +36,29 @@ test("a posted completion grade replaces an earlier incomplete result", () => {
 test("INC remains blocking even if a source row incorrectly marks it passing", () => {
   assert.deepEqual(stateFor({ letterGrade: "INC", isPassing: true }), { requiredSubject: requirement.requiredSubject, state: "INC", eligible: false });
 });
+
+test("resolves subjectId from courseOffering.subjectId structure", () => {
+  const records = buildAcademicRecordIndex([{
+    courseOffering: { subjectId: "pre-1" },
+    grades: [{ status: "POSTED", numericGrade: 1.0, isPassing: true, updatedAt: "2026-01-01T00:00:00.000Z" }]
+  }]);
+  assert.equal(prerequisiteEligibility([requirement], records)[0].state, "PASSED");
+  assert.equal(prerequisiteEligibility([requirement], records)[0].eligible, true);
+});
+
+test("evaluates Philippine collegiate grading scale (1.00 - 3.00 is passing, 5.0 is failing)", () => {
+  // 1.00 is highest honor / passing, even if legacy row had isPassing: false
+  assert.equal(stateFor({ numericGrade: 1, isPassing: false }).state, "PASSED");
+  assert.equal(stateFor({ numericGrade: 1.0, isPassing: true }).state, "PASSED");
+  assert.equal(stateFor({ numericGrade: 2.25, isPassing: true }).state, "PASSED");
+  assert.equal(stateFor({ numericGrade: 3.0, isPassing: true }).state, "PASSED");
+  // 5.0 is failing
+  assert.equal(stateFor({ numericGrade: 5.0, isPassing: false }).state, "FAILED");
+  assert.equal(stateFor({ numericGrade: 5, isPassing: false }).eligible, false);
+});
+
+test("evaluates percentage scale (75 - 100 is passing)", () => {
+  assert.equal(stateFor({ numericGrade: 88, isPassing: true }).state, "PASSED");
+  assert.equal(stateFor({ numericGrade: 75, isPassing: true }).state, "PASSED");
+  assert.equal(stateFor({ numericGrade: 74, isPassing: false }).state, "FAILED");
+});

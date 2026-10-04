@@ -70,8 +70,34 @@ export class DocumentStore {
     if (!student) return null;
 
     const application = await this.prisma.admissionApplication.findFirst({
-      where: { convertedStudentId: student.id },
+      where: {
+        OR: [
+          { convertedStudentId: student.id },
+          { applicantUserId: userId }
+        ]
+      },
       orderBy: { createdAt: "desc" },
+      select: { id: true, applicationNumber: true, status: true }
+    });
+
+    return { student, application };
+  }
+
+  async getStudentApplicationById(userId, applicationId) {
+    const student = await this.prisma.student.findUnique({
+      where: { userId },
+      select: { id: true, studentNumber: true }
+    });
+    if (!student) return null;
+
+    const application = await this.prisma.admissionApplication.findFirst({
+      where: {
+        id: applicationId,
+        OR: [
+          { convertedStudentId: student.id },
+          { applicantUserId: userId }
+        ]
+      },
       select: { id: true, applicationNumber: true, status: true }
     });
 
@@ -160,6 +186,16 @@ export class DocumentStore {
     const { studentId, applicationId, documentTypeId, originalFileName, storedFileName, filePath, fileSize, mimeType, uploadedByUserId } = data;
 
     const document = await this.prisma.$transaction(async (tx) => {
+      if (applicationId) {
+        const app = await tx.admissionApplication.findUnique({
+          where: { id: applicationId },
+          select: { status: true }
+        });
+        if (app && !["DRAFT", "RETURNED_FOR_CORRECTION"].includes(app.status)) {
+          throw new Error("APPLICATION_LOCKED");
+        }
+      }
+
       const existing = await tx.studentDocument.findUnique({
         where: {
           admissionApplicationId_documentTypeId: {

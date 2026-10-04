@@ -10,11 +10,25 @@ import { AdmissionStore } from "./admission-store.mjs";
 import { EnrollmentApplicationStore } from "./enrollment-store.mjs";
 import { RegistrarStore } from "./registrar-store.mjs";
 import { ProgramHeadStore } from "./program-head-store.mjs";
+import { StudentAssistantStore } from "./student-assistant-store.mjs";
+import { ClubStore } from "./club-store.mjs";
+import { handleClubRoutes } from "./club-router.mjs";
 import { DocumentStorageService } from "./document-storage.mjs";
 import { DocumentStore } from "./document-store.mjs";
+import { AdminFacultyService } from "./admin-faculty-service.mjs";
+import { FacultyStore } from "./faculty-store.mjs";
+import { GradeService } from "./grade-service.mjs";
+import { DeanStore } from "./dean-store.mjs";
 import { FinancialService } from "./modules/financial/services/financialService.mjs";
 import { PaymentService } from "./modules/financial/services/paymentService.mjs";
 import { VerificationService } from "./modules/financial/services/verificationService.mjs";
+import { AcademicImportService } from "./academic-import-service.mjs";
+import {
+  verifyGoogleCredential,
+  exchangeGoogleAuthCode,
+  createRegistrationToken,
+  verifyRegistrationToken
+} from "./google-auth-service.mjs";
 import {
   auditHash,
   hashPassword,
@@ -73,7 +87,7 @@ const ROLE_BY_PORTAL_PATH = new Map(ROLE_DEFINITIONS.map((role) => [role.path, r
 const ROLE_BY_API_SEGMENT = new Map(
   ROLE_DEFINITIONS.map((role) => [role.path.slice("/portal/".length), role])
 );
-const ACCOUNT_CREATION_ROLES = new Set(["administrator", "registrar", "program_head", "cashier", "student"]);
+const ACCOUNT_CREATION_ROLES = new Set(["administrator", "registrar", "program_head", "student_assistant", "cashier", "student", "ssc", "dean"]);
 
 class HttpError extends Error {
   constructor(status, code, message, details, headers = {}) {
@@ -93,16 +107,19 @@ function setSecurityHeaders(response, requestId) {
   response.setHeader("X-Request-Id", requestId);
   response.setHeader("X-Content-Type-Options", "nosniff");
   response.setHeader("X-Frame-Options", "DENY");
-  response.setHeader("Referrer-Policy", "no-referrer");
+  response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
   response.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
   response.setHeader(
     "Content-Security-Policy",
-    "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+    "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; script-src 'self' https://accounts.google.com/gsi/client; connect-src 'self' https://accounts.google.com/gsi/; frame-src 'self' https://accounts.google.com/gsi/; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
   );
 }
 
 function sendJson(response, status, payload, additionalHeaders = {}) {
-  const body = JSON.stringify(payload);
+  const body = JSON.stringify(payload, (_key, value) =>
+    typeof value === "bigint" ? Number(value) : value
+  );
   response.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
     "Content-Length": Buffer.byteLength(body),
@@ -218,6 +235,8 @@ export async function createApp(options = {}) {
   const enrollmentApplicationStore = options.enrollmentApplicationStore ?? new EnrollmentApplicationStore(database);
   const registrarStore = options.registrarStore ?? new RegistrarStore(database);
   const programHeadStore = options.programHeadStore ?? new ProgramHeadStore(database);
+  const studentAssistantStore = options.studentAssistantStore ?? new StudentAssistantStore(database);
+  const clubStore = options.clubStore ?? new ClubStore(database, { scrypt: config.scrypt });
   const documentStorage = options.documentStorage ?? new DocumentStorageService(config.documentRoot);
   await documentStorage.initialize();
   const documentStore = options.documentStore ?? new DocumentStore(database, documentStorage);
@@ -225,6 +244,11 @@ export async function createApp(options = {}) {
   const paymentService = new PaymentService(database);
   const verificationService = new VerificationService(database);
   verificationService.paymentService = paymentService;
+  const adminFacultyService = new AdminFacultyService(database, config);
+  const facultyStore = new FacultyStore(database);
+  const gradeService = new GradeService(database);
+  const deanStore = options.deanStore ?? new DeanStore(database, { gradeService, programHeadStore });
+  const academicImportService = options.academicImportService ?? new AcademicImportService(database, documentStorage);
   const dummyPasswordHash = await hashPassword(randomToken(24), config.scrypt);
   const onPasswordReset =
     options.onPasswordReset ??
@@ -253,6 +277,8 @@ export async function createApp(options = {}) {
       actorUserId: fields.actorUserId ?? null,
       targetUserId: fields.targetUserId ?? null,
       identifierHash: fields.identifierHash ?? null,
+      resourceType: fields.resourceType ?? null,
+      resourceId: fields.resourceId ?? null,
       requestId: context.requestId,
       ipHash: context.ipHash,
       method: cleanText(request.method, 12),
@@ -380,6 +406,8 @@ export async function createApp(options = {}) {
       primaryRole: primary?.slug ?? null,
       landingPath: primary?.landing_path ?? null,
       assignedProgram: user.assigned_program ?? null,
+      assignedDepartment: user.assigned_department ?? null,
+      assignedCollege: user.assigned_college ?? null,
       createdAt: user.created_at,
       updatedAt: user.updated_at,
       lastLoginAt: user.last_login_at
@@ -539,6 +567,211 @@ export async function createApp(options = {}) {
       200,
       { data: { user: userData, landingPath: userData.landingPath, csrfToken: created.csrfToken } },
       { "Set-Cookie": sessionCookie(config, created.token, remember) }
+    );
+  }
+
+  async function googleAuthConfig(request, response) {
+    const configured = Boolean(config.googleClientId && config.googleClientId.trim());
+    return sendJson(response, 200, {
+      data: {
+        configured,
+        enabled: configured || config.isTest,
+        clientId: config.googleClientId || (config.isTest ? "cjc-test-client-id" : null),
+        allowedDomains: config.googleAllowedDomains,
+        missingConfig: configured ? [] : ["GOOGLE_CLIENT_ID"]
+      }
+    });
+  }
+
+  async function googleAuthVerify(request, response, context) {
+    const anonymousSession = await requireCsrf(request, context);
+    const body = await readJson(request, config.bodyLimitBytes);
+    let credential = typeof body.credential === "string" ? body.credential.trim() : "";
+    const remember = body.remember === true;
+    const now = config.now();
+
+    if (!config.googleClientId && !config.isTest) {
+      error(
+        503,
+        "GOOGLE_AUTH_NOT_CONFIGURED",
+        "Google Workspace authentication is not configured on the server. Missing GOOGLE_CLIENT_ID environment variable."
+      );
+    }
+
+    if (!credential && typeof body.code === "string" && body.code.trim()) {
+      credential = await exchangeGoogleAuthCode(body.code.trim(), config, body.redirectUri || "postmessage");
+    }
+
+    if (!credential) {
+      error(400, "INVALID_CREDENTIAL", "Google identity token (credential) is required.");
+    }
+
+    let profile;
+    try {
+      profile = await verifyGoogleCredential(credential, config);
+    } catch (err) {
+      await audit(context, request, "authentication.google_verify", "failure", {
+        metadata: { error: err.message, code: err.code }
+      });
+      error(err.status || 400, err.code || "INVALID_CREDENTIAL", err.message, err.details);
+    }
+
+    // Search existing SMS account across all roles: Student, Faculty, Program Head, Registrar, etc.
+    const existingUser = await store.findUserForGoogleAuth(profile.googleSub, profile.email);
+
+    if (existingUser) {
+      if (existingUser.status !== "active") {
+        await audit(context, request, "authentication.google_login", "inactive_account", {
+          targetUserId: existingUser.id,
+          metadata: { email: profile.email }
+        });
+        error(403, "ACCOUNT_INACTIVE", "This project account is not active. Please contact support.");
+      }
+      if (existingUser.lock_until && existingUser.lock_until > now) {
+        await audit(context, request, "authentication.google_login", "locked_account", {
+          targetUserId: existingUser.id,
+          metadata: { email: profile.email }
+        });
+        error(423, "ACCOUNT_LOCKED", "This project account is temporarily locked.");
+      }
+
+      // Link Google identity
+      await store.linkGoogleAuth(existingUser.id, profile);
+
+      await store.revokeSession(anonymousSession.tokenHash, now);
+      const created = await createSession(existingUser, remember);
+
+      await audit(context, request, "authentication.google_login", "success", {
+        actorUserId: existingUser.id,
+        targetUserId: existingUser.id,
+        metadata: { email: profile.email, googleSub: profile.googleSub, linked: true, remember }
+      });
+
+      const userData = publicUser(existingUser);
+      return sendJson(
+        response,
+        200,
+        {
+          data: {
+            status: "LOGGED_IN",
+            user: userData,
+            landingPath: userData.landingPath,
+            csrfToken: created.csrfToken
+          }
+        },
+        { "Set-Cookie": sessionCookie(config, created.token, remember) }
+      );
+    }
+
+    // No existing SMS account -> return ACCOUNT_NOT_FOUND with signed registrationToken
+    const registrationToken = createRegistrationToken(profile, config);
+    await audit(context, request, "authentication.google_verify", "account_not_found", {
+      metadata: { email: profile.email, googleSub: profile.googleSub }
+    });
+
+    return sendJson(response, 200, {
+      data: {
+        status: "ACCOUNT_NOT_FOUND",
+        registrationToken,
+        profile: {
+          email: profile.email,
+          givenName: profile.givenName,
+          familyName: profile.familyName,
+          name: profile.name,
+          picture: profile.picture
+        }
+      }
+    });
+  }
+
+  async function googleRegisterStudent(request, response, context) {
+    const anonymousSession = await requireCsrf(request, context);
+    const body = await readJson(request, config.bodyLimitBytes);
+
+    let profile;
+    try {
+      profile = verifyRegistrationToken(body.registrationToken, config);
+    } catch (err) {
+      error(err.status || 400, err.code || "REGISTRATION_TOKEN_INVALID", err.message);
+    }
+
+    const firstName = validateRequiredText(body.firstName || profile.givenName, "first name");
+    const middleName = body.middleName ? validateRequiredText(body.middleName, "middle name") : null;
+    const lastName = validateRequiredText(body.lastName || profile.familyName, "last name");
+    const birthDate = typeof body.birthDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.birthDate)
+      ? body.birthDate
+      : null;
+    if (!birthDate) error(422, "BIRTH_DATE_INVALID", "Enter a valid birthday.");
+    const mobileNumber = validateRequiredText(body.mobileNumber, "mobile number", 32);
+
+    const password = typeof body.password === "string" && body.password.length > 0 ? body.password : null;
+    if (password) {
+      if (body.confirmPassword !== undefined && password !== body.confirmPassword) {
+        error(422, "PASSWORD_MISMATCH", "Passwords do not match.");
+      }
+      const pwdErr = validatePassword(password, config);
+      if (pwdErr) error(422, "PASSWORD_INVALID", pwdErr);
+    }
+
+    // Prevent duplicate student accounts
+    const existing = await store.findUserForGoogleAuth(profile.googleSub, profile.email);
+    if (existing) {
+      error(409, "ACCOUNT_EXISTS", "An account with this institutional email or Google identity already exists.");
+    }
+
+    const currentYear = new Date(config.now()).getUTCFullYear();
+    let result;
+    try {
+      result = await admissionStore.registerStudent({
+        firstName,
+        middleName,
+        lastName,
+        birthDate,
+        institutionalEmail: profile.email,
+        personalEmail: body.personalEmail ? validateEmail(body.personalEmail) : profile.email,
+        mobileNumber,
+        password,
+        admissionYear: currentYear,
+        googleProfile: profile
+      }, config);
+    } catch (caught) {
+      if (caught.message === "PROGRAM_INVALID") error(422, "PROGRAM_INVALID", "Select an active program.");
+      if (caught.message === "ACADEMIC_TERM_MISSING") error(503, "ACADEMIC_TERM_MISSING", "The academic catalog has no available term yet.");
+      if (caught.message === "ENTRANCE_FEE_NOT_CONFIGURED") error(503, "ENTRANCE_FEE_NOT_CONFIGURED", "The entrance fee is not configured.");
+      if (caught.code === "P2002") error(409, "ACCOUNT_EXISTS", "That email or generated school identity already exists.");
+      throw caught;
+    }
+
+    const newUser = await store.userById(result.userId);
+    const now = config.now();
+    await store.revokeSession(anonymousSession.tokenHash, now);
+    const session = await createSession(newUser, true);
+
+    await audit(context, request, "admission.student_registered", "success", {
+      actorUserId: newUser.id,
+      targetUserId: newUser.id,
+      metadata: {
+        applicationNumber: result.applicationNumber,
+        studentNumber: result.studentNumber,
+        provider: "google_workspace"
+      }
+    });
+
+    const userData = publicUser(newUser);
+    return sendJson(
+      response,
+      201,
+      {
+        data: {
+          status: "LOGGED_IN",
+          studentNumber: result.studentNumber,
+          applicationNumber: result.applicationNumber,
+          user: userData,
+          landingPath: userData.landingPath,
+          csrfToken: session.csrfToken
+        }
+      },
+      { "Set-Cookie": sessionCookie(config, session.token, true) }
     );
   }
 
@@ -813,7 +1046,7 @@ export async function createApp(options = {}) {
     if (passwordError) error(422, "PASSWORD_POLICY", passwordError);
     const role = (await store.listRoles()).find((candidate) => candidate.slug === body.role);
     if (!role || !ACCOUNT_CREATION_ROLES.has(role.slug)) {
-      error(422, "ROLE_INVALID", "Select Admin, Registrar, Program Head, Cashier, or Student.");
+      error(422, "ROLE_INVALID", "Select Admin, Registrar, Program Head, Student Assistant, Cashier, Student, or Dean.");
     }
     let programId = null;
     if (role.slug === "program_head") {
@@ -821,6 +1054,20 @@ export async function createApp(options = {}) {
       if (!programId) error(422, "PROGRAM_REQUIRED", "Select the program assigned to this Program Head.");
       const program = (await store.listPrograms()).find((candidate) => candidate.id === programId);
       if (!program) error(422, "PROGRAM_INVALID", "Select an active program.");
+    }
+    let departmentId = null;
+    if (role.slug === "student_assistant") {
+      departmentId = typeof body.departmentId === "string" ? body.departmentId.trim() : "";
+      if (!departmentId) error(422, "DEPARTMENT_REQUIRED", "Select the department assigned to this Student Assistant.");
+      const department = (await store.listDepartments()).find((candidate) => candidate.id === departmentId);
+      if (!department) error(422, "DEPARTMENT_INVALID", "Select an active department.");
+    }
+    let collegeId = null;
+    if (role.slug === "dean") {
+      collegeId = typeof body.collegeId === "string" ? body.collegeId.trim() : "";
+      if (!collegeId) error(422, "COLLEGE_REQUIRED", "Select the college assigned to this Dean.");
+      const college = (await store.listColleges()).find((candidate) => candidate.id === collegeId);
+      if (!college) error(422, "COLLEGE_INVALID", "Select an active college.");
     }
     const encoded = await hashPassword(body.password, config.scrypt);
     const now = config.now();
@@ -838,6 +1085,10 @@ export async function createApp(options = {}) {
         roleSlug: role.slug,
         programId,
         programAssignmentId: role.slug === "program_head" ? newId() : null,
+        departmentId,
+        departmentAssignmentId: role.slug === "student_assistant" ? newId() : null,
+        collegeId,
+        collegeAssignmentId: role.slug === "dean" ? newId() : null,
         assignedByUserId: adminSession.user.id,
         now
       });
@@ -845,12 +1096,16 @@ export async function createApp(options = {}) {
       if (isUniqueConstraint(caught)) error(409, "ACCOUNT_EXISTS", "That username or email is already in use.");
       if (caught.message === "PROGRAM_REQUIRED") error(422, "PROGRAM_REQUIRED", "Select the program assigned to this Program Head.");
       if (caught.message === "PROGRAM_INVALID") error(422, "PROGRAM_INVALID", "Select an active program.");
+      if (caught.message === "DEPARTMENT_REQUIRED") error(422, "DEPARTMENT_REQUIRED", "Select the department assigned to this Student Assistant.");
+      if (caught.message === "DEPARTMENT_INVALID") error(422, "DEPARTMENT_INVALID", "Select an active department.");
+      if (caught.message === "COLLEGE_REQUIRED") error(422, "COLLEGE_REQUIRED", "Select the college assigned to this Dean.");
+      if (caught.message === "COLLEGE_INVALID") error(422, "COLLEGE_INVALID", "Select an active college.");
       throw caught;
     }
     await audit(context, request, "account.created", "success", {
       actorUserId: adminSession.user.id,
       targetUserId: userId,
-      metadata: { role: role.slug, programId }
+      metadata: { role: role.slug, programId, departmentId, collegeId }
     });
     sendJson(response, 201, { data: { user: publicUser(await store.userById(userId)) } });
   }
@@ -871,6 +1126,12 @@ export async function createApp(options = {}) {
     await requirePermission(request, context, "users.manage");
     const programs = await store.listPrograms();
     sendJson(response, 200, { data: { programs } });
+  }
+
+  async function listAdminDepartments(request, response, context) {
+    await requirePermission(request, context, "users.manage");
+    const departments = await store.listDepartments();
+    sendJson(response, 200, { data: { departments } });
   }
 
   async function updateStatus(request, response, context, userId) {
@@ -1067,9 +1328,14 @@ export async function createApp(options = {}) {
       OFFERING_INVALID: [422, "OFFERING_INVALID", "Provide valid offering details."],
       OFFERING_DUPLICATE: [409, "OFFERING_DUPLICATE", "This offering code already exists in the academic term."],
       SCHEDULE_INVALID: [422, "SCHEDULE_INVALID", "Provide a valid weekday and start/end time."],
-      SCHEDULE_CONFLICT: [409, "SCHEDULE_CONFLICT", "The selected faculty member or room has a conflicting schedule."]
+      SCHEDULE_CONFLICT: [409, "SCHEDULE_CONFLICT", "The selected faculty member or room has a conflicting schedule."],
+      UNAUTHORIZED_OFFERING_ACCESS: [403, "UNAUTHORIZED_OFFERING_ACCESS", "You are not authorized to modify offerings for another program."],
+      OFFERING_NOT_FOUND: [404, "OFFERING_NOT_FOUND", "Subject offering not found."],
+      OFFERING_STATUS_INVALID: [422, "OFFERING_STATUS_INVALID", "Invalid offering status."],
+      CROSS_COLLEGE_FACULTY_FORBIDDEN: [403, "CROSS_COLLEGE_FACULTY_FORBIDDEN", "Faculty member belongs to a different College. Cross-college assignment requires Registrar or Administrator override."],
+      CROSS_COLLEGE_OVERRIDE_REQUIRED: [422, "CROSS_COLLEGE_OVERRIDE_REQUIRED", "Faculty member belongs to a different College. Please provide an override reason to proceed."]
     };
-    const responseData = messages[caught.message];
+    const responseData = messages[caught.code || caught.message];
     if (responseData) error(...responseData, caught.details);
     throw caught;
   }
@@ -1123,6 +1389,94 @@ export async function createApp(options = {}) {
     }
   }
 
+  async function getStudentAssistantDashboard(request, response, context) {
+    const session = await requirePermission(request, context, "portal.access.student_assistant");
+    try {
+      const data = await studentAssistantStore.dashboard(session.user.id);
+      sendJson(response, 200, { data });
+    } catch (caught) {
+      if (caught.message === "STUDENT_ASSISTANT_ASSIGNMENT_REQUIRED") {
+        error(403, "STUDENT_ASSISTANT_ASSIGNMENT_REQUIRED", "No active department assignment found for this Student Assistant account.");
+      }
+      throw caught;
+    }
+  }
+
+  async function listStudentAssistantApplications(request, response, context, url) {
+    const session = await requirePermission(request, context, "portal.access.student_assistant");
+    const filter = url.searchParams.get("filter") || "PENDING";
+    try {
+      const applications = await studentAssistantStore.enrollmentApplications(session.user.id, filter);
+      sendJson(response, 200, { data: { applications } });
+    } catch (caught) {
+      if (caught.message === "STUDENT_ASSISTANT_ASSIGNMENT_REQUIRED") {
+        error(403, "STUDENT_ASSISTANT_ASSIGNMENT_REQUIRED", "No active department assignment found for this Student Assistant account.");
+      }
+      throw caught;
+    }
+  }
+
+  async function getStudentAssistantApplicationDetail(request, response, context, applicationId) {
+    const session = await requirePermission(request, context, "portal.access.student_assistant");
+    try {
+      const data = await studentAssistantStore.enrollmentApplicationDetail(session.user.id, applicationId);
+      sendJson(response, 200, { data });
+    } catch (caught) {
+      if (caught.message === "STUDENT_ASSISTANT_ASSIGNMENT_REQUIRED") {
+        error(403, "STUDENT_ASSISTANT_ASSIGNMENT_REQUIRED", "No active department assignment found for this Student Assistant account.");
+      }
+      if (caught.message === "UNAUTHORIZED_DEPARTMENT_ACCESS") {
+        error(403, "UNAUTHORIZED_DEPARTMENT_ACCESS", "This application does not belong to your assigned department.");
+      }
+      if (caught.message === "APPLICATION_NOT_READY_FOR_ENCODING") {
+        error(409, "APPLICATION_NOT_READY_FOR_ENCODING", "This application is not approved for encoding by the Program Head.");
+      }
+      if (caught.code === "ENROLLMENT_APPLICATION_NOT_FOUND" || caught.message === "ENROLLMENT_APPLICATION_NOT_FOUND") {
+        error(404, "APPLICATION_NOT_FOUND", "Enrollment application not found.");
+      }
+      throw caught;
+    }
+  }
+
+  async function encodeStudentAssistantSubjects(request, response, context, applicationId) {
+    const session = await requireStatePermission(request, context, "portal.access.student_assistant");
+    const body = await readJson(request, config.bodyLimitBytes);
+    try {
+      const result = await studentAssistantStore.encodeSubjects(session.user.id, applicationId, body);
+      await audit(context, request, "student_assistant.subjects_encoded", "success", {
+        actorUserId: session.user.id,
+        metadata: { applicationId, subjectCount: result.encoding?.assignments?.length }
+      });
+      sendJson(response, 200, { data: result });
+    } catch (caught) {
+      if (caught.message === "STUDENT_ASSISTANT_ASSIGNMENT_REQUIRED") {
+        error(403, "STUDENT_ASSISTANT_ASSIGNMENT_REQUIRED", "No active department assignment found for this Student Assistant account.");
+      }
+      if (caught.message === "UNAUTHORIZED_DEPARTMENT_ACCESS") {
+        error(403, "UNAUTHORIZED_DEPARTMENT_ACCESS", "This application does not belong to your assigned department.");
+      }
+      if (caught.message === "APPLICATION_NOT_READY_FOR_ENCODING") {
+        error(409, "APPLICATION_NOT_READY_FOR_ENCODING", "This application is not approved for encoding by the Program Head.");
+      }
+      if (caught.message === "APPLICATION_NOT_FOUND") {
+        error(404, "APPLICATION_NOT_FOUND", "Enrollment application not found.");
+      }
+      if (caught.message === "INCOMPLETE_SUBJECT_ENCODING") {
+        error(422, "INCOMPLETE_SUBJECT_ENCODING", "Every approved subject must be assigned a class section.");
+      }
+      if (caught.message === "DUPLICATE_SUBJECT_ASSIGNMENT") {
+        error(422, "DUPLICATE_SUBJECT_ASSIGNMENT", "Each subject can only be assigned once.");
+      }
+      if (caught.message === "INVALID_SUBJECT_ASSIGNMENT" || caught.message === "INVALID_OFFERING_ASSIGNMENT") {
+        error(422, "SECTION_ASSIGNMENTS_INVALID", "Select a valid open offering for each approved subject.");
+      }
+      if (caught.message === "SECTION_UNAVAILABLE") {
+        error(409, "SECTION_UNAVAILABLE", "A selected section is full. Please choose another section.");
+      }
+      throw caught;
+    }
+  }
+
   async function createProgramHeadOffering(request, response, context) {
     const session = await requireStatePermission(request, context, "portal.access.program_head");
     const body = await readJson(request, config.bodyLimitBytes);
@@ -1133,6 +1487,76 @@ export async function createApp(options = {}) {
         metadata: { offeringId: offering.id, subjectId: offering.subject.id, classSectionId: offering.classSection.id }
       });
       sendJson(response, 201, { data: { offering } });
+    } catch (caught) {
+      handleProgramHeadError(caught);
+    }
+  }
+
+  async function listProgramHeadOfferings(request, response, context, url) {
+    const session = await requirePermission(request, context, "portal.access.program_head");
+    try {
+      const academicTermId = url.searchParams.get("academicTermId") || undefined;
+      const status = url.searchParams.get("status") || undefined;
+      const query = url.searchParams.get("query") || undefined;
+      const offerings = await programHeadStore.listOfferings(session.user.id, { academicTermId, status, query });
+      sendJson(response, 200, { data: { offerings } });
+    } catch (caught) {
+      handleProgramHeadError(caught);
+    }
+  }
+
+  async function updateProgramHeadOffering(request, response, context, offeringId) {
+    const session = await requireStatePermission(request, context, "portal.access.program_head");
+    const body = await readJson(request, config.bodyLimitBytes);
+    try {
+      const offering = await programHeadStore.updateOffering(session.user.id, offeringId, body);
+      await audit(context, request, "program_head.offering_updated", "success", {
+        actorUserId: session.user.id,
+        metadata: { offeringId, updates: body }
+      });
+      sendJson(response, 200, { data: { offering } });
+    } catch (caught) {
+      handleProgramHeadError(caught);
+    }
+  }
+
+  async function closeProgramHeadOffering(request, response, context, offeringId) {
+    const session = await requireStatePermission(request, context, "portal.access.program_head");
+    try {
+      const offering = await programHeadStore.closeOffering(session.user.id, offeringId);
+      await audit(context, request, "program_head.offering_closed", "success", {
+        actorUserId: session.user.id,
+        metadata: { offeringId }
+      });
+      sendJson(response, 200, { data: { offering } });
+    } catch (caught) {
+      handleProgramHeadError(caught);
+    }
+  }
+
+  async function archiveProgramHeadOffering(request, response, context, offeringId) {
+    const session = await requireStatePermission(request, context, "portal.access.program_head");
+    try {
+      const offering = await programHeadStore.archiveOffering(session.user.id, offeringId);
+      await audit(context, request, "program_head.offering_archived", "success", {
+        actorUserId: session.user.id,
+        metadata: { offeringId }
+      });
+      sendJson(response, 200, { data: { offering } });
+    } catch (caught) {
+      handleProgramHeadError(caught);
+    }
+  }
+
+  async function unarchiveProgramHeadOffering(request, response, context, offeringId) {
+    const session = await requireStatePermission(request, context, "portal.access.program_head");
+    try {
+      const offering = await programHeadStore.unarchiveOffering(session.user.id, offeringId);
+      await audit(context, request, "program_head.offering_restored", "success", {
+        actorUserId: session.user.id,
+        metadata: { offeringId }
+      });
+      sendJson(response, 200, { data: { offering } });
     } catch (caught) {
       handleProgramHeadError(caught);
     }
@@ -1187,6 +1611,7 @@ export async function createApp(options = {}) {
       };
       const responseData = messages[caught.message];
       if (responseData) error(...responseData);
+      if (caught?.code === "P2002") error(409, "APPLICATION_CONFLICT", "The enrollment application changed while it was being submitted. Please refresh and try again.");
       throw caught;
     }
   }
@@ -1478,6 +1903,7 @@ export async function createApp(options = {}) {
     } catch (caught) {
       if (caught.message === "APPLICATION_NOT_FOUND") error(404, "APPLICATION_NOT_FOUND", "Student application not found.");
       if (caught.message === "PROGRAM_HEAD_APPROVAL_REQUIRED") error(409, "PROGRAM_HEAD_APPROVAL_REQUIRED", "The Program Head must approve the subject enrollment before Registrar verification.");
+      if (caught.message === "STUDENT_ASSISTANT_ENCODING_REQUIRED") error(409, "STUDENT_ASSISTANT_ENCODING_REQUIRED", "The Student Assistant must encode every subject before Registrar verification.");
       if (caught.message === "SECTION_ASSIGNMENTS_INVALID") error(422, "SECTION_ASSIGNMENTS_INVALID", "Select one valid open section for every approved subject in the same program, curriculum, year, and term.");
       if (caught.message === "SECTION_UNAVAILABLE") error(409, "SECTION_UNAVAILABLE", "A selected section is full. Refresh and choose another section.");
       if (caught.message === "ENROLLMENT_ALREADY_EXISTS") error(409, "ENROLLMENT_ALREADY_EXISTS", "An official enrollment already exists for this student and term.");
@@ -1556,6 +1982,42 @@ export async function createApp(options = {}) {
     }
   }
 
+  async function overrideStudentProgram(request, response, context, studentId) {
+    const session = await requireStatePermission(request, context, "APPROVE_STUDENT_APPLICATION");
+    const body = await readJson(request, config.bodyLimitBytes);
+    try {
+      const result = await registrarStore.overrideStudentProgram(
+        studentId,
+        session.user.id,
+        publicUser(session.user).primaryRole,
+        body
+      );
+      await audit(context, request, "academic_assignment.overridden", "success", {
+        actorUserId: session.user.id,
+        targetUserId: result.student.userId,
+        resourceType: "student",
+        resourceId: result.student.id,
+        metadata: {
+          action: "Academic Assignment Override",
+          oldProgram: result.oldProgram?.code ?? "None",
+          newProgram: result.newProgram.code,
+          oldCurriculum: result.oldCurriculum?.code ?? "None",
+          newCurriculum: result.newCurriculum.code,
+          reason: body?.reason,
+          changedBy: session.user.displayName || session.user.username || "Registrar"
+        }
+      });
+      sendJson(response, 200, { data: { student: result.student } });
+    } catch (caught) {
+      if (caught.message === "STUDENT_NOT_FOUND") error(404, "STUDENT_NOT_FOUND", "Student not found.");
+      if (caught.message === "OVERRIDE_REASON_REQUIRED") error(422, "OVERRIDE_REASON_REQUIRED", "A reason for overriding the academic assignment is required.");
+      if (caught.message === "PROGRAM_AND_CURRICULUM_REQUIRED") error(422, "PROGRAM_AND_CURRICULUM_REQUIRED", "Both Program and Curriculum are required.");
+      if (caught.message === "PROGRAM_INVALID") error(422, "PROGRAM_INVALID", "Selected program is invalid or inactive.");
+      if (caught.message === "CURRICULUM_INVALID") error(422, "CURRICULUM_INVALID", "Selected curriculum is invalid or does not belong to the selected program.");
+      throw caught;
+    }
+  }
+
   async function openRegistrarPeriod(request, response, context) {
     const session = await requireStatePermission(request, context, "OPEN_ENROLLMENT");
     const body = await readJson(request, config.bodyLimitBytes);
@@ -1591,6 +2053,153 @@ export async function createApp(options = {}) {
       if (caught.message === "PERIOD_NOT_FOUND") error(404, "PERIOD_NOT_FOUND", "Enrollment period not found.");
       if (caught.message === "PERIOD_NOT_OPEN") error(409, "PERIOD_NOT_OPEN", "The enrollment period is not open.");
       throw caught;
+    }
+  }
+
+  function handleRegistrarOfferingError(caught) {
+    if (caught.message === "OFFERING_DUPLICATE") error(409, "OFFERING_DUPLICATE", "An offering with this code already exists for this term.");
+    if (caught.message === "SCHEDULE_CONFLICT") error(409, "SCHEDULE_CONFLICT", "Schedule conflict: instructor or room is already booked for this timeslot.");
+    if (caught.message === "SECTION_CONFLICT") error(409, "SECTION_CONFLICT", "Section conflict: section is assigned to another curriculum or year level.");
+    if (caught.message === "OFFERING_INVALID") error(422, "OFFERING_INVALID", "Invalid offering data provided.");
+    if (caught.message === "OFFERING_NOT_FOUND") error(404, "OFFERING_NOT_FOUND", "Course offering not found.");
+    if (caught.message === "OFFERING_HAS_ENROLLMENTS") error(409, "OFFERING_HAS_ENROLLMENTS", "Cannot delete an offering that has enrolled students.");
+    if (caught.message === "SECTION_CODE_INVALID") error(422, "SECTION_CODE_INVALID", "Section code format is invalid.");
+    if (caught.message === "OFFERING_CODE_INVALID") error(422, "OFFERING_CODE_INVALID", "Offering code format is invalid.");
+    if (caught.message === "SCHEDULE_INVALID") error(422, "SCHEDULE_INVALID", "Invalid schedule times or weekday.");
+    if (caught.message === "ACADEMIC_TERM_INVALID") error(422, "ACADEMIC_TERM_INVALID", "Academic term is invalid or closed.");
+    if (caught.message === "CURRICULUM_NOT_FOUND") error(404, "CURRICULUM_NOT_FOUND", "Curriculum not found.");
+    if (caught.message === "CURRICULUM_SUBJECT_NOT_FOUND") error(404, "CURRICULUM_SUBJECT_NOT_FOUND", "Subject not found in selected curriculum.");
+    if (caught.message === "FACULTY_INVALID") error(422, "FACULTY_INVALID", "Selected faculty member is not found or inactive.");
+    if (caught.message === "ROOM_INVALID") error(422, "ROOM_INVALID", "Selected room is not found or inactive.");
+    if (caught.message === "UNAUTHORIZED_OFFERING_ACCESS") error(403, "FORBIDDEN", "Unauthorized offering access.");
+    if (caught.message === "CROSS_COLLEGE_FACULTY_FORBIDDEN" || caught.code === "CROSS_COLLEGE_FACULTY_FORBIDDEN") {
+      error(403, "CROSS_COLLEGE_FACULTY_FORBIDDEN", "Faculty member belongs to a different College. Cross-college assignment requires Registrar or Administrator override.");
+    }
+    if (caught.message === "CROSS_COLLEGE_OVERRIDE_REQUIRED" || caught.code === "CROSS_COLLEGE_OVERRIDE_REQUIRED") {
+      error(422, "CROSS_COLLEGE_OVERRIDE_REQUIRED", "Faculty member belongs to a different College. Please provide an override reason to proceed.");
+    }
+    throw caught;
+  }
+
+  async function listRegistrarSubjects(request, response, context, url) {
+    await requirePermission(request, context, "VIEW_STUDENT_APPLICATION");
+    const programId = url.searchParams.get("programId") || undefined;
+    const query = url.searchParams.get("query") || undefined;
+    const subjects = await registrarStore.listSubjects({ programId, query });
+    sendJson(response, 200, { data: { subjects } });
+  }
+
+  async function listRegistrarOfferings(request, response, context, url) {
+    await requirePermission(request, context, "VIEW_STUDENT_APPLICATION");
+    const academicTermId = url.searchParams.get("academicTermId") || undefined;
+    const programId = url.searchParams.get("programId") || undefined;
+    const status = url.searchParams.get("status") || undefined;
+    const query = url.searchParams.get("query") || undefined;
+    const offerings = await registrarStore.listOfferings({ academicTermId, programId, status, query });
+    sendJson(response, 200, { data: { offerings } });
+  }
+
+  async function getRegistrarOfferingOptions(request, response, context) {
+    await requirePermission(request, context, "VIEW_STUDENT_APPLICATION");
+    const options = await registrarStore.offeringFormData();
+    sendJson(response, 200, { data: options });
+  }
+
+  async function createRegistrarOffering(request, response, context) {
+    const session = await requireStatePermission(request, context, "CREATE_ENROLLMENT_PERIOD");
+    const body = await readJson(request, config.bodyLimitBytes);
+    try {
+      const offering = await registrarStore.createOffering(body, session.user.id);
+      await audit(context, request, "registrar.offering_created", "success", {
+        actorUserId: session.user.id,
+        metadata: { offeringId: offering.id, offeringCode: offering.offeringCode }
+      });
+      if (offering.isCrossCollegeOverride) {
+        await audit(context, request, "faculty.cross_college_override", "success", {
+          actorUserId: session.user.id,
+          metadata: { offeringId: offering.id, facultyId: body.facultyId, overrideReason: body.overrideReason }
+        });
+      }
+      sendJson(response, 201, { data: { offering } });
+    } catch (caught) {
+      handleRegistrarOfferingError(caught);
+    }
+  }
+
+  async function updateRegistrarOffering(request, response, context, offeringId) {
+    const session = await requireStatePermission(request, context, "UPDATE_ENROLLMENT_PERIOD");
+    const body = await readJson(request, config.bodyLimitBytes);
+    try {
+      const offering = await registrarStore.updateOffering(offeringId, body, session.user.id);
+      await audit(context, request, "registrar.offering_updated", "success", {
+        actorUserId: session.user.id,
+        metadata: { offeringId, updates: body }
+      });
+      if (offering.isCrossCollegeOverride) {
+        await audit(context, request, "faculty.cross_college_override", "success", {
+          actorUserId: session.user.id,
+          metadata: { offeringId, facultyId: body.facultyId, overrideReason: body.overrideReason }
+        });
+      }
+      sendJson(response, 200, { data: { offering } });
+    } catch (caught) {
+      handleRegistrarOfferingError(caught);
+    }
+  }
+
+  async function closeRegistrarOffering(request, response, context, offeringId) {
+    const session = await requireStatePermission(request, context, "CLOSE_ENROLLMENT");
+    try {
+      const offering = await registrarStore.closeOffering(offeringId, session.user.id);
+      await audit(context, request, "registrar.offering_closed", "success", {
+        actorUserId: session.user.id,
+        metadata: { offeringId }
+      });
+      sendJson(response, 200, { data: { offering } });
+    } catch (caught) {
+      handleRegistrarOfferingError(caught);
+    }
+  }
+
+  async function archiveRegistrarOffering(request, response, context, offeringId) {
+    const session = await requireStatePermission(request, context, "CLOSE_ENROLLMENT");
+    try {
+      const offering = await registrarStore.archiveOffering(offeringId, session.user.id);
+      await audit(context, request, "registrar.offering_archived", "success", {
+        actorUserId: session.user.id,
+        metadata: { offeringId }
+      });
+      sendJson(response, 200, { data: { offering } });
+    } catch (caught) {
+      handleRegistrarOfferingError(caught);
+    }
+  }
+
+  async function unarchiveRegistrarOffering(request, response, context, offeringId) {
+    const session = await requireStatePermission(request, context, "CREATE_ENROLLMENT_PERIOD");
+    try {
+      const offering = await registrarStore.unarchiveOffering(offeringId, session.user.id);
+      await audit(context, request, "registrar.offering_restored", "success", {
+        actorUserId: session.user.id,
+        metadata: { offeringId }
+      });
+      sendJson(response, 200, { data: { offering } });
+    } catch (caught) {
+      handleRegistrarOfferingError(caught);
+    }
+  }
+
+  async function deleteRegistrarOffering(request, response, context, offeringId) {
+    const session = await requireStatePermission(request, context, "CREATE_ENROLLMENT_PERIOD");
+    try {
+      const result = await registrarStore.deleteOffering(offeringId, session.user.id);
+      await audit(context, request, "registrar.offering_deleted", "success", {
+        actorUserId: session.user.id,
+        metadata: { offeringId }
+      });
+      sendJson(response, 200, { data: result });
+    } catch (caught) {
+      handleRegistrarOfferingError(caught);
     }
   }
 
@@ -1780,7 +2389,10 @@ export async function createApp(options = {}) {
     const session = await requirePermission(request, context, "portal.access.student");
     const appInfo = await documentStore.getStudentApplication(session.user.id);
     if (!appInfo?.student) error(404, "STUDENT_NOT_FOUND", "No student profile is linked to this account.");
-    const documents = await documentStore.getStudentDocuments(appInfo.student.id, appInfo.application?.id ?? null);
+    const url = new URL(request.url, `http://${request.headers.host || "localhost"}`);
+    const queryAppId = url.searchParams.get("applicationId");
+    const targetAppId = queryAppId || appInfo.application?.id || null;
+    const documents = await documentStore.getStudentDocuments(appInfo.student.id, targetAppId);
     sendJson(response, 200, { data: { documents } });
   }
 
@@ -1858,9 +2470,9 @@ export async function createApp(options = {}) {
     const docType = await documentStore.getDocumentType(documentTypeId);
     if (!docType) error(422, "DOCUMENT_TYPE_INVALID", "Invalid document type.");
 
-    const appInfo = await documentStore.getStudentApplication(session.user.id);
+    const appInfo = await documentStore.getStudentApplicationById(session.user.id, applicationId);
     if (!appInfo?.student) error(404, "STUDENT_NOT_FOUND", "No student profile is linked to this account.");
-    if (appInfo.application?.id !== applicationId) error(403, "APPLICATION_MISMATCH", "Document does not belong to your application.");
+    if (!appInfo.application) error(403, "APPLICATION_MISMATCH", "Document does not belong to your application.");
 
     let validation;
     try {
@@ -1895,6 +2507,9 @@ export async function createApp(options = {}) {
       });
     } catch (caught) {
       await documentStorage.deleteFile(relativePath).catch(() => {});
+      if (caught.message === "APPLICATION_LOCKED") {
+        error(409, "APPLICATION_LOCKED", "Documents cannot be uploaded or replaced while your application is under review.");
+      }
       if (caught.message === "DOCUMENT_VERIFIED_LOCKED") {
         error(409, "DOCUMENT_VERIFIED_LOCKED", "A verified document cannot be replaced.");
       }
@@ -1950,6 +2565,302 @@ export async function createApp(options = {}) {
         actorUserId: session.user.id,
         metadata: { documentId }
       });
+      response.writeHead(200, {
+        "Content-Type": contentType,
+        "Content-Length": body.length,
+        "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(safeName)}`,
+        "Cache-Control": "private, no-store"
+      });
+      if (request.method === "HEAD") response.end();
+      else response.end(body);
+    } catch (caught) {
+      if (caught?.code === "ENOENT") error(404, "DOCUMENT_FILE_MISSING", "The document file could not be found.");
+      throw caught;
+    }
+  }
+
+  async function submitAcademicImportRequest(request, response, context) {
+    const session = await requireStateAuthentication(request, context);
+    const maxFileSize = documentStorage.getMaxFileSize();
+
+    let fields, file;
+    try {
+      const parsed = await parseMultipartFormData(request, maxFileSize);
+      fields = parsed.fields;
+      file = parsed.file;
+    } catch (caught) {
+      if (caught.message === "FILE_TOO_LARGE") error(413, "FILE_TOO_LARGE", "The uploaded file exceeds the maximum allowed size.");
+      if (caught.message === "INVALID_MULTIPART") error(400, "INVALID_MULTIPART", "Invalid multipart form data.");
+      throw caught;
+    }
+
+    const targetProgramId = fields.targetProgramId;
+    const previousSchool = typeof fields.previousSchool === "string" && fields.previousSchool.trim()
+      ? fields.previousSchool.trim()
+      : null;
+
+    if (!targetProgramId) {
+      error(422, "PROGRAM_SELECTION_REQUIRED", "Please select a target program for credit evaluation.");
+    }
+    if (!file) {
+      error(422, "FILE_REQUIRED", "Academic record or transcript file is required.");
+    }
+
+    const student = await database.student.findFirst({
+      where: { userId: session.user.id }
+    });
+    if (!student) {
+      error(404, "STUDENT_NOT_FOUND", "No student profile is linked to this account.");
+    }
+
+    try {
+      const importRequest = await academicImportService.createRequest({
+        studentId: student.id,
+        targetProgramId,
+        previousSchool,
+        file,
+        userId: session.user.id
+      });
+
+      await audit(context, request, "academic_import.request_submitted", "success", {
+        actorUserId: session.user.id,
+        targetUserId: session.user.id,
+        metadata: {
+          requestId: importRequest.id,
+          studentId: student.id,
+          targetProgramId
+        }
+      });
+
+      sendJson(response, 201, { data: { request: importRequest } });
+    } catch (caught) {
+      if (caught.message === "FILE_EMPTY") error(422, "FILE_EMPTY", "The selected file is empty.");
+      if (caught.message === "FILE_TOO_LARGE") error(413, "FILE_TOO_LARGE", "The uploaded file exceeds the 10 MB limit.");
+      if (caught.message === "INVALID_FILE_EXTENSION") {
+        error(415, "INVALID_FILE_EXTENSION", "Upload a PDF, PNG, JPG, or JPEG file.");
+      }
+      if (caught.message === "INVALID_MIME_TYPE" || caught.message === "FILE_CONTENT_MISMATCH") {
+        error(415, "INVALID_FILE_TYPE", "The file contents must be a valid PDF, PNG, JPG, or JPEG document.");
+      }
+      if (caught.message === "PROGRAM_NOT_FOUND") error(404, "PROGRAM_NOT_FOUND", "Target program not found.");
+      throw caught;
+    }
+  }
+
+  async function listAcademicImportRequests(request, response, context, url) {
+    const session = await requireAuthentication(request, context);
+    const roles = store.rolesForUser(session.user).map((r) => r.slug);
+    const isStaff = roles.some((r) => ["administrator", "registrar", "dean", "program_head"].includes(r));
+
+    let studentId = null;
+    if (!isStaff) {
+      const student = await database.student.findFirst({
+        where: { userId: session.user.id }
+      });
+      if (!student) {
+        return sendJson(response, 200, { data: { requests: [] } });
+      }
+      studentId = student.id;
+    }
+
+    const statusParam = url.searchParams.get("status");
+    const requests = await academicImportService.listRequests({
+      studentId,
+      status: statusParam || null
+    });
+
+    sendJson(response, 200, { data: { requests } });
+  }
+
+  async function getAcademicImportRequest(request, response, context, requestId) {
+    const session = await requireAuthentication(request, context);
+    const roles = store.rolesForUser(session.user).map((r) => r.slug);
+    const isStaff = roles.some((r) => ["administrator", "registrar", "dean", "program_head"].includes(r));
+
+    const importRequest = await academicImportService.getRequest(requestId);
+    if (!importRequest) {
+      error(404, "REQUEST_NOT_FOUND", "Academic record import request not found.");
+    }
+
+    if (!isStaff && importRequest.student.userId !== session.user.id) {
+      error(403, "FORBIDDEN", "You are not authorized to view this request.");
+    }
+
+    sendJson(response, 200, { data: { request: importRequest } });
+  }
+
+  async function verifyAcademicImportRequest(request, response, context, requestId) {
+    const session = await requireStateAuthentication(request, context);
+    const roles = store.rolesForUser(session.user).map((r) => r.slug);
+    if (!roles.some((r) => ["administrator", "registrar"].includes(r))) {
+      error(403, "FORBIDDEN", "Only Registrar or Administrator can verify academic record import requests.");
+    }
+
+    const body = await readJson(request, config.bodyLimitBytes);
+    const action = body.action;
+    const remarks = body.remarks || body.rejectionReason || "";
+    const rejectionReason = body.rejectionReason || body.remarks || "";
+
+    try {
+      const updated = await academicImportService.verifyRequest({
+        requestId,
+        action,
+        remarks,
+        rejectionReason,
+        reviewerUserId: session.user.id
+      });
+
+      await audit(context, request, "academic_import.request_verified", "success", {
+        actorUserId: session.user.id,
+        targetUserId: updated.student?.userId,
+        metadata: {
+          requestId,
+          action,
+          remarks
+        }
+      });
+
+      sendJson(response, 200, { data: { request: updated } });
+    } catch (caught) {
+      if (caught.message === "REQUEST_NOT_FOUND") error(404, "REQUEST_NOT_FOUND", "Request not found.");
+      if (caught.message === "REMARKS_REQUIRED_ON_REJECTION") error(422, "REMARKS_REQUIRED", "Remarks are required when rejecting a request.");
+      if (caught.message === "INVALID_VERIFICATION_ACTION") error(422, "INVALID_ACTION", "Action must be APPROVE or REJECT.");
+      throw caught;
+    }
+  }
+
+  async function processAcademicImportAI(request, response, context, requestId) {
+    const session = await requireStateAuthentication(request, context);
+    const roles = store.rolesForUser(session.user).map((r) => r.slug);
+    if (!roles.some((r) => ["administrator", "registrar"].includes(r))) {
+      error(403, "FORBIDDEN", "Only Registrar or Administrator can trigger AI processing.");
+    }
+
+    try {
+      const updated = await academicImportService.processAI(requestId);
+      await audit(context, request, "academic_import.ai_processed", "success", {
+        actorUserId: session.user.id,
+        targetUserId: updated.student?.userId,
+        metadata: {
+          requestId,
+          detectedRecordsCount: updated.matchedData?.records?.length || 0,
+          extractionMethod: updated.extractedData?.extractionMethod || "DETERMINISTIC"
+        }
+      });
+
+      sendJson(response, 200, { data: { request: updated } });
+    } catch (caught) {
+      await audit(context, request, "academic_import.ai_processed", "failure", {
+        actorUserId: session.user.id,
+        metadata: {
+          requestId,
+          error: caught.message
+        }
+      });
+      if (caught.message === "REQUEST_NOT_FOUND") error(404, "REQUEST_NOT_FOUND", "Request not found.");
+      if (caught.message === "FIRST_RUN_REQUIRES_REGISTRAR_APPROVAL") {
+        error(422, "APPROVAL_REQUIRED", "Document must be verified by Registrar before running AI matching.");
+      }
+      error(422, "EXTRACTION_FAILED", caught.message || "No academic records could be extracted. AI/OCR processing failed or the document is unreadable.");
+    }
+  }
+
+  async function getAcademicImportPreview(request, response, context, requestId) {
+    const session = await requireAuthentication(request, context);
+    const roles = store.rolesForUser(session.user).map((r) => r.slug);
+    if (!roles.some((r) => ["administrator", "registrar"].includes(r))) {
+      error(403, "FORBIDDEN", "Only Registrar or Administrator can view import preview.");
+    }
+
+    try {
+      const preview = await academicImportService.getPreview(requestId);
+      sendJson(response, 200, { data: { preview } });
+    } catch (caught) {
+      if (caught.message === "REQUEST_NOT_FOUND") error(404, "REQUEST_NOT_FOUND", "Request not found.");
+      throw caught;
+    }
+  }
+
+  async function commitAcademicImport(request, response, context, requestId) {
+    const session = await requireStateAuthentication(request, context);
+    const roles = store.rolesForUser(session.user).map((r) => r.slug);
+    if (!roles.some((r) => ["administrator", "registrar"].includes(r))) {
+      error(403, "FORBIDDEN", "Only Registrar or Administrator can commit academic records.");
+    }
+
+    const body = await readJson(request, config.bodyLimitBytes);
+    const resolutions = Array.isArray(body.resolutions) ? body.resolutions : [];
+
+    try {
+      const result = await academicImportService.commitImport({
+        requestId,
+        resolutions,
+        reviewerUserId: session.user.id
+      });
+
+      const targetUserId = result.request?.student?.userId || result.targetUserId || null;
+      try {
+        await audit(context, request, "academic_import.records_imported", "success", {
+          actorUserId: session.user.id,
+          targetUserId,
+          metadata: {
+            requestId,
+            studentId: result.studentId || result.request?.studentId,
+            importBatchId: result.importBatchId,
+            importedCount: result.importedCount,
+            skippedCount: result.skippedCount
+          }
+        });
+      } catch (auditError) {
+        console.error("[AcademicImport] Audit logging failed for commit:", auditError);
+      }
+
+      sendJson(response, 200, { data: result });
+    } catch (caught) {
+      if (caught.message === "REQUEST_NOT_FOUND") error(404, "REQUEST_NOT_FOUND", "Request not found.");
+      if (caught.message === "ALREADY_IMPORTED" || caught.message === "CANNOT_COMMIT_IN_STATUS_IMPORTED") {
+        error(409, "ALREADY_IMPORTED", "Academic records were already imported.");
+      }
+      if (caught.message?.startsWith("CANNOT_COMMIT_IN_STATUS_")) {
+        error(422, "INVALID_STATUS", `Cannot commit academic record import in status ${caught.message.replace("CANNOT_COMMIT_IN_STATUS_", "")}.`);
+      }
+      throw caught;
+    }
+  }
+
+  async function viewAcademicImportDocument(request, response, context, requestId) {
+    const session = await requireAuthentication(request, context);
+    const importRequest = await academicImportService.getRequest(requestId);
+    if (!importRequest) error(404, "REQUEST_NOT_FOUND", "Request not found.");
+
+    const roles = store.rolesForUser(session.user).map((r) => r.slug);
+    const isStaff = roles.some((r) => ["administrator", "registrar", "dean", "program_head"].includes(r));
+    if (!isStaff && importRequest.student.userId !== session.user.id) {
+      error(403, "FORBIDDEN", "You are not authorized to view this document.");
+    }
+
+    const document = importRequest.document;
+    if (!document || !document.filePath) error(404, "DOCUMENT_NOT_FOUND", "Document file not available.");
+
+    const storageRoot = resolve(config.documentRoot);
+    const filePath = resolve(storageRoot, document.filePath);
+    if (filePath !== storageRoot && !filePath.startsWith(`${storageRoot}${sep}`)) {
+      error(403, "DOCUMENT_PATH_INVALID", "The document path was rejected.");
+    }
+
+    try {
+      const body = await documentStorage.readFile(document.filePath);
+      const extension = extname(document.originalFileName || document.storedFileName || filePath).toLowerCase();
+      const contentType = document.mimeType || DOCUMENT_CONTENT_TYPES.get(extension) || "application/octet-stream";
+      const safeName = String(document.originalFileName || `academic_record_${requestId}${extension}`)
+        .replace(/[\r\n"]/g, "_")
+        .slice(0, 180);
+
+      await audit(context, request, "academic_import.document_viewed", "success", {
+        actorUserId: session.user.id,
+        metadata: { requestId, documentId: document.id }
+      });
+
       response.writeHead(200, {
         "Content-Type": contentType,
         "Content-Length": body.length,
@@ -2197,6 +3108,368 @@ export async function createApp(options = {}) {
     return false;
   }
 
+  // ── Faculty Management Error Handler ────────────────────────────────
+
+  function handleFacultyError(caught) {
+    const messages = {
+      NAME_REQUIRED: [422, "NAME_REQUIRED", "First name and last name are required."],
+      EMPLOYEE_NUMBER_REQUIRED: [422, "EMPLOYEE_NUMBER_REQUIRED", "Employee ID is required."],
+      EMAIL_INVALID: [422, "EMAIL_INVALID", "Valid institutional email is required."],
+      COLLEGE_REQUIRED: [422, "COLLEGE_REQUIRED", "College assignment is required."],
+      COLLEGE_NOT_FOUND: [404, "COLLEGE_NOT_FOUND", "Selected college does not exist or is inactive."],
+      EMPLOYEE_NUMBER_EXISTS: [409, "EMPLOYEE_NUMBER_EXISTS", "A faculty member with that employee number already exists."],
+      ACCOUNT_EXISTS: [409, "ACCOUNT_EXISTS", "A user account with that username or email already exists."],
+      PASSWORD_POLICY: [422, "PASSWORD_POLICY", caught?.message || "Password does not meet policy."],
+      ROLE_NOT_FOUND: [500, "ROLE_NOT_FOUND", "Faculty role is not configured in the system."],
+      FACULTY_NOT_FOUND: [404, "FACULTY_NOT_FOUND", "Faculty member not found."],
+      UNAUTHORIZED_CLASS_ACCESS: [403, "UNAUTHORIZED_CLASS_ACCESS", "You are not assigned to this class."],
+      GRADES_EMPTY: [422, "GRADES_EMPTY", "No grade data provided."],
+      INVALID_ENROLLMENT_ITEM: [422, "INVALID_ENROLLMENT_ITEM", caught?.message || "Invalid enrollment item."],
+      GRADE_VALUE_INVALID: [422, "GRADE_VALUE_INVALID", caught?.message || "Invalid grade value."],
+      GRADE_ALREADY_POSTED: [409, "GRADE_ALREADY_POSTED", "Cannot modify a grade that has already been posted."],
+      GRADE_ALREADY_SUBMITTED: [409, "GRADE_ALREADY_SUBMITTED", "Cannot revert a submitted grade to draft."],
+      INCOMPLETE_GRADE_SHEET: [409, "INCOMPLETE_GRADE_SHEET", "Every enrolled student must have a completed grade before this grade sheet can proceed."],
+      NO_APPROVED_GRADES: [404, "NO_APPROVED_GRADES", "No Dean-approved grades found for this offering."],
+      NO_SUBMITTED_GRADES: [404, "NO_SUBMITTED_GRADES", "No submitted grades found for this offering."],
+      OFFERING_NOT_FOUND: [404, "OFFERING_NOT_FOUND", "Course offering not found."],
+      CROSS_COLLEGE_FACULTY_FORBIDDEN: [403, "CROSS_COLLEGE_FACULTY_FORBIDDEN", "Faculty member belongs to a different College. Cross-college assignment requires Registrar or Administrator override."],
+      CROSS_COLLEGE_OVERRIDE_REQUIRED: [422, "CROSS_COLLEGE_OVERRIDE_REQUIRED", "Faculty member belongs to a different College. Please provide an override reason to proceed."],
+      UNAUTHORIZED_COLLEGE_OFFERING: [403, "UNAUTHORIZED_COLLEGE_OFFERING", "This course offering does not belong to your assigned college."],
+      UNAUTHORIZED_COLLEGE_ENROLLMENT: [403, "UNAUTHORIZED_COLLEGE_ENROLLMENT", "This student enrollment does not belong to your assigned college."],
+      DEAN_ASSIGNMENT_REQUIRED: [403, "DEAN_ASSIGNMENT_REQUIRED", "No active college assignment found for this Dean account."],
+      REMARKS_REQUIRED: [422, "REMARKS_REQUIRED", "Remarks are required when returning grades to faculty."],
+      OVERRIDE_REASON_REQUIRED: [422, "OVERRIDE_REASON_REQUIRED", "An override reason is required when overriding prerequisites."],
+      OVERRIDE_INVALID: [422, "OVERRIDE_INVALID", "One or more selected subjects are not eligible for prerequisite override."],
+      ENROLLMENT_NOT_REVIEWABLE: [422, "ENROLLMENT_NOT_REVIEWABLE", "Enrollment is not in reviewable status."],
+      ENROLLMENT_RULES_FAILED: [422, "ENROLLMENT_RULES_FAILED", "Enrollment evaluation rules failed."]
+    };
+    if (caught?.status && typeof caught.status === "number") {
+      error(caught.status, caught.code || "REQUEST_FAILED", caught.message || "An error occurred.");
+    }
+    const code = caught?.code || caught?.message;
+    const mapped = messages[code];
+    if (mapped) error(mapped[0], mapped[1], caught.message || mapped[2]);
+    throw caught;
+  }
+
+  // ── Admin Faculty Endpoints ─────────────────────────────────────────
+
+  async function listAdminColleges(request, response, context) {
+    await requirePermission(request, context, "administrator.manage_faculty");
+    const colleges = await adminFacultyService.listColleges();
+    sendJson(response, 200, { data: { colleges } });
+  }
+
+  async function listAdminFaculty(request, response, context) {
+    await requirePermission(request, context, "administrator.manage_faculty");
+    const faculty = await adminFacultyService.listFaculty();
+    sendJson(response, 200, { data: { faculty } });
+  }
+
+  async function createAdminFaculty(request, response, context) {
+    const session = await requireStatePermission(request, context, "administrator.manage_faculty");
+    const body = await readJson(request, config.bodyLimitBytes);
+    try {
+      const result = await adminFacultyService.createFaculty(body, session.user.id);
+      await audit(context, request, "faculty.created", "success", {
+        actorUserId: session.user.id,
+        targetUserId: result.userId,
+        metadata: {
+          facultyId: result.id,
+          employeeNumber: result.employeeNumber,
+          collegeCode: result.college.code
+        }
+      });
+      sendJson(response, 201, { data: result });
+    } catch (caught) {
+      handleFacultyError(caught);
+    }
+  }
+
+  async function updateAdminFaculty(request, response, context, facultyId) {
+    const session = await requireStatePermission(request, context, "administrator.manage_faculty");
+    const body = await readJson(request, config.bodyLimitBytes);
+    try {
+      const result = await adminFacultyService.updateFaculty(facultyId, body, session.user.id);
+      await audit(context, request, "faculty.updated", "success", {
+        actorUserId: session.user.id,
+        targetUserId: result.userId,
+        metadata: { facultyId: result.id, status: result.status }
+      });
+      sendJson(response, 200, { data: result });
+    } catch (caught) {
+      handleFacultyError(caught);
+    }
+  }
+
+  // ── Teacher Workspace Endpoints ─────────────────────────────────────
+
+  async function getFacultyClasses(request, response, context) {
+    const session = await requirePermission(request, context, "teacher.view_classes");
+    try {
+      const classes = await facultyStore.getAssignedOfferings(session.user.id);
+      sendJson(response, 200, { data: { classes } });
+    } catch (caught) {
+      handleFacultyError(caught);
+    }
+  }
+
+  async function getFacultyClassRoster(request, response, context, offeringId) {
+    const session = await requirePermission(request, context, "teacher.view_students");
+    try {
+      const roster = await facultyStore.getOfferingRoster(session.user.id, offeringId);
+      sendJson(response, 200, { data: roster });
+    } catch (caught) {
+      handleFacultyError(caught);
+    }
+  }
+
+  async function saveFacultyGrades(request, response, context, offeringId) {
+    const session = await requireStatePermission(request, context, "teacher.manage_grades");
+    const body = await readJson(request, config.bodyLimitBytes);
+    try {
+      const result = await facultyStore.saveGrades(
+        session.user.id,
+        offeringId,
+        body.grades,
+        false
+      );
+      await audit(context, request, "grade.saved", "success", {
+        actorUserId: session.user.id,
+        metadata: { offeringId, savedCount: result.savedCount }
+      });
+      sendJson(response, 200, { data: result });
+    } catch (caught) {
+      handleFacultyError(caught);
+    }
+  }
+
+  async function submitFacultyGrades(request, response, context, offeringId) {
+    const session = await requireStatePermission(request, context, "teacher.submit_grades");
+    const body = await readJson(request, config.bodyLimitBytes);
+    try {
+      const result = await facultyStore.saveGrades(
+        session.user.id,
+        offeringId,
+        body.grades,
+        true
+      );
+      await audit(context, request, "grade.submitted", "success", {
+        actorUserId: session.user.id,
+        metadata: { offeringId, savedCount: result.savedCount }
+      });
+      sendJson(response, 200, { data: result });
+    } catch (caught) {
+      handleFacultyError(caught);
+    }
+  }
+
+  // ── Registrar Grade Approval Endpoints ──────────────────────────────
+
+  async function getRegistrarGradeSubmissions(request, response, context) {
+    await requirePermission(request, context, "registrar.approve_grades");
+    const submissions = await gradeService.listPendingSubmissions();
+    sendJson(response, 200, { data: { submissions } });
+  }
+
+  async function getRegistrarGradeSheet(request, response, context, offeringId) {
+    await requirePermission(request, context, "registrar.approve_grades");
+    try {
+      const sheet = await gradeService.getOfferingGradeSheet(offeringId);
+      sendJson(response, 200, { data: sheet });
+    } catch (caught) {
+      handleFacultyError(caught);
+    }
+  }
+
+  async function approveRegistrarGrades(request, response, context, offeringId) {
+    const session = await requireStatePermission(request, context, "registrar.approve_grades");
+    await readJson(request, config.bodyLimitBytes).catch(() => ({}));
+    try {
+      const result = await gradeService.approveGrades(offeringId, session.user.id);
+      await audit(context, request, "grade.approved", "success", {
+        actorUserId: session.user.id,
+        metadata: {
+          offeringId,
+          approvedCount: result.approvedCount,
+          status: result.status
+        }
+      });
+      sendJson(response, 200, { data: result });
+    } catch (caught) {
+      handleFacultyError(caught);
+    }
+  }
+
+  async function returnRegistrarGrades(request, response, context, offeringId) {
+    const session = await requireStatePermission(request, context, "registrar.approve_grades");
+    const body = await readJson(request, config.bodyLimitBytes).catch(() => ({}));
+    try {
+      const result = await gradeService.returnGrades(offeringId, session.user.id, body?.remarks);
+      await audit(context, request, "registrar.grades.returned", "success", {
+        actorUserId: session.user.id,
+        resourceType: "offering",
+        resourceId: offeringId,
+        metadata: { offeringId, returnedCount: result.returnedCount, remarks: result.remarks }
+      });
+      sendJson(response, 200, { data: result });
+    } catch (caught) {
+      handleFacultyError(caught);
+    }
+  }
+
+  // ── Dean Endpoints ──────────────────────────────────────────────────
+
+  async function getDeanOverview(request, response, context) {
+    const session = await requirePermission(request, context, "portal.access.dean");
+    try {
+      const data = await deanStore.getDashboardOverview(session.user.id);
+      sendJson(response, 200, { data: { overview: data, ...data } });
+    } catch (caught) {
+      handleFacultyError(caught);
+    }
+  }
+
+  async function getDeanStudents(request, response, context, url) {
+    const session = await requirePermission(request, context, "portal.access.dean");
+    try {
+      const search = url.searchParams.get("search") || "";
+      const sort = url.searchParams.get("sort") || "name";
+      const programId = url.searchParams.get("programId") || "";
+      const yearLevel = url.searchParams.get("yearLevel") || null;
+      const data = await deanStore.listCollegeStudents(session.user.id, { search, sort, programId, yearLevel });
+      sendJson(response, 200, { data });
+    } catch (caught) {
+      handleFacultyError(caught);
+    }
+  }
+
+  async function getDeanFaculty(request, response, context) {
+    const session = await requirePermission(request, context, "portal.access.dean");
+    try {
+      const data = await deanStore.listCollegeFaculty(session.user.id);
+      sendJson(response, 200, { data });
+    } catch (caught) {
+      handleFacultyError(caught);
+    }
+  }
+
+  async function getDeanSchedules(request, response, context, url) {
+    const session = await requirePermission(request, context, "portal.access.dean");
+    try {
+      const programId = url.searchParams.get("programId") || "";
+      const data = await deanStore.listCollegeSchedules(session.user.id, { programId });
+      sendJson(response, 200, { data });
+    } catch (caught) {
+      handleFacultyError(caught);
+    }
+  }
+
+  async function getDeanGradeSubmissions(request, response, context) {
+    const session = await requirePermission(request, context, "portal.access.dean");
+    try {
+      const data = await deanStore.listPendingGradeSubmissions(session.user.id);
+      sendJson(response, 200, { data });
+    } catch (caught) {
+      handleFacultyError(caught);
+    }
+  }
+
+  async function getDeanOfferingGradeSheet(request, response, context, offeringId) {
+    const session = await requirePermission(request, context, "portal.access.dean");
+    try {
+      const sheet = await deanStore.getOfferingGradeSheet(session.user.id, offeringId);
+      sendJson(response, 200, { data: sheet });
+    } catch (caught) {
+      handleFacultyError(caught);
+    }
+  }
+
+  async function approveDeanGrades(request, response, context, offeringId) {
+    const session = await requireStatePermission(request, context, "portal.access.dean");
+    const body = await readJson(request, config.bodyLimitBytes).catch(() => ({}));
+    try {
+      const result = await deanStore.approveGrades(session.user.id, offeringId, body?.remarks);
+      await audit(context, request, "dean.grades.approved", "success", {
+        actorUserId: session.user.id,
+        resourceType: "offering",
+        resourceId: offeringId,
+        metadata: {
+          offeringId,
+          approvedCount: result.approvedCount,
+          status: result.status,
+          collegeCode: result.collegeCode
+        }
+      });
+      sendJson(response, 200, { data: result });
+    } catch (caught) {
+      handleFacultyError(caught);
+    }
+  }
+
+  async function returnDeanGrades(request, response, context, offeringId) {
+    const session = await requireStatePermission(request, context, "portal.access.dean");
+    const body = await readJson(request, config.bodyLimitBytes);
+    try {
+      const result = await deanStore.returnGrades(session.user.id, offeringId, body?.remarks);
+      await audit(context, request, "dean.grades.returned", "success", {
+        actorUserId: session.user.id,
+        resourceType: "offering",
+        resourceId: offeringId,
+        metadata: {
+          offeringId,
+          returnedCount: result.returnedCount,
+          status: result.status,
+          remarks: result.remarks
+        }
+      });
+      sendJson(response, 200, { data: result });
+    } catch (caught) {
+      handleFacultyError(caught);
+    }
+  }
+
+  async function getDeanPendingEvaluations(request, response, context) {
+    const session = await requirePermission(request, context, "portal.access.dean");
+    try {
+      const data = await deanStore.listPendingEvaluations(session.user.id);
+      sendJson(response, 200, { data });
+    } catch (caught) {
+      handleFacultyError(caught);
+    }
+  }
+
+  async function getDeanEnrollmentEvaluation(request, response, context, enrollmentId) {
+    const session = await requirePermission(request, context, "portal.access.dean");
+    try {
+      const evaluation = await deanStore.getEnrollmentEvaluation(session.user.id, enrollmentId);
+      sendJson(response, 200, { data: { evaluation, ...evaluation } });
+    } catch (caught) {
+      handleFacultyError(caught);
+    }
+  }
+
+  async function approveDeanEnrollmentEvaluation(request, response, context, enrollmentId) {
+    const session = await requireStatePermission(request, context, "portal.access.dean");
+    const body = await readJson(request, config.bodyLimitBytes).catch(() => ({}));
+    try {
+      const result = await deanStore.approveEnrollmentEvaluation(session.user.id, enrollmentId, body);
+      await audit(context, request, "dean.evaluation.approved", "success", {
+        actorUserId: session.user.id,
+        resourceType: "enrollment",
+        resourceId: enrollmentId,
+        metadata: {
+          enrollmentId,
+          collegeCode: result.evaluatedBy?.collegeCode,
+          overrideCount: Array.isArray(body?.overrideItemIds) ? body.overrideItemIds.length : 0
+        }
+      });
+      sendJson(response, 200, { data: result });
+    } catch (caught) {
+      handleFacultyError(caught);
+    }
+  }
+
   async function handler(request, response) {
     const requestStartedAt = requestMonitor.begin();
     let pathname = "/";
@@ -2271,6 +3544,9 @@ export async function createApp(options = {}) {
       if (method === "GET" && pathname === "/api/v1/auth/csrf") return await authSession(request, response, context);
       if (method === "GET" && pathname === "/api/v1/auth/session") return await authSession(request, response, context);
       if (method === "GET" && pathname === "/api/v1/auth/me") return await authSession(request, response, context, true);
+      if (method === "GET" && pathname === "/api/v1/auth/google/config") return await googleAuthConfig(request, response, context);
+      if (method === "POST" && pathname === "/api/v1/auth/google/verify") return await googleAuthVerify(request, response, context);
+      if (method === "POST" && pathname === "/api/v1/auth/google/register-student") return await googleRegisterStudent(request, response, context);
       if (method === "GET" && pathname === "/api/v1/admission/programs") return await listAdmissionPrograms(request, response);
       if (method === "POST" && pathname === "/api/v1/admission/register") return await registerStudent(request, response, context);
       if (method === "POST" && pathname === "/api/v1/auth/login") return await login(request, response, context);
@@ -2337,6 +3613,39 @@ export async function createApp(options = {}) {
       if (method === "GET" && pathname === "/api/v1/student/documents/types") {
         return await listDocumentTypes(request, response, context);
       }
+
+      // Academic Record Import Routes
+      if (method === "POST" && pathname === "/api/v1/academic-import/requests") {
+        return await submitAcademicImportRequest(request, response, context);
+      }
+      if (method === "GET" && pathname === "/api/v1/academic-import/requests") {
+        return await listAcademicImportRequests(request, response, context, url);
+      }
+      const academicImportViewDocMatch = pathname.match(/^\/api\/v1\/academic-import\/requests\/([0-9a-f-]{36})\/document$/i);
+      if ((method === "GET" || method === "HEAD") && academicImportViewDocMatch) {
+        return await viewAcademicImportDocument(request, response, context, academicImportViewDocMatch[1]);
+      }
+      const academicImportVerifyMatch = pathname.match(/^\/api\/v1\/academic-import\/requests\/([0-9a-f-]{36})\/verify$/i);
+      if (method === "POST" && academicImportVerifyMatch) {
+        return await verifyAcademicImportRequest(request, response, context, academicImportVerifyMatch[1]);
+      }
+      const academicImportProcessMatch = pathname.match(/^\/api\/v1\/academic-import\/requests\/([0-9a-f-]{36})\/process-ai$/i);
+      if (method === "POST" && academicImportProcessMatch) {
+        return await processAcademicImportAI(request, response, context, academicImportProcessMatch[1]);
+      }
+      const academicImportPreviewMatch = pathname.match(/^\/api\/v1\/academic-import\/requests\/([0-9a-f-]{36})\/preview$/i);
+      if (method === "GET" && academicImportPreviewMatch) {
+        return await getAcademicImportPreview(request, response, context, academicImportPreviewMatch[1]);
+      }
+      const academicImportCommitMatch = pathname.match(/^\/api\/v1\/academic-import\/requests\/([0-9a-f-]{36})\/commit$/i);
+      if (method === "POST" && academicImportCommitMatch) {
+        return await commitAcademicImport(request, response, context, academicImportCommitMatch[1]);
+      }
+      const academicImportGetMatch = pathname.match(/^\/api\/v1\/academic-import\/requests\/([0-9a-f-]{36})$/i);
+      if (method === "GET" && academicImportGetMatch) {
+        return await getAcademicImportRequest(request, response, context, academicImportGetMatch[1]);
+      }
+
       if (method === "GET" && pathname === "/api/v1/registrar/dashboard") {
         return await registrarDashboard(request, response, context);
       }
@@ -2349,8 +3658,27 @@ export async function createApp(options = {}) {
       if (method === "POST" && pathname === "/api/v1/program-head/curricula") {
         return await createProgramCurriculum(request, response, context);
       }
+      if (method === "GET" && pathname === "/api/v1/program-head/offerings") {
+        return await listProgramHeadOfferings(request, response, context, url);
+      }
       if (method === "POST" && pathname === "/api/v1/program-head/offerings") {
         return await createProgramHeadOffering(request, response, context);
+      }
+      const programHeadOfferingMatch = pathname.match(/^\/api\/v1\/program-head\/offerings\/([0-9a-f-]{36})$/i);
+      if (method === "PATCH" && programHeadOfferingMatch) {
+        return await updateProgramHeadOffering(request, response, context, programHeadOfferingMatch[1]);
+      }
+      const programHeadOfferingCloseMatch = pathname.match(/^\/api\/v1\/program-head\/offerings\/([0-9a-f-]{36})\/close$/i);
+      if (method === "POST" && programHeadOfferingCloseMatch) {
+        return await closeProgramHeadOffering(request, response, context, programHeadOfferingCloseMatch[1]);
+      }
+      const programHeadOfferingArchiveMatch = pathname.match(/^\/api\/v1\/program-head\/offerings\/([0-9a-f-]{36})\/archive$/i);
+      if (method === "POST" && programHeadOfferingArchiveMatch) {
+        return await archiveProgramHeadOffering(request, response, context, programHeadOfferingArchiveMatch[1]);
+      }
+      const programHeadOfferingUnarchiveMatch = pathname.match(/^\/api\/v1\/program-head\/offerings\/([0-9a-f-]{36})\/unarchive$/i);
+      if (method === "POST" && programHeadOfferingUnarchiveMatch) {
+        return await unarchiveProgramHeadOffering(request, response, context, programHeadOfferingUnarchiveMatch[1]);
       }
       const programHeadCurriculumSubjectMatch = pathname.match(/^\/api\/v1\/program-head\/curricula\/([0-9a-f-]{36})\/subjects$/i);
       if (method === "POST" && programHeadCurriculumSubjectMatch) {
@@ -2374,6 +3702,20 @@ export async function createApp(options = {}) {
       const programHeadEvaluationApprovalMatch = pathname.match(/^\/api\/v1\/program-head\/enrollments\/([0-9a-f-]{36})\/evaluation\/approve$/i);
       if (method === "POST" && programHeadEvaluationApprovalMatch) {
         return await approveProgramHeadEnrollmentEvaluation(request, response, context, programHeadEvaluationApprovalMatch[1]);
+      }
+      if (method === "GET" && pathname === "/api/v1/student-assistant/dashboard") {
+        return await getStudentAssistantDashboard(request, response, context);
+      }
+      if (method === "GET" && pathname === "/api/v1/student-assistant/applications") {
+        return await listStudentAssistantApplications(request, response, context, url);
+      }
+      const studentAssistantApplicationMatch = pathname.match(/^\/api\/v1\/student-assistant\/applications\/([0-9a-f-]{36})$/i);
+      if (method === "GET" && studentAssistantApplicationMatch) {
+        return await getStudentAssistantApplicationDetail(request, response, context, studentAssistantApplicationMatch[1]);
+      }
+      const studentAssistantEncodeMatch = pathname.match(/^\/api\/v1\/student-assistant\/applications\/([0-9a-f-]{36})\/encode$/i);
+      if (method === "POST" && studentAssistantEncodeMatch) {
+        return await encodeStudentAssistantSubjects(request, response, context, studentAssistantEncodeMatch[1]);
       }
       if (method === "GET" && pathname === "/api/v1/registrar/academic-years") {
         return await listRegistrarAcademicYears(request, response, context);
@@ -2412,19 +3754,163 @@ export async function createApp(options = {}) {
       }
       const registrarDocumentMatch = pathname.match(/^\/api\/v1\/registrar\/documents\/([0-9a-f-]{36})$/i);
       if (method === "PATCH" && registrarDocumentMatch) return await updateRegistrarDocument(request, response, context, registrarDocumentMatch[1]);
+      const registrarStudentOverrideMatch = pathname.match(/^\/api\/v1\/registrar\/students\/([0-9a-f-]{36})\/academic-override$/i);
+      if (method === "POST" && registrarStudentOverrideMatch) {
+        return await overrideStudentProgram(request, response, context, registrarStudentOverrideMatch[1]);
+      }
       if (method === "POST" && pathname === "/api/v1/registrar/enrollment-period/open") {
         return await openRegistrarPeriod(request, response, context);
       }
       if (method === "POST" && pathname === "/api/v1/registrar/enrollment-period/close") {
         return await closeRegistrarPeriod(request, response, context);
       }
+      if (method === "GET" && pathname === "/api/v1/registrar/offering-options") {
+        return await getRegistrarOfferingOptions(request, response, context);
+      }
+      if (method === "GET" && pathname === "/api/v1/registrar/subjects") {
+        return await listRegistrarSubjects(request, response, context, url);
+      }
+      if (method === "GET" && pathname === "/api/v1/registrar/offerings") {
+        return await listRegistrarOfferings(request, response, context, url);
+      }
+      if (method === "POST" && pathname === "/api/v1/registrar/offerings") {
+        return await createRegistrarOffering(request, response, context);
+      }
+      const registrarOfferingMatch = pathname.match(/^\/api\/v1\/registrar\/offerings\/([0-9a-f-]{36})$/i);
+      if (method === "PATCH" && registrarOfferingMatch) {
+        return await updateRegistrarOffering(request, response, context, registrarOfferingMatch[1]);
+      }
+      if (method === "DELETE" && registrarOfferingMatch) {
+        return await deleteRegistrarOffering(request, response, context, registrarOfferingMatch[1]);
+      }
+      const registrarOfferingCloseMatch = pathname.match(/^\/api\/v1\/registrar\/offerings\/([0-9a-f-]{36})\/close$/i);
+      if (method === "POST" && registrarOfferingCloseMatch) {
+        return await closeRegistrarOffering(request, response, context, registrarOfferingCloseMatch[1]);
+      }
+      const registrarOfferingArchiveMatch = pathname.match(/^\/api\/v1\/registrar\/offerings\/([0-9a-f-]{36})\/archive$/i);
+      if (method === "POST" && registrarOfferingArchiveMatch) {
+        return await archiveRegistrarOffering(request, response, context, registrarOfferingArchiveMatch[1]);
+      }
+      const registrarOfferingUnarchiveMatch = pathname.match(/^\/api\/v1\/registrar\/offerings\/([0-9a-f-]{36})\/unarchive$/i);
+      if (method === "POST" && registrarOfferingUnarchiveMatch) {
+        return await unarchiveRegistrarOffering(request, response, context, registrarOfferingUnarchiveMatch[1]);
+      }
 
       // Financial routes
       const financialResult = await handleFinancialRoutes(request, response, context, url, pathname, method);
       if (financialResult !== false) return financialResult;
 
+      // Club Environment routes
+      const clubResult = await handleClubRoutes(request, response, context, url, pathname, method, {
+        clubStore,
+        requirePermission,
+        requireStatePermission,
+        readJson,
+        sendJson,
+        audit,
+        error,
+        config
+      });
+      if (clubResult) return;
+
+      // ── Admin Faculty Management Routes ────────────────────────────
+      if (method === "GET" && pathname === "/api/v1/admin/colleges") {
+        return await listAdminColleges(request, response, context);
+      }
+      if (method === "GET" && pathname === "/api/v1/admin/faculty") {
+        return await listAdminFaculty(request, response, context);
+      }
+      if (method === "POST" && pathname === "/api/v1/admin/faculty") {
+        return await createAdminFaculty(request, response, context);
+      }
+      const adminFacultyMatch = pathname.match(/^\/api\/v1\/admin\/faculty\/([0-9a-f-]{36})$/i);
+      if (method === "PATCH" && adminFacultyMatch) {
+        return await updateAdminFaculty(request, response, context, adminFacultyMatch[1]);
+      }
+
+      // ── Teacher Workspace Routes ───────────────────────────────────
+      if (method === "GET" && pathname === "/api/v1/faculty/classes") {
+        return await getFacultyClasses(request, response, context);
+      }
+      const facultyRosterMatch = pathname.match(/^\/api\/v1\/faculty\/classes\/([0-9a-f-]{36})\/students$/i);
+      if (method === "GET" && facultyRosterMatch) {
+        return await getFacultyClassRoster(request, response, context, facultyRosterMatch[1]);
+      }
+      const facultyGradesSaveMatch = pathname.match(/^\/api\/v1\/faculty\/classes\/([0-9a-f-]{36})\/grades$/i);
+      if (method === "POST" && facultyGradesSaveMatch) {
+        return await saveFacultyGrades(request, response, context, facultyGradesSaveMatch[1]);
+      }
+      const facultyGradesSubmitMatch = pathname.match(/^\/api\/v1\/faculty\/classes\/([0-9a-f-]{36})\/grades\/submit$/i);
+      if (method === "POST" && facultyGradesSubmitMatch) {
+        return await submitFacultyGrades(request, response, context, facultyGradesSubmitMatch[1]);
+      }
+
+      // ── Registrar Grade Approval Routes ────────────────────────────
+      if (method === "GET" && pathname === "/api/v1/registrar/grades/submissions") {
+        return await getRegistrarGradeSubmissions(request, response, context);
+      }
+      const registrarGradeSheetMatch = pathname.match(/^\/api\/v1\/registrar\/(?:offerings\/([0-9a-f-]{36})\/grades|grades\/submissions\/([0-9a-f-]{36}))$/i);
+      if (method === "GET" && registrarGradeSheetMatch) {
+        const offeringId = registrarGradeSheetMatch[1] || registrarGradeSheetMatch[2];
+        return await getRegistrarGradeSheet(request, response, context, offeringId);
+      }
+      const registrarGradeApproveMatch = pathname.match(/^\/api\/v1\/registrar\/(?:offerings\/([0-9a-f-]{36})\/grades\/approve|grades\/submissions\/([0-9a-f-]{36})\/approve)$/i);
+      if (method === "POST" && registrarGradeApproveMatch) {
+        const offeringId = registrarGradeApproveMatch[1] || registrarGradeApproveMatch[2];
+        return await approveRegistrarGrades(request, response, context, offeringId);
+      }
+      const registrarGradeReturnMatch = pathname.match(/^\/api\/v1\/registrar\/(?:offerings\/([0-9a-f-]{36})\/grades\/return|grades\/submissions\/([0-9a-f-]{36})\/return)$/i);
+      if (method === "POST" && registrarGradeReturnMatch) {
+        const offeringId = registrarGradeReturnMatch[1] || registrarGradeReturnMatch[2];
+        return await returnRegistrarGrades(request, response, context, offeringId);
+      }
+
+      // ── Dean Workspace Routes ──────────────────────────────────────
+      if (method === "GET" && (pathname === "/api/v1/dean/dashboard" || pathname === "/api/v1/dean/overview")) {
+        return await getDeanOverview(request, response, context);
+      }
+      if (method === "GET" && pathname === "/api/v1/dean/students") {
+        return await getDeanStudents(request, response, context, url);
+      }
+      if (method === "GET" && pathname === "/api/v1/dean/faculty") {
+        return await getDeanFaculty(request, response, context);
+      }
+      if (method === "GET" && pathname === "/api/v1/dean/schedules") {
+        return await getDeanSchedules(request, response, context, url);
+      }
+      if (method === "GET" && (pathname === "/api/v1/dean/grades/pending" || pathname === "/api/v1/dean/grades/submissions")) {
+        return await getDeanGradeSubmissions(request, response, context);
+      }
+      const deanGradeSheetMatch = pathname.match(/^\/api\/v1\/dean\/(?:offerings\/([0-9a-f-]{36})\/grades|grades\/offering\/([0-9a-f-]{36}))$/i);
+      if (method === "GET" && deanGradeSheetMatch) {
+        const offeringId = deanGradeSheetMatch[1] || deanGradeSheetMatch[2];
+        return await getDeanOfferingGradeSheet(request, response, context, offeringId);
+      }
+      const deanGradeApproveMatch = pathname.match(/^\/api\/v1\/dean\/(?:offerings\/([0-9a-f-]{36})\/grades\/approve|grades\/offering\/([0-9a-f-]{36})\/approve)$/i);
+      if (method === "POST" && deanGradeApproveMatch) {
+        const offeringId = deanGradeApproveMatch[1] || deanGradeApproveMatch[2];
+        return await approveDeanGrades(request, response, context, offeringId);
+      }
+      const deanGradeReturnMatch = pathname.match(/^\/api\/v1\/dean\/(?:offerings\/([0-9a-f-]{36})\/grades\/return|grades\/offering\/([0-9a-f-]{36})\/return)$/i);
+      if (method === "POST" && deanGradeReturnMatch) {
+        const offeringId = deanGradeReturnMatch[1] || deanGradeReturnMatch[2];
+        return await returnDeanGrades(request, response, context, offeringId);
+      }
+      if (method === "GET" && (pathname === "/api/v1/dean/evaluations/pending" || pathname === "/api/v1/dean/evaluations")) {
+        return await getDeanPendingEvaluations(request, response, context);
+      }
+      const deanEvalMatch = pathname.match(/^\/api\/v1\/dean\/evaluations\/([0-9a-f-]{36})$/i);
+      if (method === "GET" && deanEvalMatch) {
+        return await getDeanEnrollmentEvaluation(request, response, context, deanEvalMatch[1]);
+      }
+      const deanEvalApproveMatch = pathname.match(/^\/api\/v1\/dean\/evaluations\/([0-9a-f-]{36})\/approve$/i);
+      if (method === "POST" && deanEvalApproveMatch) {
+        return await approveDeanEnrollmentEvaluation(request, response, context, deanEvalApproveMatch[1]);
+      }
+
       if (method === "GET" && pathname === "/api/v1/admin/roles") return await listRoles(request, response, context);
       if (method === "GET" && pathname === "/api/v1/admin/programs") return await listAdminPrograms(request, response, context);
+      if (method === "GET" && pathname === "/api/v1/admin/departments") return await listAdminDepartments(request, response, context);
       if (method === "GET" && pathname === "/api/v1/admin/users") return await listUsers(request, response, context);
       if (method === "POST" && pathname === "/api/v1/admin/users") {
         return await createUser(request, response, context);

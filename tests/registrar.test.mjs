@@ -264,12 +264,12 @@ test("Student enrollment options include the official DRAFT curriculum for the a
         const options = await studentClient.request("/api/v1/student/enrollment/options");
         assert.equal(options.response.status, 200, "options endpoint responds");
         assert.ok(options.payload.data.curriculumSubjects.some((item) => item.programId === program.id && item.curriculumCode === "SY2023"), "official draft curriculum is exposed to student enrollment");
+        throw rollback;
       } finally {
         await new Promise((resolveClose) => server.close(resolveClose));
         await app.close();
       }
     });
-    throw rollback;
   } catch (error) {
     if (error !== rollback) throw error;
   } finally {
@@ -425,12 +425,12 @@ test("Student enrollment accepts curriculum-subject IDs from the selected curric
         });
         assert.equal(response.response.status, 200, "curriculum-subject IDs from the eligible list are accepted on submit");
         assert.equal(response.payload.data.application.status, "SUBMITTED");
+        throw rollback;
       } finally {
         await new Promise((resolveClose) => server.close(resolveClose));
         await app.close();
       }
     });
-    throw rollback;
   } catch (error) {
     if (error !== rollback) throw error;
   } finally {

@@ -128,6 +128,20 @@ export function createConfig(overrides = {}) {
       "authHistoryRetentionMs"
     ),
     forgotResponseFloorMs: integer(overrides.forgotResponseFloorMs, isTest ? 1 : 250, "forgotResponseFloorMs"),
+    googleClientId: overrides.googleClientId ?? process.env.GOOGLE_CLIENT_ID ?? process.env.CJC_GOOGLE_CLIENT_ID ?? "",
+    googleClientSecret: overrides.googleClientSecret ?? process.env.GOOGLE_CLIENT_SECRET ?? process.env.CJC_GOOGLE_CLIENT_SECRET ?? "",
+    googleAllowedDomains: Object.freeze(
+      (overrides.googleAllowedDomains ?? process.env.GOOGLE_WORKSPACE_DOMAINS ?? process.env.CJC_GOOGLE_WORKSPACE_DOMAINS ?? "g.cjc.edu.ph,cjc.edu.ph")
+        .split(",")
+        .map((d) => d.trim().toLowerCase())
+        .filter(Boolean)
+    ),
+    googleCallbackUrl: overrides.googleCallbackUrl ?? process.env.GOOGLE_CALLBACK_URL ?? process.env.CJC_GOOGLE_CALLBACK_URL ?? `${appOrigin}/api/v1/auth/google/callback`,
+    googleTokenExpiryMs: integer(
+      overrides.googleTokenExpiryMs ?? process.env.GOOGLE_TOKEN_EXPIRY_MS ?? process.env.CJC_GOOGLE_TOKEN_EXPIRY_MS,
+      15 * 60 * 1000,
+      "googleTokenExpiryMs"
+    ),
     now: overrides.now ?? (() => Date.now())
   });
 }

@@ -18,7 +18,7 @@
     <link rel="icon" type="image/png" href="assets/images/cor-jesu-college-seal.png" />
     <link rel="preload" as="image" href="assets/images/cjc-student-portal-hero.jpg" />
     <link rel="stylesheet" href="style.css" />
-
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body>
@@ -930,6 +930,22 @@
                     </p>
                 </div>
 
+                <div class="google-auth-section" data-google-auth-section>
+                    <div id="google-signin-btn-container" class="google-btn-container" data-google-btn-container></div>
+                    <button class="button button--google button--full" type="button" data-google-signin>
+                        <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                        </svg>
+                        <span data-google-btn-text>Sign in with CJC Google Account</span>
+                    </button>
+                    <div class="auth-divider" data-auth-divider>
+                        <span>or continue with project credentials</span>
+                    </div>
+                </div>
+
                 <form class="login-form" method="post" data-login-form novalidate>
                     <div class="field">
                         <label for="login-identifier">Project username or email</label>
@@ -1002,6 +1018,119 @@
                     </form>
                     <button class="forgot-link recovery-view__back" type="button" data-back-to-signin>
                         Back to sign in
+                    </button>
+                </section>
+
+                <section class="google-type-view" aria-labelledby="google-type-title" data-google-type-selection hidden>
+                    <div class="login-dialog__heading">
+                        <p class="eyebrow eyebrow--gold"><span aria-hidden="true"></span>CJC Account Setup</p>
+                        <h2 id="google-type-title">Select your account type</h2>
+                        <p>Choose your Cor Jesu affiliation to continue setting up your access.</p>
+                    </div>
+                    <div class="google-type-options">
+                        <button class="account-type-card" type="button" data-google-type-choice="student">
+                            <span class="account-type-card__icon" aria-hidden="true">🎓</span>
+                            <div class="account-type-card__info">
+                                <strong>Student</strong>
+                                <span>Complete quick student onboarding with your institutional account.</span>
+                            </div>
+                        </button>
+                        <button class="account-type-card" type="button" data-google-type-choice="faculty_staff">
+                            <span class="account-type-card__icon" aria-hidden="true">🏛️</span>
+                            <div class="account-type-card__info">
+                                <strong>Faculty / Staff</strong>
+                                <span>Academic instructors, program heads, deans, or department personnel.</span>
+                            </div>
+                        </button>
+                    </div>
+                    <button class="forgot-link recovery-view__back" type="button" data-google-back-to-signin>
+                        Back to sign in
+                    </button>
+                </section>
+
+                <section class="google-staff-notice" aria-labelledby="staff-notice-title" data-google-staff-notice hidden>
+                    <div class="login-dialog__heading">
+                        <p class="eyebrow eyebrow--gold"><span aria-hidden="true"></span>Faculty &amp; Staff Access</p>
+                        <h2 id="staff-notice-title">Account Creation Required</h2>
+                    </div>
+                    <div class="staff-notice-box" role="alert">
+                        <svg class="icon icon--alert" aria-hidden="true">
+                            <use href="#icon-shield"></use>
+                        </svg>
+                        <p data-staff-notice-text>
+                            Your CJC Google account is valid, but no SMS account exists for this institutional email. Please contact the System Administrator to have your account created.
+                        </p>
+                    </div>
+                    <button class="button button--primary button--full" type="button" data-google-back-to-signin>
+                        Return to Sign In
+                    </button>
+                </section>
+
+                <section class="google-student-view" aria-labelledby="student-onboard-title" data-google-student-onboarding hidden>
+                    <div class="login-dialog__heading">
+                        <p class="eyebrow eyebrow--gold"><span aria-hidden="true"></span>Student Onboarding</p>
+                        <h2 id="student-onboard-title">Complete Your Profile</h2>
+                        <p>Your institutional email and identity are verified. Provide your required details to finish registration.</p>
+                    </div>
+                    <form class="login-form" data-google-student-form novalidate>
+                        <div class="field">
+                            <label for="google-student-email">Institutional Email (Verified)</label>
+                            <input id="google-student-email" type="email" name="institutionalEmail" readonly class="input--verified" />
+                        </div>
+                        <div class="field-grid field-grid--two">
+                            <div class="field">
+                                <label for="google-student-first">First Name <span class="field-required">*</span></label>
+                                <input id="google-student-first" type="text" name="firstName" required />
+                                <small class="field__error" data-error-for="googleFirstName"></small>
+                            </div>
+                            <div class="field">
+                                <label for="google-student-last">Last Name <span class="field-required">*</span></label>
+                                <input id="google-student-last" type="text" name="lastName" required />
+                                <small class="field__error" data-error-for="googleLastName"></small>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="google-student-middle">Middle Name <span class="field-optional">(optional)</span></label>
+                            <input id="google-student-middle" type="text" name="middleName" placeholder="Leave blank if none" />
+                        </div>
+                        <div class="field">
+                            <label for="google-student-birthdate">Date of Birth <span class="field-required">*</span></label>
+                            <input id="google-student-birthdate" type="date" name="birthDate" required />
+                            <small class="field__error" data-error-for="googleBirthDate"></small>
+                        </div>
+                        <div class="field">
+                            <label for="google-student-mobile">Mobile Number <span class="field-required">*</span></label>
+                            <input id="google-student-mobile" type="tel" name="mobileNumber" placeholder="09XXXXXXXXX" required />
+                            <small class="field__error" data-error-for="googleMobile"></small>
+                        </div>
+                        <div class="field">
+                            <label for="google-student-password">Fallback Password <span class="field-optional">(optional, for username/password login)</span></label>
+                            <span class="password-field">
+                                <input id="google-student-password" type="password" name="password" autocomplete="new-password" placeholder="At least 12 characters (optional)" />
+                                <button type="button" aria-label="Show password" aria-pressed="false" data-password-toggle
+                                    data-password-target="google-student-password">
+                                    <svg class="icon password-show" aria-hidden="true">
+                                        <use href="#icon-eye"></use>
+                                    </svg>
+                                    <svg class="icon password-hide" aria-hidden="true">
+                                        <use href="#icon-eye-off"></use>
+                                    </svg>
+                                </button>
+                            </span>
+                            <small class="field__error" data-error-for="googlePassword"></small>
+                        </div>
+
+                        <button class="button button--primary button--full" type="submit">
+                            <span data-google-submit-label>Complete Student Registration</span>
+                            <svg class="icon" aria-hidden="true">
+                                <use href="#icon-arrow-right"></use>
+                            </svg>
+                        </button>
+                        <p class="form-message form-message--error" role="alert" data-google-onboard-error hidden></p>
+                        <p class="login-form__status" role="status" aria-live="polite" data-google-onboard-status></p>
+                    </form>
+                    <button class="forgot-link recovery-view__back" type="button" data-google-back-to-type>
+                        Change Account Type
                     </button>
                 </section>
 

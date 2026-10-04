@@ -71,12 +71,14 @@ export class StudentDashboardStore {
 
     if (!student) return emptyDashboard();
 
-    const [enrollment, clearance, requests, openPeriod] = await Promise.all([
+    const [enrollment, clearance, requests, openPeriod, clubClearances] = await Promise.all([
       this.prisma.enrollment.findFirst({
         where: { studentId: student.id },
         orderBy: [{ academicTerm: { startsOn: "desc" } }, { createdAt: "desc" }],
         select: {
           id: true,
+          programId: true,
+          curriculumId: true,
           yearLevel: true,
           status: true,
           enrolledAt: true,
@@ -177,8 +179,72 @@ export class StudentDashboardStore {
             }
           }
         }
+      }),
+      this.prisma.clubClearance.findMany({
+        where: { studentId: student.id },
+        include: {
+          club: { select: { id: true, code: true, name: true, category: true } },
+          clearedBy: { select: { displayName: true } }
+        },
+        orderBy: { createdAt: "asc" }
       })
     ]);
+
+    if ((!student.program || !student.curriculum) && enrollment?.programId && enrollment?.curriculumId) {
+      await this.prisma.student.update({
+        where: { id: student.id },
+        data: {
+          programId: enrollment.programId,
+          curriculumId: enrollment.curriculumId,
+          currentYearLevel: enrollment.yearLevel || student.currentYearLevel
+        }
+      });
+      const existingAssignment = await this.prisma.studentCurriculumAssignment.findFirst({
+        where: { studentId: student.id, curriculumId: enrollment.curriculumId }
+      });
+      if (!existingAssignment) {
+        await this.prisma.studentCurriculumAssignment.create({
+          data: {
+            studentId: student.id,
+            curriculumId: enrollment.curriculumId,
+            startsOn: enrollment.enrolledAt || new Date(),
+            reason: "Initial curriculum assignment (system sync)"
+          }
+        });
+      }
+      const existingProgHistory = await this.prisma.studentProgramHistory.findFirst({
+        where: { studentId: student.id, programId: enrollment.programId }
+      });
+      if (!existingProgHistory) {
+        await this.prisma.studentProgramHistory.create({
+          data: {
+            studentId: student.id,
+            programId: enrollment.programId,
+            startsOn: enrollment.enrolledAt || new Date(),
+            reason: "Initial program assignment (system sync)"
+          }
+        });
+      }
+      const refreshedStudent = await this.prisma.student.findUnique({
+        where: { id: student.id },
+        select: {
+          program: {
+            select: {
+              code: true,
+              name: true,
+              department: { select: { code: true, name: true, college: { select: { code: true, name: true } } } }
+            }
+          },
+          curriculum: { select: { code: true, name: true, version: true, status: true } },
+          currentYearLevel: true
+        }
+      });
+      if (refreshedStudent) {
+        student.program = refreshedStudent.program;
+        student.curriculum = refreshedStudent.curriculum;
+        student.currentYearLevel = refreshedStudent.currentYearLevel;
+      }
+    }
 
     const billingTerm = openPeriod?.academicTerm ?? enrollment?.academicTerm ?? null;
     const enrollmentPeriodId = openPeriod?.id ?? null;
@@ -222,29 +288,45 @@ export class StudentDashboardStore {
     ]);
 
     const enrollmentItems = enrollment?.items ?? [];
-    const schedule = enrollmentItems.flatMap((item) =>
-      item.courseOffering.schedules.map((meeting) => ({
+    const schedule = enrollmentItems.flatMap((item) => {
+      const schedules = item.courseOffering.schedules;
+      const instructors = item.courseOffering.faculty.map((assignment) => ({
+        name: fullName(assignment.faculty),
+        role: assignment.role
+      }));
+      if (schedules && schedules.length > 0) {
+        return schedules.map((meeting) => ({
+          subjectCode: item.courseOffering.subject.code,
+          subjectTitle: item.courseOffering.subject.title,
+          section: item.courseOffering.classSection?.code ?? null,
+          weekday: meeting.weekday,
+          startsAt: timeOnly(meeting.startsAt),
+          endsAt: timeOnly(meeting.endsAt),
+          effectiveFrom: dateOnly(meeting.effectiveFrom),
+          effectiveTo: dateOnly(meeting.effectiveTo),
+          room: meeting.room ? {
+            code: meeting.room.code,
+            name: meeting.room.name,
+            building: meeting.room.building
+          } : null,
+          instructors
+        }));
+      }
+      return [{
         subjectCode: item.courseOffering.subject.code,
         subjectTitle: item.courseOffering.subject.title,
         section: item.courseOffering.classSection?.code ?? null,
-        weekday: meeting.weekday,
-        startsAt: timeOnly(meeting.startsAt),
-        endsAt: timeOnly(meeting.endsAt),
-        effectiveFrom: dateOnly(meeting.effectiveFrom),
-        effectiveTo: dateOnly(meeting.effectiveTo),
-        room: meeting.room ? {
-          code: meeting.room.code,
-          name: meeting.room.name,
-          building: meeting.room.building
-        } : null,
-        instructors: item.courseOffering.faculty.map((assignment) => ({
-          name: fullName(assignment.faculty),
-          role: assignment.role
-        }))
-      }))
-    ).sort((left, right) =>
+        weekday: null,
+        startsAt: null,
+        endsAt: null,
+        effectiveFrom: null,
+        effectiveTo: null,
+        room: null,
+        instructors
+      }];
+    }).sort((left, right) =>
       (weekdayOrder.get(left.weekday) ?? 99) - (weekdayOrder.get(right.weekday) ?? 99)
-      || String(left.startsAt).localeCompare(String(right.startsAt))
+      || String(left.startsAt || "").localeCompare(String(right.startsAt || ""))
     );
 
     const finalGrades = enrollmentItems.flatMap((item) =>
@@ -261,13 +343,57 @@ export class StudentDashboardStore {
       }))
     );
 
-    const clearanceCounts = (clearance?.items ?? []).reduce((counts, item) => {
+    const institutionalItems = clearance?.items.map((item) => ({
+      code: item.requirement.code,
+      office: item.requirement.title,
+      officeType: item.requirement.officeType,
+      required: item.requirement.isRequired,
+      status: item.status,
+      remarks: item.remarks,
+      processedAt: item.actedAt
+    })) || [];
+
+    const clubItems = (clubClearances || []).map((c) => {
+      const isCleared = c.status === "CLEARED";
+      const isBlocked = c.status === "NOT_CLEARED";
+      const itemStatus = isCleared ? "APPROVED" : isBlocked ? "BLOCKED" : "PENDING";
+      const remarksParts = [];
+      if (c.remarks) remarksParts.push(c.remarks);
+      if (c.clearedBy?.displayName) remarksParts.push(`Evaluated by: ${c.clearedBy.displayName}`);
+      return {
+        code: `CLUB-${c.club.code}`,
+        office: `Club: ${c.club.name} (${c.club.code})`,
+        officeType: "OTHER",
+        required: true,
+        status: itemStatus,
+        rawStatus: c.status,
+        remarks: remarksParts.length ? remarksParts.join(" · ") : (isCleared ? "Cleared by Club Officer" : "Pending Club Evaluation"),
+        processedAt: c.clearedAt
+      };
+    });
+
+    const allClearanceItems = [...institutionalItems, ...clubItems];
+
+    const clearanceCounts = allClearanceItems.reduce((counts, item) => {
       counts.total += 1;
-      if (item.status === "APPROVED" || item.status === "WAIVED") counts.cleared += 1;
+      if (item.status === "APPROVED" || item.status === "WAIVED" || item.status === "CLEARED") counts.cleared += 1;
       else if (item.status === "BLOCKED") counts.blocked += 1;
       else counts.pending += 1;
       return counts;
     }, { total: 0, cleared: 0, pending: 0, blocked: 0 });
+
+    let overallClearanceStatus = clearance?.status || null;
+    if (allClearanceItems.length > 0) {
+      if (clearanceCounts.blocked > 0) {
+        overallClearanceStatus = "BLOCKED";
+      } else if (clearanceCounts.cleared === clearanceCounts.total) {
+        overallClearanceStatus = "CLEARED";
+      } else if (clearanceCounts.cleared > 0) {
+        overallClearanceStatus = "IN_PROGRESS";
+      } else {
+        overallClearanceStatus = "PENDING";
+      }
+    }
 
     const totalDebits = debitResult._sum.amount;
     const totalCredits = creditResult._sum.amount;
@@ -312,20 +438,23 @@ export class StudentDashboardStore {
       } : null,
       schedule,
       finalGrades,
-      clearance: clearance ? {
-        cycle: clearance.cycle,
-        status: clearance.status,
-        startedAt: clearance.startedAt,
-        completedAt: clearance.completedAt,
+      clearance: (allClearanceItems.length > 0 || clearance) ? {
+        cycle: clearance?.cycle || { code: "CAMPUS-CLEARANCE", name: "Campus Clearance", status: "OPEN" },
+        status: overallClearanceStatus || "PENDING",
+        startedAt: clearance?.startedAt || (clubClearances[0]?.createdAt ?? null),
+        completedAt: overallClearanceStatus === "CLEARED" ? (clearance?.completedAt || new Date()) : null,
         counts: clearanceCounts,
-        items: clearance.items.map((item) => ({
-          code: item.requirement.code,
-          office: item.requirement.title,
-          officeType: item.requirement.officeType,
-          required: item.requirement.isRequired,
-          status: item.status,
-          remarks: item.remarks,
-          processedAt: item.actedAt
+        items: allClearanceItems,
+        clubClearances: (clubClearances || []).map((c) => ({
+          id: c.id,
+          clubId: c.club.id,
+          clubCode: c.club.code,
+          clubName: c.club.name,
+          category: c.club.category,
+          status: c.status,
+          remarks: c.remarks,
+          clearedAt: c.clearedAt,
+          clearedBy: c.clearedBy?.displayName || null
         }))
       } : null,
       requests: requests.map((request) => ({
@@ -351,7 +480,7 @@ export class StudentDashboardStore {
   }
 
   async getProfile(userId) {
-    const student = await this.prisma.student.findUnique({
+    let student = await this.prisma.student.findUnique({
       where: { userId },
       include: {
         program: {
@@ -366,6 +495,34 @@ export class StudentDashboardStore {
     });
 
     if (!student) return null;
+
+    if (!student.programId || !student.curriculumId) {
+      const enrollment = await this.prisma.enrollment.findFirst({
+        where: { studentId: student.id },
+        orderBy: [{ academicTerm: { startsOn: "desc" } }, { createdAt: "desc" }],
+        select: { programId: true, curriculumId: true, yearLevel: true }
+      });
+      if (enrollment?.programId && enrollment?.curriculumId) {
+        student = await this.prisma.student.update({
+          where: { id: student.id },
+          data: {
+            programId: enrollment.programId,
+            curriculumId: enrollment.curriculumId,
+            currentYearLevel: enrollment.yearLevel || student.currentYearLevel
+          },
+          include: {
+            program: {
+              include: {
+                department: {
+                  include: { college: true }
+                }
+              }
+            },
+            curriculum: true
+          }
+        });
+      }
+    }
 
     return {
       id: student.id,
@@ -555,3 +712,5 @@ export class StudentDashboardStore {
     }));
   }
 }
+
+export { StudentDashboardStore as StudentStore };

@@ -155,6 +155,34 @@
         createRegistrarAcademicTerm: (data, options = {}) => mutate("/registrar/academic-terms", "POST", data, options),
         openRegistrarEnrollment: (academicTermId, options = {}) => mutate("/registrar/enrollment-period/open", "POST", { academicTermId }, options),
         closeRegistrarEnrollment: (periodId, options = {}) => mutate("/registrar/enrollment-period/close", "POST", { periodId }, options),
+        getRegistrarSubjects: (params = {}, options = {}) => {
+            const query = new URLSearchParams();
+            if (params.programId) query.set("programId", params.programId);
+            if (params.query) query.set("query", params.query);
+            const queryString = query.toString() ? `?${query.toString()}` : "";
+            return request(`/registrar/subjects${queryString}`, options);
+        },
+        getRegistrarOfferings: (params = {}, options = {}) => {
+            const query = new URLSearchParams();
+            if (params.academicTermId) query.set("academicTermId", params.academicTermId);
+            if (params.programId) query.set("programId", params.programId);
+            if (params.status) query.set("status", params.status);
+            if (params.query) query.set("query", params.query);
+            const queryString = query.toString() ? `?${query.toString()}` : "";
+            return request(`/registrar/offerings${queryString}`, options);
+        },
+        getRegistrarOfferingOptions: (options = {}) => request("/registrar/offering-options", options),
+        createRegistrarOffering: (data, options = {}) => mutate("/registrar/offerings", "POST", data, options),
+        updateRegistrarOffering: (offeringId, data, options = {}) =>
+            mutate(`/registrar/offerings/${encodeURIComponent(offeringId)}`, "PATCH", data, options),
+        closeRegistrarOffering: (offeringId, options = {}) =>
+            mutate(`/registrar/offerings/${encodeURIComponent(offeringId)}/close`, "POST", {}, options),
+        archiveRegistrarOffering: (offeringId, options = {}) =>
+            mutate(`/registrar/offerings/${encodeURIComponent(offeringId)}/archive`, "POST", {}, options),
+        unarchiveRegistrarOffering: (offeringId, options = {}) =>
+            mutate(`/registrar/offerings/${encodeURIComponent(offeringId)}/unarchive`, "POST", {}, options),
+        deleteRegistrarOffering: (offeringId, options = {}) =>
+            mutate(`/registrar/offerings/${encodeURIComponent(offeringId)}`, "DELETE", {}, options),
         getProgramHeadDashboard: async (options = {}) => {
             const data = await request("/program-head/dashboard", options);
             return data.dashboard;
@@ -175,7 +203,23 @@
         },
         createProgramHeadCurriculum: (data, options = {}) => mutate("/program-head/curricula", "POST", data, options),
         addProgramHeadCurriculumSubject: (curriculumId, data, options = {}) => mutate(`/program-head/curricula/${encodeURIComponent(curriculumId)}/subjects`, "POST", data, options),
+        getProgramHeadOfferings: (params = {}, options = {}) => {
+            const query = new URLSearchParams();
+            if (params.academicTermId) query.set("academicTermId", params.academicTermId);
+            if (params.status) query.set("status", params.status);
+            if (params.query) query.set("query", params.query);
+            const queryString = query.toString() ? `?${query.toString()}` : "";
+            return request(`/program-head/offerings${queryString}`, options);
+        },
         createProgramHeadOffering: (data, options = {}) => mutate("/program-head/offerings", "POST", data, options),
+        updateProgramHeadOffering: (offeringId, data, options = {}) =>
+            mutate(`/program-head/offerings/${encodeURIComponent(offeringId)}`, "PATCH", data, options),
+        closeProgramHeadOffering: (offeringId, options = {}) =>
+            mutate(`/program-head/offerings/${encodeURIComponent(offeringId)}/close`, "POST", {}, options),
+        archiveProgramHeadOffering: (offeringId, options = {}) =>
+            mutate(`/program-head/offerings/${encodeURIComponent(offeringId)}/archive`, "POST", {}, options),
+        unarchiveProgramHeadOffering: (offeringId, options = {}) =>
+            mutate(`/program-head/offerings/${encodeURIComponent(offeringId)}/unarchive`, "POST", {}, options),
         getProgramHeadEnrollmentEvaluation: async (enrollmentId, options = {}) => {
             const data = await request(`/program-head/enrollments/${encodeURIComponent(enrollmentId)}/evaluation`, options);
             return data.evaluation;
@@ -218,7 +262,12 @@
             }, options),
         deleteUser: (userId, options = {}) => mutate(`/admin/users/${encodeURIComponent(userId)}`, "DELETE", {}, options),
         getDocumentTypes: (options = {}) => request("/student/documents/types", options),
-        getStudentDocuments: (options = {}) => request("/student/documents", options),
+        getStudentDocuments: (params = {}, options = {}) => {
+            const queryParams = typeof params === "string" ? { applicationId: params } : (params?.applicationId ? params : null);
+            const search = queryParams?.applicationId ? `?applicationId=${encodeURIComponent(queryParams.applicationId)}` : "";
+            const finalOptions = (typeof params === "object" && !params.applicationId && Object.keys(options).length === 0) ? params : options;
+            return request(`/student/documents${search}`, finalOptions);
+        },
         uploadStudentDocument: (documentTypeId, applicationId, file, options = {}) => {
             const formData = new FormData();
             formData.append("documentTypeId", documentTypeId);
@@ -228,16 +277,159 @@
         },
         deleteStudentDocument: (id, options = {}) => mutate(`/student/documents/${encodeURIComponent(id)}`, "DELETE", {}, options),
         viewStudentDocument: (id, options = {}) => request(`/student/documents/${encodeURIComponent(id)}/view`, options),
-        
+
         getSystemLogs: (options = {}) => {
             const query = new URLSearchParams();
             if (options.limit) query.set("limit", options.limit);
             if (options.severity) query.set("severity", options.severity);
             if (options.status) query.set("status", options.status);
-            return request(`/admin/system-logs?${query.toString()}`, options);
+            const search = query.toString() ? `?${query.toString()}` : "";
+            return request(`/admin/system-logs${search}`, options);
         },
         updateSystemLogStatus: (id, status, options = {}) => mutate(`/admin/system-logs/${encodeURIComponent(id)}/status`, "PATCH", { status }, options),
         getMonitoringHealth: (options = {}) => request("/admin/monitoring/health", options),
+
+        // ── Admin Faculty Management ──────────────────────────────────
+        getAdminColleges: (options = {}) => request("/admin/colleges", options),
+        getAdminFaculty: (options = {}) => request("/admin/faculty", options),
+        createAdminFaculty: (data, options = {}) => mutate("/admin/faculty", "POST", data, options),
+        updateAdminFaculty: (facultyId, data, options = {}) =>
+            mutate(`/admin/faculty/${encodeURIComponent(facultyId)}`, "PATCH", data, options),
+
+        // ── Teacher Workspace ─────────────────────────────────────────
+        getFacultyClasses: (options = {}) => request("/faculty/classes", options),
+        getFacultyClassRoster: (offeringId, options = {}) =>
+            request(`/faculty/classes/${encodeURIComponent(offeringId)}/students`, options),
+        saveFacultyGrades: (offeringId, grades, options = {}) =>
+            mutate(`/faculty/classes/${encodeURIComponent(offeringId)}/grades`, "POST", { grades }, options),
+        submitFacultyGrades: (offeringId, grades, options = {}) =>
+            mutate(`/faculty/classes/${encodeURIComponent(offeringId)}/grades/submit`, "POST", { grades }, options),
+
+        // ── Registrar Grade Approval ──────────────────────────────────
+        getRegistrarGradeSubmissions: (options = {}) => request("/registrar/grades/submissions", options),
+        getRegistrarGradeSheet: (offeringId, options = {}) =>
+            request(`/registrar/offerings/${encodeURIComponent(offeringId)}/grades`, options),
+        approveRegistrarGrades: (offeringId, options = {}) =>
+            mutate(`/registrar/offerings/${encodeURIComponent(offeringId)}/grades/approve`, "POST", {}, options),
+        returnRegistrarGrades: (offeringId, remarks, options = {}) =>
+            mutate(`/registrar/offerings/${encodeURIComponent(offeringId)}/grades/return`, "POST", { remarks }, options),
+
+        // ── Admin Departments ─────────────────────────────────────────
+        getAdminDepartments: (options = {}) => request("/admin/departments", options),
+
+        // ── Student Assistant Workspace ───────────────────────────────
+        getStudentAssistantDashboard: (options = {}) => request("/student-assistant/dashboard", options),
+        getStudentAssistantApplications: (filter = "PENDING", options = {}) =>
+            request(`/student-assistant/applications?filter=${encodeURIComponent(filter)}`, options),
+        getStudentAssistantApplicationDetail: (applicationId, options = {}) =>
+            request(`/student-assistant/applications/${encodeURIComponent(applicationId)}`, options),
+        encodeStudentAssistantSubjects: (applicationId, assignments, options = {}) =>
+            mutate(`/student-assistant/applications/${encodeURIComponent(applicationId)}/encode`, "POST", { assignments }, options),
+
+        // ── SSC Club Management ───────────────────────────────────────
+        createSscClub: (clubData, options = {}) => mutate("/ssc/clubs", "POST", clubData, options),
+        getSscClubs: (filter = "ALL", options = {}) =>
+            request(`/ssc/clubs?filter=${encodeURIComponent(filter)}`, options),
+        updateSscClubStatus: (clubId, status, options = {}) =>
+            mutate(`/ssc/clubs/${encodeURIComponent(clubId)}/status`, "PATCH", { status }, options),
+        updateSscClubEffectivity: (clubId, effectivityStartDate, effectivityEndDate, options = {}) =>
+            mutate(`/ssc/clubs/${encodeURIComponent(clubId)}/effectivity`, "PATCH", { effectivityStartDate, effectivityEndDate }, options),
+
+        // ── Club Account Portal ───────────────────────────────────────
+        getClubDashboard: (options = {}) => request("/club/dashboard", options),
+        validateClubStudent: (studentNumber, options = {}) =>
+            request(`/club/validate-student/${encodeURIComponent(studentNumber)}`, options),
+        getClubOfficers: (options = {}) => request("/club/officers", options),
+        assignClubOfficer: (data, options = {}) => mutate("/club/officers", "POST", data, options),
+        updateClubOfficer: (officerId, data, options = {}) =>
+            mutate(`/club/officers/${encodeURIComponent(officerId)}`, "PATCH", data, options),
+        removeClubOfficer: (officerId, options = {}) =>
+            mutate(`/club/officers/${encodeURIComponent(officerId)}`, "DELETE", {}, options),
+        getClubMembers: (options = {}) => request("/club/members", options),
+        getClubAnnouncements: (options = {}) => request("/club/announcements", options),
+        createClubAnnouncement: (data, options = {}) => mutate("/club/announcements", "POST", data, options),
+        deleteClubAnnouncement: (id, options = {}) => mutate(`/club/announcements/${encodeURIComponent(id)}`, "DELETE", {}, options),
+        getClubDocuments: (options = {}) => request("/club/documents", options),
+        createClubDocument: (data, options = {}) => mutate("/club/documents", "POST", data, options),
+        deleteClubDocument: (id, options = {}) => mutate(`/club/documents/${encodeURIComponent(id)}`, "DELETE", {}, options),
+
+        // ── Student Clubs ─────────────────────────────────────────────
+        getStudentAvailableClubs: (options = {}) => request("/student/clubs/available", options),
+        getStudentMyClubs: (options = {}) => request("/student/clubs/my-clubs", options),
+        joinStudentClub: (clubId, options = {}) => mutate(`/student/clubs/${encodeURIComponent(clubId)}/join`, "POST", {}, options),
+        getStudentClubPortal: (clubId, options = {}) =>
+            request(`/student/clubs/${encodeURIComponent(clubId)}/portal`, options),
+        evaluateStudentClubClearance: (clubId, data, options = {}) =>
+            mutate(`/student/clubs/${encodeURIComponent(clubId)}/clearance`, "POST", data, options),
+        getStudentClubClearanceHistory: (clubId, options = {}) =>
+            request(`/student/clubs/${encodeURIComponent(clubId)}/clearance-history`, options),
+
+        // ── Google Workspace Authentication ───────────────────────────
+        getGoogleAuthConfig: (options = {}) => request("/auth/google/config", options),
+        googleAuthVerify: (credentialOrPayload, options = {}) => {
+            const body = typeof credentialOrPayload === "string"
+                ? { credential: credentialOrPayload }
+                : credentialOrPayload;
+            return mutate("/auth/google/verify", "POST", body, options);
+        },
+        googleRegisterStudent: (data, options = {}) =>
+            mutate("/auth/google/register-student", "POST", data, options),
+
+        // ── Dean Workspace ───────────────────────────────────────────
+        getDeanDashboard: (options = {}) => request("/dean/dashboard", options),
+        getDeanOverview: (options = {}) => request("/dean/dashboard", options),
+        getDeanPendingGrades: (options = {}) => request("/dean/grades/pending", options),
+        getDeanGradeSubmissions: (options = {}) => request("/dean/grades/pending", options),
+        getDeanGradeSheet: (offeringId, options = {}) =>
+            request(`/dean/grades/offering/${encodeURIComponent(offeringId)}`, options),
+        approveDeanGrades: (offeringId, data = {}, options = {}) =>
+            mutate(`/dean/grades/offering/${encodeURIComponent(offeringId)}/approve`, "POST", data, options),
+        returnDeanGrades: (offeringId, data = {}, options = {}) =>
+            mutate(`/dean/grades/offering/${encodeURIComponent(offeringId)}/return`, "POST", data, options),
+        getDeanStudents: (params = {}, options = {}) => {
+            const query = new URLSearchParams();
+            if (params.search) query.set("search", params.search);
+            if (params.sort) query.set("sort", params.sort);
+            if (params.programId) query.set("programId", params.programId);
+            if (params.yearLevel) query.set("yearLevel", params.yearLevel);
+            const search = query.toString() ? `?${query.toString()}` : "";
+            return request(`/dean/students${search}`, options);
+        },
+        getDeanFaculty: (options = {}) => request("/dean/faculty", options),
+        getDeanPendingEvaluations: (options = {}) => request("/dean/evaluations/pending", options),
+        getDeanEnrollmentEvaluation: (enrollmentId, options = {}) =>
+            request(`/dean/evaluations/${encodeURIComponent(enrollmentId)}`, options),
+        approveDeanEnrollmentEvaluation: (enrollmentId, data = {}, options = {}) =>
+            mutate(`/dean/evaluations/${encodeURIComponent(enrollmentId)}/approve`, "POST", data, options),
+        getDeanSchedules: (params = {}, options = {}) => {
+            const query = new URLSearchParams();
+            if (params.programId) query.set("programId", params.programId);
+            const search = query.toString() ? `?${query.toString()}` : "";
+            return request(`/dean/schedules${search}`, options);
+        },
+
+        // ── Academic Record Import & AI Crediting ─────────────────────
+        submitAcademicRecordImportRequest: (formData, options = {}) =>
+            mutate("/academic-import/requests", "POST", formData, options),
+        getAcademicRecordImportRequests: (params = {}, options = {}) => {
+            const query = new URLSearchParams();
+            if (params.status) query.set("status", params.status);
+            if (params.search) query.set("search", params.search);
+            const searchStr = query.toString() ? `?${query.toString()}` : "";
+            return request(`/academic-import/requests${searchStr}`, options);
+        },
+        getAcademicRecordImportRequest: (id, options = {}) =>
+            request(`/academic-import/requests/${encodeURIComponent(id)}`, options),
+        verifyAcademicRecordImportRequest: (id, data, options = {}) =>
+            mutate(`/academic-import/requests/${encodeURIComponent(id)}/verify`, "POST", data, options),
+        processAcademicRecordImportAI: (id, data = {}, options = {}) =>
+            mutate(`/academic-import/requests/${encodeURIComponent(id)}/process-ai`, "POST", data, options),
+        getAcademicRecordImportPreview: (id, options = {}) =>
+            request(`/academic-import/requests/${encodeURIComponent(id)}/preview`, options),
+        commitAcademicRecordImport: (id, data, options = {}) =>
+            mutate(`/academic-import/requests/${encodeURIComponent(id)}/commit`, "POST", data, options),
+        getAcademicRecordImportDocumentUrl: (id) =>
+            `${API_ROOT}/academic-import/requests/${encodeURIComponent(id)}/document`,
 
         safeLandingPath,
         clearCsrf: () => {

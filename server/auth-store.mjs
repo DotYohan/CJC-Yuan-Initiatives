@@ -1,6 +1,7 @@
+import { randomUUID as newId } from "node:crypto";
 import { Prisma } from "@prisma/client";
 
-const asDate = (value) => (value instanceof Date ? value : new Date(value));
+const asDate = (value) => (value instanceof Date ? value : (value != null ? new Date(value) : new Date()));
 const asMillis = (value) => (value ? value.getTime() : null);
 const userInclude = {
   userRoles: {
@@ -9,6 +10,32 @@ const userInclude = {
   },
   programAssignments: {
     include: { program: { select: { id: true, code: true, name: true } } },
+    take: 1
+  },
+  departmentAssignments: {
+    include: {
+      department: {
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          college: { select: { id: true, code: true, name: true } }
+        }
+      }
+    },
+    take: 1
+  },
+  collegeAssignments: {
+    include: {
+      college: {
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          shortName: true
+        }
+      }
+    },
     take: 1
   }
 };
@@ -45,6 +72,11 @@ function mapUser(user) {
     created_at: asMillis(user.createdAt),
     updated_at: asMillis(user.updatedAt),
     assigned_program: user.programAssignments?.[0]?.program ?? null,
+    assignedProgram: user.programAssignments?.[0]?.program ?? null,
+    assigned_department: user.departmentAssignments?.[0]?.department ?? null,
+    assignedDepartment: user.departmentAssignments?.[0]?.department ?? null,
+    assigned_college: user.collegeAssignments?.[0]?.college ?? null,
+    assignedCollege: user.collegeAssignments?.[0]?.college ?? null,
     roles: (user.userRoles ?? []).map(mapRoleAssignment)
   };
 }
@@ -90,6 +122,81 @@ export class AuthenticationStore {
 
   async userById(id) {
     return mapUser(await this.prisma.user.findFirst({ where: { id, deletedAt: null }, include: userInclude }));
+  }
+
+  async findUserForGoogleAuth(googleSub, email) {
+    const normalizedEmail = (email || "").trim().toLowerCase();
+
+    // 1. Search by linked googleSub
+    if (googleSub) {
+      const linked = await this.prisma.userGoogleAuth.findUnique({
+        where: { googleSub },
+        include: { user: { include: userInclude } }
+      });
+      if (linked?.user && !linked.user.deletedAt) {
+        return mapUser(linked.user);
+      }
+    }
+
+    // 2. Search User by emailNormalized / usernameNormalized
+    const userByEmail = await this.prisma.user.findFirst({
+      where: {
+        deletedAt: null,
+        OR: [
+          { emailNormalized: normalizedEmail },
+          { usernameNormalized: normalizedEmail }
+        ]
+      },
+      include: userInclude
+    });
+    if (userByEmail) return mapUser(userByEmail);
+
+    // 3. Search Student by institutionalEmail
+    const student = await this.prisma.student.findFirst({
+      where: {
+        institutionalEmail: { equals: normalizedEmail, mode: "insensitive" },
+        user: { deletedAt: null }
+      },
+      include: { user: { include: userInclude } }
+    });
+    if (student?.user) return mapUser(student.user);
+
+    // 4. Search Faculty by institutionalEmail
+    const faculty = await this.prisma.faculty.findFirst({
+      where: {
+        institutionalEmail: { equals: normalizedEmail, mode: "insensitive" },
+        user: { deletedAt: null }
+      },
+      include: { user: { include: userInclude } }
+    });
+    if (faculty?.user) return mapUser(faculty.user);
+
+    return null;
+  }
+
+  async linkGoogleAuth(userId, { googleSub, email, picture }) {
+    const now = asDate(this.config.now());
+    const normalized = (email || "").trim().toLowerCase();
+    return this.prisma.userGoogleAuth.upsert({
+      where: { userId },
+      update: {
+        googleSub,
+        email: normalized,
+        emailNormalized: normalized,
+        avatarUrl: picture || null,
+        lastLoginAt: now
+      },
+      create: {
+        id: newId(),
+        userId,
+        googleSub,
+        email: normalized,
+        emailNormalized: normalized,
+        avatarUrl: picture || null,
+        linkedAt: now,
+        lastLoginAt: now
+      }
+    });
   }
 
   rolesForUser(user) {
@@ -263,7 +370,8 @@ export class AuthenticationStore {
   }
 
   async createUser(values) {
-    const role = await this.prisma.role.findUnique({ where: { slug: values.roleSlug }, select: { id: true, slug: true } });
+    const roleSlug = values.roleSlug || values.role;
+    const role = roleSlug ? await this.prisma.role.findUnique({ where: { slug: roleSlug }, select: { id: true, slug: true } }) : null;
     if (!role) throw new Error("ROLE_INVALID");
     let program = null;
     if (role.slug === "program_head") {
@@ -278,13 +386,40 @@ export class AuthenticationStore {
       });
       if (!program) throw new Error("PROGRAM_INVALID");
     }
+    let department = null;
+    if (role.slug === "student_assistant") {
+      if (typeof values.departmentId !== "string" || !values.departmentId) throw new Error("DEPARTMENT_REQUIRED");
+      department = await this.prisma.department.findFirst({
+        where: {
+          id: values.departmentId,
+          isActive: true,
+          college: { is: { isActive: true } }
+        },
+        select: { id: true }
+      });
+      if (!department) throw new Error("DEPARTMENT_INVALID");
+    }
+    let college = null;
+    if (role.slug === "dean") {
+      if (typeof values.collegeId !== "string" || !values.collegeId) throw new Error("COLLEGE_REQUIRED");
+      college = await this.prisma.college.findFirst({
+        where: {
+          id: values.collegeId,
+          isActive: true
+        },
+        select: { id: true }
+      });
+      if (!college) throw new Error("COLLEGE_INVALID");
+    }
     return mapUser(await this.prisma.user.create({ data: {
       id: values.id, username: values.username, usernameNormalized: values.usernameNormalized,
       displayName: values.displayName, email: values.email, emailNormalized: values.emailNormalized,
       passwordHash: values.passwordHash, status: "ACTIVE", mustChangePassword: values.mustChangePassword,
       createdAt: asDate(values.now), updatedAt: asDate(values.now),
       userRoles: { create: { roleId: role.id, isPrimary: true, assignedByUserId: values.assignedByUserId } },
-      programAssignments: program ? { create: { id: values.programAssignmentId, programId: program.id, assignedByUserId: values.assignedByUserId } } : undefined
+      programAssignments: program ? { create: { id: values.programAssignmentId || newId(), programId: program.id, assignedByUserId: values.assignedByUserId } } : undefined,
+      departmentAssignments: department ? { create: { id: values.departmentAssignmentId || newId(), departmentId: department.id, assignedByUserId: values.assignedByUserId } } : undefined,
+      collegeAssignments: college ? { create: { id: values.collegeAssignmentId || newId(), collegeId: college.id, assignedByUserId: values.assignedByUserId } } : undefined
     }, include: userInclude }));
   }
 
@@ -295,6 +430,30 @@ export class AuthenticationStore {
         department: { is: { isActive: true, college: { is: { isActive: true } } } }
       },
       select: { id: true, code: true, name: true },
+      orderBy: [{ code: "asc" }, { name: "asc" }]
+    });
+  }
+
+  async listDepartments() {
+    return this.prisma.department.findMany({
+      where: {
+        isActive: true,
+        college: { is: { isActive: true } }
+      },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        college: { select: { id: true, code: true, name: true } }
+      },
+      orderBy: [{ college: { name: "asc" } }, { code: "asc" }]
+    });
+  }
+
+  async listColleges() {
+    return this.prisma.college.findMany({
+      where: { isActive: true },
+      select: { id: true, code: true, name: true, shortName: true },
       orderBy: [{ code: "asc" }, { name: "asc" }]
     });
   }
@@ -331,6 +490,7 @@ export class AuthenticationStore {
     await this.prisma.auditLog.create({ data: {
       eventType: values.eventType, outcome: values.outcome, actorUserId: values.actorUserId,
       targetUserId: values.targetUserId, identifierHash: values.identifierHash,
+      resourceType: values.resourceType ?? null, resourceId: values.resourceId ?? null,
       requestId: values.requestId, ipHash: values.ipHash, method: values.method,
       path: values.path, metadata: values.metadata, createdAt: asDate(values.createdAt)
     } });

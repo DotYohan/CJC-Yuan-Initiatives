@@ -24,6 +24,13 @@
     const programHeadOfferingForm = select("[data-create-program-head-offering]");
     const programHeadOfferingCurriculum = select("#program-head-offering-curriculum");
     const programHeadOfferingSubject = select("#program-head-offering-subject");
+    const programHeadOfferingSearch = select("[data-program-head-offering-search]");
+    const programHeadOfferingStatusFilter = select("[data-program-head-offering-status-filter]");
+    const programHeadOfferingSort = select("[data-program-head-offering-sort]");
+    const refreshProgramHeadOfferingsBtn = select("[data-refresh-program-head-offerings]");
+    const programHeadOfferingEditDialog = select("[data-program-head-offering-edit-dialog]");
+    const programHeadOfferingEditForm = select("[data-edit-program-head-offering-form]");
+    const programHeadOfferingEditStatus = select("[data-ph-edit-status]");
     const programHeadStudentDialog = select("[data-program-head-student-dialog]");
     const programHeadEvaluationDialog = select("[data-program-head-evaluation-dialog]");
     const programHeadEvaluationForm = select("[data-approve-program-head-evaluation]");
@@ -38,6 +45,27 @@
     const registrarError = select("[data-registrar-error]");
     const registrarStatus = select("[data-registrar-status]");
     const registrarApplicationsDialog = select("[data-registrar-applications-dialog]");
+    const registrarOfferingForm = select("[data-create-registrar-offering]");
+    const registrarOfferingTerm = select("#registrar-offering-term");
+    const registrarOfferingProgram = select("#registrar-offering-program");
+    const registrarOfferingCurriculum = select("#registrar-offering-curriculum");
+    const registrarOfferingSubject = select("#registrar-offering-subject");
+    const registrarOfferingFaculty = select("#registrar-offering-faculty");
+    const registrarOfferingRoom = select("#registrar-offering-room");
+    const registrarOfferingsList = select("[data-registrar-offerings-list]");
+    const registrarSubjectsTbody = select("[data-registrar-subjects-tbody]");
+    const registrarOfferingSearch = select("[data-registrar-offering-search]");
+    const registrarOfferingProgramFilter = select("[data-registrar-offering-program-filter]");
+    const registrarOfferingStatusFilter = select("[data-registrar-offering-status-filter]");
+    const registrarOfferingSort = select("[data-registrar-offering-sort]");
+    const refreshRegistrarOfferingsBtn = select("[data-refresh-registrar-offerings]");
+    const registrarOfferingEditDialog = select("[data-registrar-offering-edit-dialog]");
+    const registrarOfferingEditForm = select("[data-edit-registrar-offering-form]");
+    const registrarOfferingEditStatus = select("[data-reg-edit-status-msg]");
+    const refreshRegistrarSubjectsBtn = select("[data-refresh-registrar-subjects]");
+    const registrarSubjectSearch = select("[data-registrar-subject-search]");
+    const registrarSubjectProgramFilter = select("[data-registrar-subject-program-filter]");
+    const registrarOfferingStatus = select("[data-registrar-offering-form-status]");
     const registrarDocumentsDialog = select("[data-registrar-documents-dialog]");
     const registrarApplicationList = select("[data-registrar-application-list]");
     const registrarApplicationsStatus = select("[data-registrar-applications-status]");
@@ -59,6 +87,155 @@
     const roleSelect = select("#create-role");
     const programAssignment = select("[data-program-assignment]");
     const programSelect = select("#create-program");
+    const departmentAssignment = select("[data-department-assignment]");
+    const departmentSelect = select("#create-department");
+    const collegeAssignment = select("[data-college-assignment]");
+    const collegeSelect = select("#create-college");
+
+    const studentAssistantPanel = select("[data-student-assistant-panel]");
+    const saDepartmentContext = select("[data-sa-department-context]");
+    const saPendingCount = select("[data-sa-pending-count]");
+    const saEncodedCount = select("[data-sa-encoded-count]");
+    const saProgramsCount = select("[data-sa-programs-count]");
+    const saFilterPendingCount = select("[data-sa-filter-pending-count]");
+    const saFilterEncodedCount = select("[data-sa-filter-encoded-count]");
+    const saStatus = select("[data-sa-status]");
+    const saApplicationsList = select("[data-sa-applications-list]");
+    const saEmptyState = select("[data-sa-empty-state]");
+    const saDetailContainer = select("[data-sa-detail-container]");
+    const saStudentName = select("[data-sa-student-name]");
+    const saStudentDetails = select("[data-sa-student-details]");
+    const saStudentStatus = select("[data-sa-student-status]");
+    const saFootprintBanner = select("[data-sa-footprint-banner]");
+    const saEncodedByText = select("[data-sa-encoded-by-text]");
+    const saEncodedAtText = select("[data-sa-encoded-at-text]");
+    const saEncodeForm = select("[data-sa-encode-form]");
+    const saSubjectsBody = select("[data-sa-subjects-body]");
+    const saEncodeError = select("[data-sa-encode-error]");
+    const saSubmitEncode = select("[data-sa-submit-encode]");
+    const refreshStudentAssistantBtn = select("[data-refresh-student-assistant]");
+
+    // Dean DOM Elements
+    const deanPanel = select("[data-dean-panel]");
+    const deanCollegeContext = select("[data-dean-college-context]");
+    const deanRefreshBtn = select("[data-refresh-dean]");
+    const deanStudentsCount = select("[data-dean-students-count]");
+    const deanFacultyCount = select("[data-dean-faculty-count]");
+    const deanProgramsCount = select("[data-dean-programs-count]");
+    const deanGradesPendingCount = select("[data-dean-grades-pending-count]");
+
+    // Dean Grade Review
+    const deanGradesTbody = select("[data-dean-grades-tbody]");
+    const refreshDeanGradesBtn = select("[data-refresh-dean-grades]");
+    const deanGradeDialog = select("[data-dean-grade-dialog]");
+    const deanGradeDialogTitle = select("[data-dean-grade-dialog-title]");
+    const deanGradeDialogMeta = select("[data-dean-grade-dialog-meta]");
+    const deanGradeSheetTbody = select("[data-dean-grade-sheet-tbody]");
+    const deanGradeRemarks = select("#dean-grade-remarks");
+    const deanGradeError = select("[data-dean-grade-error]");
+    const deanApproveGradesBtn = select("[data-dean-approve-grades]");
+    const deanReturnGradesBtn = select("[data-dean-return-grades]");
+    const closeDeanGradeDialogBtns = selectAll("[data-close-dean-grade-dialog]");
+
+    // Dean Students
+    const deanStudentsTbody = select("[data-dean-students-tbody]");
+    const deanStudentSearch = select("[data-dean-student-search]");
+    const deanStudentSort = select("[data-dean-student-sort]");
+
+    // Dean Faculty
+    const deanFacultyTbody = select("[data-dean-faculty-tbody]");
+
+    // Dean Evaluation
+    const deanEvaluationsTbody = select("[data-dean-evaluations-tbody]");
+    const refreshDeanEvaluationsBtn = select("[data-refresh-dean-evaluations]");
+    const deanEvaluationDialog = select("[data-dean-evaluation-dialog]");
+    const deanEvalTitle = select("[data-dean-eval-title]");
+    const deanEvalMeta = select("[data-dean-eval-meta]");
+    const deanEvalIssuesContainer = select("[data-dean-eval-issues-container]");
+    const deanEvalSubjectsTbody = select("[data-dean-eval-subjects-tbody]");
+    const deanEvalOverrideReasonField = select("[data-dean-eval-override-reason-field]");
+    const deanEvalOverrideReason = select("#dean-eval-override-reason");
+    const deanEvalRemarks = select("#dean-eval-remarks");
+    const deanEvalError = select("[data-dean-eval-error]");
+    const deanSubmitEvaluationBtn = select("[data-dean-submit-evaluation]");
+    const closeDeanEvalDialogBtns = selectAll("[data-close-dean-eval-dialog]");
+
+    // Dean Schedules
+    const deanSchedulesTbody = select("[data-dean-schedules-tbody]");
+
+    // SSC DOM Elements
+    const sscPanel = select("[data-ssc-panel]");
+    const sscTotalClubs = select("[data-ssc-total-clubs]");
+    const sscActiveClubs = select("[data-ssc-active-clubs]");
+    const sscInactiveClubs = select("[data-ssc-inactive-clubs]");
+    const sscExpiredClubs = select("[data-ssc-expired-clubs]");
+    const sscClubsTable = select("[data-ssc-clubs-table]");
+    const sscClubsBody = select("[data-ssc-clubs-body]");
+    const sscStatus = select("[data-ssc-status]");
+    const sscSearch = select("[data-ssc-search]");
+    const clearSscSearchBtn = select("[data-clear-ssc-search]");
+    const sscCreateClubDialog = select("[data-ssc-create-club-dialog]");
+    const sscCreateClubForm = select("[data-ssc-create-club-form]");
+    const sscCreateError = select("[data-ssc-create-error]");
+    const sscEditDatesDialog = select("[data-ssc-edit-dates-dialog]");
+    const sscEditDatesForm = select("[data-ssc-edit-dates-form]");
+    const sscDatesError = select("[data-ssc-dates-error]");
+    const refreshSscBtn = select("[data-refresh-ssc]");
+    const openCreateClubBtn = select("[data-open-create-club]");
+
+    // Club Management DOM Elements
+    const clubPanel = select("[data-club-panel]");
+    const clubHeaderName = select("[data-club-header-name]");
+    const clubHeaderCategory = select("[data-club-header-category]");
+    const clubHeaderLead = select("[data-club-header-lead]");
+    const clubHeaderStatus = select("[data-club-header-status]");
+    const refreshClubBtn = select("[data-refresh-club]");
+    const assignOfficerForm = select("[data-assign-officer-form]");
+    const verifyOfficerBtn = select("[data-verify-officer-btn]");
+    const officerVerifyResult = select("[data-officer-verify-result]");
+    const officerError = select("[data-officer-error]");
+    const clubOfficersBody = select("[data-club-officers-body]");
+    const clubMembersBody = select("[data-club-members-body]");
+    const clubClearedCount = select("[data-club-cleared-count]");
+    const clubTotalMembersCount = select("[data-club-total-members-count]");
+    const createAnnouncementForm = select("[data-create-announcement-form]");
+    const announcementError = select("[data-announcement-error]");
+    const clubAnnouncementsList = select("[data-club-announcements-list]");
+    const createDocumentForm = select("[data-create-document-form]");
+    const documentError = select("[data-document-error]");
+    const clubDocumentsBody = select("[data-club-documents-body]");
+
+    // Student Clubs DOM Elements
+    const studentActiveClubsCount = select("[data-student-active-clubs-count]");
+    const refreshStudentClubsBtn = select("[data-refresh-student-clubs]");
+    const studentMyClubsBody = select("[data-student-my-clubs-body]");
+    const studentAvailableClubsGrid = select("[data-student-available-clubs-grid]");
+    const studentClubsStatus = select("[data-student-clubs-status]");
+    const studentClubPortalDialog = select("[data-student-club-portal-dialog]");
+    const portalClubName = select("[data-portal-club-name]");
+    const portalCategoryLabel = select("[data-portal-category-label]");
+    const portalClubLead = select("[data-portal-club-lead]");
+    const portalClubStatus = select("[data-portal-club-status]");
+    const portalRolePill = select("[data-portal-role-pill]");
+    const portalExpiredBanner = select("[data-portal-expired-banner]");
+    const portalAnnouncementsFeed = select("[data-portal-announcements-feed]");
+    const portalDocsBody = select("[data-portal-docs-body]");
+    const portalDocFilter = select("[data-portal-doc-filter]");
+    const portalOfficersBody = select("[data-portal-officers-body]");
+    const portalMyClearancePill = select("[data-portal-my-clearance-pill]");
+    const portalMyClearanceDate = select("[data-portal-my-clearance-date]");
+    const portalMyClearanceBy = select("[data-portal-my-clearance-by]");
+    const portalMyClearanceRemarks = select("[data-portal-my-clearance-remarks]");
+    const portalEvalTab = select("[data-portal-eval-tab]");
+    const portalEvalBody = select("[data-portal-eval-body]");
+    const evalActionDialog = select("[data-eval-action-dialog]");
+    const evalActionForm = select("[data-eval-action-form]");
+    const evalActionError = select("[data-eval-action-error]");
+    const evalFormTargetName = select("#eval-form-target-name");
+    const evalFormClubId = select("#eval-form-club-id");
+    const evalFormTargetId = select("#eval-form-target-id");
+    const evalFormStatus = select("#eval-form-status");
+    const evalFormRemarks = select("#eval-form-remarks");
     const usersStatus = select("[data-users-status]");
     const usersTable = select("[data-users-table]");
     const usersBody = select("[data-users-body]");
@@ -75,6 +252,38 @@
     const studentError = select("[data-student-error]");
     const studentUnlinked = select("[data-student-unlinked]");
     const studentContent = select("[data-student-content]");
+
+    const facultyPanel = select("[data-faculty-panel]");
+    const registrarGradesPanel = select("[data-registrar-grades-panel]");
+    const adminFacultySection = select("[data-admin-faculty-section]");
+    const facultyClassesGrid = select("[data-faculty-classes-grid]");
+    const facultyRosterDialog = select("[data-faculty-roster-dialog]");
+    const facultyRosterTitle = select("[data-roster-dialog-title]");
+    const facultyRosterInfo = select("[data-roster-info]");
+    const facultyRosterTbody = select("[data-roster-tbody]");
+    const saveDraftGradesBtn = select("[data-save-draft-grades]");
+    const submitGradesBtn = select("[data-submit-grades]");
+    const closeRosterDialogBtn = select("[data-close-roster-dialog]");
+    const refreshFacultyBtn = select("[data-refresh-faculty]");
+
+    const adminFacultyTbody = select("[data-admin-faculty-tbody]");
+    const showFacultyFormBtn = select("[data-show-faculty-form]");
+    const refreshAdminFacultyBtn = select("[data-refresh-admin-faculty]");
+    const facultyCreateDialog = select("[data-faculty-create-dialog]");
+    const facultyCreateForm = select("[data-faculty-create-form]");
+    const facultyCreateError = select("[data-faculty-create-error]");
+    const facultyCollegeSelect = select("#faculty-college");
+    const closeFacultyCreateDialogBtn = select("[data-close-faculty-create-dialog]");
+
+    const gradeSubmissionsTbody = select("[data-grade-submissions-tbody]");
+    const refreshGradeSubmissionsBtn = select("[data-refresh-grade-submissions]");
+    const gradeSheetDialog = select("[data-grade-sheet-dialog]");
+    const gradeSheetTitle = select("[data-grade-sheet-title]");
+    const gradeSheetTbody = select("[data-grade-sheet-tbody]");
+    const closeGradeSheetDialogBtns = selectAll("[data-close-grade-sheet-dialog]");
+    const approveGradesBtn = select("[data-approve-grades-btn]");
+    const returnGradesBtn = select("[data-return-grades-btn]");
+
     const state = {
         user: null,
         roles: [],
@@ -96,6 +305,45 @@
         currentReview: null,
         selectedDocumentId: null,
         monitoringHealth: null,
+        registrarOfferingOptions: null,
+        registrarOfferings: [],
+        registrarSubjects: [],
+        facultyLoaded: false,
+        facultyClasses: [],
+        activeOfferingRoster: null,
+        adminFaculty: [],
+        adminColleges: [],
+        gradeSubmissions: [],
+        activeRegistrarGradeSheet: null,
+        studentAssistantLoaded: false,
+        studentAssistantDashboard: null,
+        studentAssistantApplications: [],
+        studentAssistantFilter: "PENDING",
+        selectedSaApplicationId: null,
+        currentSaDetail: null,
+        sscLoaded: false,
+        sscClubs: [],
+        sscCurrentFilter: "ALL",
+        clubLoaded: false,
+        clubDashboard: null,
+        studentClubsLoaded: false,
+        studentAvailableClubs: [],
+        studentMyClubs: [],
+        studentActiveClubPortal: null,
+        deanLoaded: false,
+        deanOverview: null,
+        deanGrades: [],
+        activeDeanGradeSheet: null,
+        deanStudents: [],
+        deanFaculty: [],
+        deanEvaluations: [],
+        activeDeanEvaluation: null,
+        deanSchedules: [],
+        studentImportRequests: [],
+        registrarImportRequests: [],
+        activeRegistrarImport: null,
+        activeRegistrarImportPreview: null,
+        academicPrograms: [],
     };
     let mandatoryPrompted = false;
     let roleDialogReturnFocus = null;
@@ -109,6 +357,7 @@
         dean: "Dean",
         administrator: "Administrator",
         student_assistant: "Student Assistant",
+        club: "Club Account",
         registrar: "Registrar",
         cashier: "Cashier",
         ssc: "SSC",
@@ -117,10 +366,24 @@
         yearbook_coordinator: "Yearbook Coordinator",
         proctor: "Proctor",
     };
-    const accountCreationRoleSlugs = new Set(["administrator", "registrar", "program_head", "cashier", "student"]);
+    const accountCreationRoleSlugs = new Set(["administrator", "registrar", "program_head", "dean", "cashier", "student", "student_assistant", "ssc"]);
     const humanize = (value) => String(value || "")
         .replace(/[_-]+/g, " ")
         .replace(/\b\w/g, (letter) => letter.toUpperCase());
+    const escapeHtml = (unsafe) => String(unsafe ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    const safeExternalUrl = (value) => {
+        try {
+            const url = new URL(String(value || ""), window.location.origin);
+            return url.protocol === "http:" || url.protocol === "https:" ? url.href : "";
+        } catch {
+            return "";
+        }
+    };
     const roleName = (slug) => {
         const catalogRole = state.roleCatalog.find((role) => role.slug === slug);
         return catalogRole?.name || roleNames[slug] || humanize(slug) || "Project user";
@@ -135,8 +398,13 @@
     const isAdministrator = () => state.roles.includes("administrator");
     const isRegistrar = () => state.roles.includes("registrar");
     const isProgramHead = () => state.roles.includes("program_head");
+    const isFaculty = () => state.roles.includes("faculty");
+    const isStudentAssistant = () => state.roles.includes("student_assistant");
+    const isSsc = () => state.roles.includes("ssc");
+    const isClub = () => state.roles.includes("club");
+    const isDean = () => state.roles.includes("dean");
     const isStudentWorkspace = () => location.pathname === "/portal/student"
-        || (location.pathname === "/portal.html" && state.user?.primaryRole === "student");
+        || (location.pathname === "/portal.html" && (state.user?.primaryRole === "student" || state.roles.includes("student")));
     const needsPasswordChange = () => Boolean(state.user?.mustChangePassword);
     const redirectToSignIn = () => {
         const returnTo = `${location.pathname}${location.search}`;
@@ -144,8 +412,9 @@
     };
 
     const setText = (selector, value) => {
-        const element = select(selector);
-        if (element) element.textContent = value;
+        selectAll(selector).forEach((element) => {
+            element.textContent = value;
+        });
     };
     const setBusy = (container, busy) => {
         if (!container) return;
@@ -330,7 +599,7 @@
         const applicationStatus = select("[data-application-status]");
         if (dashboard?.linked && dashboard.student) {
             try {
-            appData = await auth.getEnrollmentApplication();
+                appData = await auth.getEnrollmentApplication();
                 const status = appData.application?.status || appData.admission?.status;
                 const feedback = appData.feedback;
                 if (status) {
@@ -392,8 +661,8 @@
             enrollmentAction.textContent = needsEnrollmentForOpenTerm
                 ? "Start enrollment for current term"
                 : ["DRAFT", "REJECTED", "RETURNED_FOR_CORRECTION"].includes(workflowStatus)
-                ? "Continue enrollment form"
-                : "Complete enrollment form";
+                    ? "Continue enrollment form"
+                    : "Complete enrollment form";
             if (!editable) {
                 enrollmentAction.title = "Enrollment form updates are not available in the current status.";
             } else {
@@ -427,7 +696,18 @@
 
         const clearanceList = select("[data-clearance-form-list]");
         clearanceList?.replaceChildren();
-        setText("[data-clearance-form-status]", clearance ? humanize(clearance.status) : "Not started");
+        const clearanceStatusEl = select("[data-clearance-form-status]");
+        if (clearanceStatusEl) {
+            const stat = clearance?.status || "NOT_STARTED";
+            clearanceStatusEl.textContent = clearance ? humanize(clearance.status) : "Not started";
+            clearanceStatusEl.className = `status-pill ${
+                stat === "CLEARED" || stat === "APPROVED"
+                    ? "status-pill--active"
+                    : stat === "BLOCKED" || stat === "NOT_CLEARED"
+                    ? "status-pill--expired"
+                    : "status-pill--pending"
+            }`;
+        }
         if (clearanceList) {
             const items = Array.isArray(clearance?.items) ? clearance.items : [];
             if (!items.length) {
@@ -441,7 +721,8 @@
                         item.remarks || "No remarks",
                         item.processedAt ? `Processed ${formatDate(item.processedAt)}` : "Not processed"
                     ].join(" · ");
-                    clearanceList.append(dashboardListItem(item.office || humanize(item.officeType), details, humanize(item.status)));
+                    const trailing = item.status === "APPROVED" || item.status === "CLEARED" ? "Cleared" : humanize(item.status);
+                    clearanceList.append(dashboardListItem(item.office || humanize(item.officeType), details, trailing));
                 });
             }
         }
@@ -454,9 +735,12 @@
                 const room = meeting.room
                     ? [meeting.room.building, meeting.room.code].filter(Boolean).join(" · ")
                     : "Room to be announced";
+                const timeText = meeting.weekday
+                    ? `${humanize(meeting.weekday)} · ${meeting.startsAt || "TBA"}–${meeting.endsAt || "TBA"}`
+                    : "Schedule TBA";
                 return dashboardListItem(
                     `${meeting.subjectCode} — ${meeting.subjectTitle}`,
-                    `${humanize(meeting.weekday)} · ${meeting.startsAt || "TBA"}–${meeting.endsAt || "TBA"} · ${room}`,
+                    `${timeText} · ${room}`,
                     meeting.section || ""
                 );
             }));
@@ -509,6 +793,8 @@
             const data = await auth.getStudentDashboard();
             state.studentLoaded = true;
             await renderStudentDashboard(data.dashboard);
+            await loadStudentClubs();
+            await loadStudentImportRequests();
         } catch (error) {
             if (handleExpiredSession(error)) return;
             state.studentLoaded = false;
@@ -541,11 +827,12 @@
         state.roles = normalizeRoles(user?.roles);
         const primaryRole = user?.primaryRole && state.roles.includes(user.primaryRole)
             ? user.primaryRole
-            : "";
+            : (state.roles[0] || "");
         const primaryLabel = roleName(primaryRole);
         const name = displayName(user);
         const required = needsPasswordChange();
         const studentWorkspace = isStudentWorkspace();
+        document.body.classList.toggle("student-mode", studentWorkspace && !required);
 
         setText("[data-role-label]", `${primaryLabel} account`);
         setText("[data-workspace-title]", `${primaryLabel} workspace`);
@@ -567,10 +854,22 @@
         const canManageAccounts = isAdministrator() && !required;
         const canManageRegistrar = isRegistrar() && !required;
         const canManageProgramHead = isProgramHead() && !required;
+        const canManageFaculty = isFaculty() && !required;
+        const canManageStudentAssistant = isStudentAssistant() && !required;
+        const canManageSsc = isSsc() && !required;
+        const canManageClub = isClub() && !required;
+        const canManageDean = isDean() && !required;
         adminPanel.hidden = !canManageAccounts;
+        if (sscPanel) sscPanel.hidden = !canManageSsc;
+        if (clubPanel) clubPanel.hidden = !canManageClub;
         if (monitoringPanel) monitoringPanel.hidden = !canManageAccounts;
         registrarPanel.hidden = !canManageRegistrar;
         programHeadPanel.hidden = !canManageProgramHead;
+        if (facultyPanel) facultyPanel.hidden = !canManageFaculty;
+        if (studentAssistantPanel) studentAssistantPanel.hidden = !canManageStudentAssistant;
+        if (deanPanel) deanPanel.hidden = !canManageDean;
+        if (registrarGradesPanel) registrarGradesPanel.hidden = !canManageRegistrar;
+        if (adminFacultySection) adminFacultySection.hidden = !canManageAccounts;
         studentDashboard.hidden = !studentWorkspace || required;
 
         if (required && !mandatoryPrompted) {
@@ -581,13 +880,41 @@
             state.adminLoaded = true;
             void loadAdminData();
         }
+        if (canManageAccounts && !state.adminFacultyLoaded) {
+            state.adminFacultyLoaded = true;
+            void loadAdminFaculty();
+        }
         if (canManageRegistrar && !state.registrarLoaded) {
             state.registrarLoaded = true;
             void loadRegistrarData();
         }
+        if (canManageRegistrar && !state.registrarGradesLoaded) {
+            state.registrarGradesLoaded = true;
+            void loadRegistrarGradeSubmissions();
+        }
         if (canManageProgramHead && !state.programHeadLoaded) {
             state.programHeadLoaded = true;
             void loadProgramHeadData();
+        }
+        if (canManageFaculty && !state.facultyLoaded) {
+            state.facultyLoaded = true;
+            void loadFacultyClasses();
+        }
+        if (canManageStudentAssistant && !state.studentAssistantLoaded) {
+            state.studentAssistantLoaded = true;
+            void loadStudentAssistantData();
+        }
+        if (canManageDean && !state.deanLoaded) {
+            state.deanLoaded = true;
+            void loadDeanData();
+        }
+        if (canManageSsc && !state.sscLoaded) {
+            state.sscLoaded = true;
+            void loadSscData();
+        }
+        if (canManageClub && !state.clubLoaded) {
+            state.clubLoaded = true;
+            void loadClubData();
         }
         if (studentWorkspace && !required && !state.studentLoaded && !state.studentLoading) {
             void loadStudentDashboard();
@@ -781,19 +1108,7 @@
         try {
             await auth.logout();
         } catch (error) {
-            if (error?.status !== 401) {
-                buttons.forEach((button) => {
-                    button.disabled = false;
-                    button.setAttribute("aria-busy", "false");
-                });
-                if (passwordDialog?.open) {
-                    showError(passwordError, "Could not sign out. Check your connection and try again.");
-                } else {
-                    showError(globalError, "Could not sign out. Check your connection and try again.");
-                    globalError?.scrollIntoView({ block: "nearest" });
-                }
-                return;
-            }
+            console.warn("Logout request completed with notice:", error);
         }
         auth.clearCsrf();
         location.replace("/index.html");
@@ -817,7 +1132,7 @@
             roleSelect.append(option);
         });
         roleSelect.disabled = !accountRoles.length;
-        syncProgramAssignment();
+        syncRoleAssignments();
     };
 
     const renderProgramOptions = (programs = []) => {
@@ -827,16 +1142,49 @@
         programSelect.disabled = !programs.length || roleSelect?.value !== "program_head";
     };
 
-    const syncProgramAssignment = () => {
-        const required = roleSelect?.value === "program_head";
-        if (programAssignment) programAssignment.hidden = !required;
+    const renderDepartmentOptions = (departments = []) => {
+        if (!departmentSelect) return;
+        departmentSelect.replaceChildren(new Option(departments.length ? "Choose a department / college" : "No departments available", ""));
+        departments.forEach((dept) => {
+            const collegeCode = dept.college?.code ? ` [${dept.college.code}]` : "";
+            departmentSelect.append(new Option(`${dept.code} · ${dept.name}${collegeCode}`, dept.id));
+        });
+        departmentSelect.disabled = !departments.length || roleSelect?.value !== "student_assistant";
+    };
+
+    const renderCollegeOptions = (colleges = []) => {
+        if (!collegeSelect) return;
+        collegeSelect.replaceChildren(new Option(colleges.length ? "Choose an assigned college" : "No colleges available", ""));
+        colleges.forEach((c) => {
+            collegeSelect.append(new Option(`${c.code} · ${c.name}`, c.id));
+        });
+        collegeSelect.disabled = !colleges.length || roleSelect?.value !== "dean";
+    };
+
+    const syncRoleAssignments = () => {
+        const isPH = roleSelect?.value === "program_head";
+        const isSA = roleSelect?.value === "student_assistant";
+        const isDeanRole = roleSelect?.value === "dean";
+        if (programAssignment) programAssignment.hidden = !isPH;
         if (programSelect) {
-            programSelect.required = required;
-            programSelect.disabled = !required || programSelect.options.length <= 1;
-            if (!required) programSelect.value = "";
+            programSelect.required = isPH;
+            programSelect.disabled = !isPH || programSelect.options.length <= 1;
+            if (!isPH) programSelect.value = "";
+        }
+        if (departmentAssignment) departmentAssignment.hidden = !isSA;
+        if (departmentSelect) {
+            departmentSelect.required = isSA;
+            departmentSelect.disabled = !isSA || departmentSelect.options.length <= 1;
+            if (!isSA) departmentSelect.value = "";
+        }
+        if (collegeAssignment) collegeAssignment.hidden = !isDeanRole;
+        if (collegeSelect) {
+            collegeSelect.required = isDeanRole;
+            collegeSelect.disabled = !isDeanRole || collegeSelect.options.length <= 1;
+            if (!isDeanRole) collegeSelect.value = "";
         }
     };
-    roleSelect?.addEventListener("change", syncProgramAssignment);
+    roleSelect?.addEventListener("change", syncRoleAssignments);
 
     const selectedEditorRoles = () => selectAll("input[name='roles']:checked", roleForm || document)
         .map((input) => input.value)
@@ -1108,7 +1456,13 @@
 
     const loadAdminData = async () => {
         if (!isAdministrator() || needsPasswordChange()) return;
-        await Promise.allSettled([loadRoles(), loadUsers(), auth.getAdminPrograms().then((data) => renderProgramOptions(data.programs || []))]);
+        await Promise.allSettled([
+            loadRoles(),
+            loadUsers(),
+            auth.getAdminPrograms().then((data) => renderProgramOptions(data.programs || [])),
+            auth.getAdminDepartments().then((data) => renderDepartmentOptions(data.departments || [])),
+            auth.getAdminColleges().then((data) => renderCollegeOptions(data.colleges || []))
+        ]);
     };
 
     const renderRegistrarDashboard = (dashboard) => {
@@ -1144,12 +1498,60 @@
         if (closeButton) closeButton.disabled = !isOpen;
     };
 
+    const initWorkspaceTabs = (navAttr, viewAttr, onSwitch) => {
+        const switchTab = (targetView) => {
+            const navs = selectAll(`[${navAttr}]`);
+            const views = selectAll(`[${viewAttr}]`);
+            navs.forEach((tab) => {
+                const isMatch = tab.getAttribute(navAttr) === targetView;
+                tab.classList.toggle("active", isMatch);
+                tab.setAttribute("aria-selected", isMatch ? "true" : "false");
+            });
+            views.forEach((view) => {
+                const isMatch = view.getAttribute(viewAttr) === targetView;
+                view.hidden = !isMatch;
+            });
+            if (typeof onSwitch === "function") onSwitch(targetView);
+        };
+        const navs = selectAll(`[${navAttr}]`);
+        navs.forEach((tab) => {
+            tab.addEventListener("click", () => {
+                const view = tab.getAttribute(navAttr);
+                if (view) switchTab(view);
+            });
+        });
+        return switchTab;
+    };
+
+    const switchRegistrarTab = initWorkspaceTabs("data-registrar-nav", "data-registrar-view", (view) => {
+        if (view === "academic-imports") void loadRegistrarImportRequests();
+    });
+    const switchStudentTab = initWorkspaceTabs("data-student-nav", "data-student-view", (view) => {
+        if (view === "clubs") void loadStudentClubs();
+        if (view === "clearance") void loadStudentDashboard();
+        if (view === "grades") void loadStudentImportRequests();
+    });
+    const switchClubTab = initWorkspaceTabs("data-club-nav", "data-club-view");
+    const switchStudentPortalTab = initWorkspaceTabs("data-portal-nav", "data-portal-view");
+    const switchProgramHeadTab = initWorkspaceTabs("data-ph-nav", "data-ph-view");
+    const switchFacultyTab = initWorkspaceTabs("data-faculty-nav", "data-faculty-view");
+    const switchAdminTab = initWorkspaceTabs("data-admin-nav", "data-admin-view");
+    const switchDeanTab = initWorkspaceTabs("data-dean-nav", "data-dean-view");
+
+
     const loadRegistrarData = async () => {
         if (!isRegistrar() || needsPasswordChange()) return;
         try {
             const dashboard = await auth.getRegistrarDashboard();
             renderRegistrarDashboard(dashboard);
             await loadRegistrarApplications();
+            await Promise.all([
+                loadRegistrarOfferingOptions(),
+                loadRegistrarOfferings(),
+                loadRegistrarSubjects(),
+                loadRegistrarGradeSubmissions(),
+                loadRegistrarImportRequests()
+            ]);
             if (registrarStatus) registrarStatus.textContent = "";
         } catch (error) {
             if (handleExpiredSession(error)) return;
@@ -1165,6 +1567,585 @@
         paragraph.textContent = message;
         return paragraph;
     };
+
+    const updateRegistrarOfferingSubjects = () => {
+        const curriculumId = registrarOfferingCurriculum?.value;
+        const curriculum = (state.registrarOfferingOptions?.curricula || []).find((c) => c.id === curriculumId);
+        registrarOfferingSubject?.replaceChildren(new Option("Select a subject", ""));
+        for (const s of curriculum?.subjects || []) {
+            registrarOfferingSubject?.append(
+                new Option(`Y${s.yearLevel} T${s.termNumber} · ${s.subjectCode} — ${s.subjectTitle} (${s.creditUnits}u)`, s.subjectId)
+            );
+        }
+    };
+
+    const updateRegistrarOfferingCurricula = () => {
+        const programId = registrarOfferingProgram?.value;
+        const curricula = (state.registrarOfferingOptions?.curricula || []).filter(
+            (c) => !programId || c.programId === programId
+        );
+        registrarOfferingCurriculum?.replaceChildren(new Option("Select a curriculum", ""));
+        for (const curr of curricula) {
+            registrarOfferingCurriculum?.append(new Option(`${curr.code} (${curr.name})`, curr.id));
+        }
+        updateRegistrarOfferingSubjects();
+    };
+
+    const loadRegistrarOfferingOptions = async () => {
+        try {
+            const data = await auth.getRegistrarOfferingOptions();
+            state.registrarOfferingOptions = data;
+
+            registrarOfferingTerm?.replaceChildren(new Option("Select a term", ""));
+            for (const term of data.academicTerms || []) {
+                const label = `${term.academicYear?.code || ""} ${term.name} (${term.code})`;
+                registrarOfferingTerm?.append(new Option(label, term.id));
+            }
+
+            registrarOfferingProgram?.replaceChildren(new Option("Select a program", ""));
+            registrarOfferingProgramFilter?.replaceChildren(new Option("All programs", ""));
+            registrarSubjectProgramFilter?.replaceChildren(new Option("All programs", ""));
+            for (const prog of data.programs || []) {
+                registrarOfferingProgram?.append(new Option(`${prog.code} — ${prog.name}`, prog.id));
+                registrarOfferingProgramFilter?.append(new Option(prog.code, prog.id));
+                registrarSubjectProgramFilter?.append(new Option(prog.code, prog.id));
+            }
+
+            registrarOfferingFaculty?.replaceChildren(new Option("To be assigned", ""));
+            for (const f of data.faculty || []) {
+                registrarOfferingFaculty?.append(new Option(f.name, f.id));
+            }
+
+            registrarOfferingRoom?.replaceChildren(new Option("TBA", ""));
+            for (const r of data.rooms || []) {
+                registrarOfferingRoom?.append(new Option(`${r.building} ${r.code}`, r.id));
+            }
+
+            updateRegistrarOfferingCurricula();
+        } catch (error) {
+            console.error("Failed to load registrar offering options", error);
+            if (registrarOfferingStatus) {
+                registrarOfferingStatus.textContent = "Unable to load offering options. Please click Refresh to try again.";
+            }
+        }
+    };
+
+    const formatTimeInput = (timeVal) => {
+        if (!timeVal) return "";
+        if (typeof timeVal === "string") {
+            if (/^\d{2}:\d{2}$/.test(timeVal)) return timeVal;
+            if (/^\d{2}:\d{2}:\d{2}/.test(timeVal)) return timeVal.slice(0, 5);
+            if (timeVal.includes("T")) {
+                const timePart = timeVal.split("T")[1];
+                return timePart ? timePart.slice(0, 5) : "";
+            }
+        }
+        if (timeVal instanceof Date) {
+            return timeVal.toISOString().slice(11, 16);
+        }
+        return "";
+    };
+
+    const openRegistrarOfferingEdit = (offering) => {
+        if (!registrarOfferingEditDialog) return;
+        const idInput = select("[data-reg-edit-id]");
+        if (idInput) idInput.value = offering.id;
+        const offeringIdInput = registrarOfferingEditForm?.querySelector('input[name="offeringId"]');
+        if (offeringIdInput) offeringIdInput.value = offering.id;
+
+        const overrideWrap = select("[data-reg-edit-override-wrap]");
+        const overrideInput = select("#reg-edit-override-reason");
+        if (overrideWrap) overrideWrap.style.display = "none";
+        if (overrideInput) overrideInput.value = "";
+
+        setText("[data-reg-edit-program-display]", offering.classSection?.program?.name || offering.classSection?.program?.code || "—");
+        setText("[data-reg-edit-term-display]", offering.academicTerm?.name || offering.academicTerm?.code || "—");
+        setText("[data-reg-edit-subject-display]", `${offering.subject?.code} — ${offering.subject?.title}`);
+
+        const codeInput = select("#reg-edit-code");
+        if (codeInput) codeInput.value = offering.offeringCode;
+
+        const statusSelect = select("#reg-edit-status");
+        if (statusSelect) statusSelect.value = offering.status;
+
+        const sectionInput = select("#reg-edit-section");
+        if (sectionInput) sectionInput.value = offering.classSection?.code || "";
+
+        const capacityInput = select("#reg-edit-capacity");
+        if (capacityInput) capacityInput.value = offering.capacity ?? "";
+
+        const facultySelect = select("#reg-edit-faculty");
+        if (facultySelect) {
+            facultySelect.replaceChildren(new Option("To be assigned", ""));
+            for (const f of state.registrarOfferingOptions?.faculty || []) {
+                facultySelect.append(new Option(f.name, f.id));
+            }
+            const currentFacultyId = offering.faculty?.[0]?.faculty?.id || offering.faculty?.[0]?.facultyId || "";
+            facultySelect.value = currentFacultyId;
+        }
+
+        const schedule = offering.schedules?.[0];
+        const daySelect = select("#reg-edit-day");
+        if (daySelect) daySelect.value = schedule?.weekday || "";
+
+        const startInput = select("#reg-edit-start");
+        if (startInput) startInput.value = formatTimeInput(schedule?.startsAt);
+
+        const endInput = select("#reg-edit-end");
+        if (endInput) endInput.value = formatTimeInput(schedule?.endsAt);
+
+        const roomSelect = select("#reg-edit-room");
+        if (roomSelect) {
+            roomSelect.replaceChildren(new Option("TBA", ""));
+            for (const r of state.registrarOfferingOptions?.rooms || []) {
+                roomSelect.append(new Option(`${r.building} ${r.code}`, r.id));
+            }
+            roomSelect.value = schedule?.room?.id || schedule?.roomId || "";
+        }
+
+        if (registrarOfferingEditStatus) registrarOfferingEditStatus.textContent = "";
+        if (typeof registrarOfferingEditDialog?.showModal === "function") {
+            if (!registrarOfferingEditDialog.open) registrarOfferingEditDialog.showModal();
+        } else {
+            registrarOfferingEditDialog?.setAttribute("open", "");
+        }
+    };
+
+    const renderRegistrarOfferings = () => {
+        if (!registrarOfferingsList) return;
+        registrarOfferingsList.replaceChildren();
+        const query = (registrarOfferingSearch?.value || "").toLowerCase().trim();
+        const programFilter = registrarOfferingProgramFilter?.value || "";
+        const statusFilter = registrarOfferingStatusFilter?.value || "ACTIVE";
+        const sortBy = registrarOfferingSort?.value || "code_asc";
+
+        let filtered = (state.registrarOfferings || []).filter((offering) => {
+            if (programFilter && offering.classSection?.programId !== programFilter) return false;
+            if (statusFilter === "ACTIVE") {
+                if (offering.status === "ARCHIVED") return false;
+            } else if (statusFilter !== "ALL") {
+                if (offering.status !== statusFilter) return false;
+            }
+            if (query) {
+                const matchCode = offering.offeringCode?.toLowerCase().includes(query);
+                const matchSub = offering.subject?.code?.toLowerCase().includes(query) || offering.subject?.title?.toLowerCase().includes(query);
+                const matchSec = offering.classSection?.code?.toLowerCase().includes(query);
+                const matchFac = offering.faculty?.[0]?.name?.toLowerCase().includes(query) ||
+                    offering.faculty?.[0]?.faculty?.lastName?.toLowerCase().includes(query) ||
+                    offering.faculty?.[0]?.faculty?.firstName?.toLowerCase().includes(query);
+                if (!matchCode && !matchSub && !matchSec && !matchFac) return false;
+            }
+            return true;
+        });
+
+        filtered.sort((a, b) => {
+            if (sortBy === "code_asc") return (a.subject?.code || "").localeCompare(b.subject?.code || "");
+            if (sortBy === "code_desc") return (b.subject?.code || "").localeCompare(a.subject?.code || "");
+            if (sortBy === "offering_asc") return (a.offeringCode || "").localeCompare(b.offeringCode || "");
+            if (sortBy === "section_asc") return (a.classSection?.code || "").localeCompare(b.classSection?.code || "");
+            if (sortBy === "capacity_desc") return (b.capacity || 0) - (a.capacity || 0);
+            if (sortBy === "status") return (a.status || "").localeCompare(b.status || "");
+            return 0;
+        });
+
+        if (!filtered.length) {
+            registrarOfferingsList.append(programHeadEmpty("No class offerings match the filter criteria."));
+            return;
+        }
+
+        for (const offering of filtered) {
+            const item = document.createElement("div");
+            item.className = `offering-card ${offering.status === "ARCHIVED" ? "is-archived" : ""}`;
+
+            const main = document.createElement("div");
+            main.className = "offering-card__main";
+
+            const header = document.createElement("div");
+            header.className = "offering-card__header";
+
+            const codeBadge = document.createElement("span");
+            codeBadge.className = "offering-card__code";
+            codeBadge.textContent = offering.offeringCode;
+
+            const title = document.createElement("h4");
+            title.className = "offering-card__title";
+            title.textContent = `${offering.subject.code} — ${offering.subject.title}`;
+
+            const statusPill = document.createElement("span");
+            statusPill.className = `status-pill status-${offering.status.toLowerCase()}`;
+            statusPill.textContent = offering.status;
+
+            header.append(codeBadge, title, statusPill);
+
+            const details = document.createElement("div");
+            details.className = "offering-card__details";
+
+            const progText = offering.classSection?.program?.code || "Program";
+            const secText = offering.classSection?.code || "No section";
+            const termText = offering.academicTerm?.name || "Term TBA";
+            const schedule = offering.schedules?.[0];
+            const scheduleText = schedule ? `${humanize(schedule.weekday)} ${schedule.startsAt}–${schedule.endsAt} (${schedule.room?.building || ""} ${schedule.room?.code || ""})` : "Schedule TBA";
+            const facultyText = offering.faculty?.[0]?.name || (offering.faculty?.[0]?.faculty ? `${offering.faculty[0].faculty.firstName} ${offering.faculty[0].faculty.lastName}` : "Instructor TBA");
+            const capText = `Cap: ${offering.capacity ?? "∞"} (Enrolled: ${offering.enrolledCount ?? 0})`;
+
+            const progChip = document.createElement("span");
+            progChip.className = "offering-card__chip";
+            progChip.innerHTML = `<strong>Program:</strong> ${escapeHtml(progText)}`;
+
+            const secChip = document.createElement("span");
+            secChip.className = "offering-card__chip";
+            secChip.innerHTML = `<strong>Section:</strong> ${escapeHtml(secText)}`;
+
+            const termChip = document.createElement("span");
+            termChip.className = "offering-card__chip";
+            termChip.textContent = termText;
+
+            const facultyChip = document.createElement("span");
+            facultyChip.className = "offering-card__chip";
+            facultyChip.innerHTML = `<strong>Instructor:</strong> ${escapeHtml(facultyText)}`;
+
+            const schedChip = document.createElement("span");
+            schedChip.className = "offering-card__chip";
+            schedChip.innerHTML = `<strong>Time:</strong> ${escapeHtml(scheduleText)}`;
+
+            const capChip = document.createElement("span");
+            capChip.className = "offering-card__chip";
+            capChip.textContent = capText;
+
+            details.append(progChip, secChip, termChip, facultyChip, schedChip, capChip);
+            main.append(header, details);
+
+            const actions = document.createElement("div");
+            actions.className = "offering-card__actions";
+
+            // Edit button (Registrar Centralized Authority)
+            const editBtn = document.createElement("button");
+            editBtn.type = "button";
+            editBtn.className = "button button--small button--quiet";
+            editBtn.textContent = "Edit";
+            editBtn.addEventListener("click", () => openRegistrarOfferingEdit(offering));
+            actions.append(editBtn);
+
+            // Close / Reopen button
+            if (offering.status === "OPEN") {
+                const closeBtn = document.createElement("button");
+                closeBtn.type = "button";
+                closeBtn.className = "button button--small button--quiet";
+                closeBtn.textContent = "Close";
+                closeBtn.addEventListener("click", async () => {
+                    if (!confirm(`Close offering ${offering.offeringCode}? Students will no longer be assigned to it.`)) return;
+                    try {
+                        await auth.closeRegistrarOffering(offering.id);
+                        await loadRegistrarOfferings();
+                    } catch (err) {
+                        alert(err.message || "Failed to close offering.");
+                    }
+                });
+                actions.append(closeBtn);
+            } else if (offering.status === "CLOSED") {
+                const reopenBtn = document.createElement("button");
+                reopenBtn.type = "button";
+                reopenBtn.className = "button button--small button--quiet";
+                reopenBtn.textContent = "Reopen";
+                reopenBtn.addEventListener("click", async () => {
+                    try {
+                        await auth.updateRegistrarOffering(offering.id, { status: "OPEN" });
+                        await loadRegistrarOfferings();
+                    } catch (err) {
+                        alert(err.message || "Failed to reopen offering.");
+                    }
+                });
+                actions.append(reopenBtn);
+            }
+
+            // Archive / Restore button
+            if (offering.status !== "ARCHIVED") {
+                const archiveBtn = document.createElement("button");
+                archiveBtn.type = "button";
+                archiveBtn.className = "button button--small button--quiet";
+                archiveBtn.textContent = "Archive";
+                archiveBtn.title = "Archive this offering to keep your list clean";
+                archiveBtn.addEventListener("click", async () => {
+                    if (!confirm(`Archive offering ${offering.offeringCode}? It will be hidden from the active view.`)) return;
+                    try {
+                        await auth.archiveRegistrarOffering(offering.id);
+                        await loadRegistrarOfferings();
+                    } catch (err) {
+                        alert(err.message || "Failed to archive offering.");
+                    }
+                });
+                actions.append(archiveBtn);
+            } else {
+                const restoreBtn = document.createElement("button");
+                restoreBtn.type = "button";
+                restoreBtn.className = "button button--small button--quiet";
+                restoreBtn.textContent = "Restore";
+                restoreBtn.title = "Restore this offering from archive";
+                restoreBtn.addEventListener("click", async () => {
+                    try {
+                        await auth.unarchiveRegistrarOffering(offering.id);
+                        await loadRegistrarOfferings();
+                    } catch (err) {
+                        alert(err.message || "Failed to restore offering.");
+                    }
+                });
+                actions.append(restoreBtn);
+            }
+
+            item.append(main, actions);
+            registrarOfferingsList.append(item);
+        }
+    };
+
+    const loadRegistrarOfferings = async () => {
+        try {
+            const data = await auth.getRegistrarOfferings({ status: "ALL" });
+            state.registrarOfferings = data.offerings || [];
+            renderRegistrarOfferings();
+        } catch (error) {
+            console.error("Failed to load registrar offerings", error);
+            if (registrarOfferingsList) {
+                registrarOfferingsList.replaceChildren(programHeadEmpty("Could not load active offerings. Click Refresh to try again."));
+            }
+        }
+    };
+
+    const renderRegistrarSubjects = () => {
+        if (!registrarSubjectsTbody) return;
+        registrarSubjectsTbody.replaceChildren();
+        const query = (registrarSubjectSearch?.value || "").toLowerCase().trim();
+        const programFilter = registrarSubjectProgramFilter?.value || "";
+
+        const filtered = (state.registrarSubjects || []).filter((sub) => {
+            if (programFilter && sub.programId !== programFilter) return false;
+            if (query) {
+                const matchCode = sub.subjectCode?.toLowerCase().includes(query);
+                const matchTitle = sub.subjectTitle?.toLowerCase().includes(query);
+                const matchProg = sub.programCode?.toLowerCase().includes(query);
+                if (!matchCode && !matchTitle && !matchProg) return false;
+            }
+            return true;
+        });
+
+        if (!filtered.length) {
+            const tr = document.createElement("tr");
+            const td = document.createElement("td");
+            td.colSpan = 8;
+            td.className = "text-center";
+            td.style.padding = "16px";
+            td.textContent = "No subjects match the search or program criteria.";
+            tr.append(td);
+            registrarSubjectsTbody.append(tr);
+            return;
+        }
+
+        for (const sub of filtered) {
+            const tr = document.createElement("tr");
+
+            const tdCode = document.createElement("td");
+            tdCode.innerHTML = `<strong>${escapeHtml(sub.subjectCode)}</strong>`;
+            const tdDesc = document.createElement("td");
+            tdDesc.textContent = sub.subjectTitle;
+            const tdUnits = document.createElement("td");
+            tdUnits.style.textAlign = "center";
+            tdUnits.textContent = sub.creditUnits;
+            const tdProg = document.createElement("td");
+            tdProg.textContent = `${sub.programCode} (${sub.programName})`;
+            const tdCurr = document.createElement("td");
+            tdCurr.textContent = `${sub.curriculumCode} v${sub.curriculumVersion}`;
+            const tdYear = document.createElement("td");
+            tdYear.style.textAlign = "center";
+            tdYear.textContent = `Year ${sub.yearLevel}`;
+            const tdSem = document.createElement("td");
+            tdSem.style.textAlign = "center";
+            tdSem.textContent = `Semester ${sub.termNumber}`;
+
+            const tdAction = document.createElement("td");
+            tdAction.style.textAlign = "center";
+            const offerBtn = document.createElement("button");
+            offerBtn.type = "button";
+            offerBtn.className = "button button--small button--primary";
+            offerBtn.textContent = "Offer class";
+            offerBtn.addEventListener("click", () => {
+                switchRegistrarTab("offerings");
+                if (registrarOfferingProgram) {
+                    registrarOfferingProgram.value = sub.programId;
+                    updateRegistrarOfferingCurricula();
+                }
+                if (registrarOfferingCurriculum) {
+                    registrarOfferingCurriculum.value = sub.curriculumId;
+                    updateRegistrarOfferingSubjects();
+                }
+                if (registrarOfferingSubject) {
+                    registrarOfferingSubject.value = sub.subjectId;
+                }
+                registrarOfferingForm?.scrollIntoView({ behavior: "smooth" });
+            });
+            tdAction.append(offerBtn);
+
+            tr.append(tdCode, tdDesc, tdUnits, tdProg, tdCurr, tdYear, tdSem, tdAction);
+            registrarSubjectsTbody.append(tr);
+        }
+    };
+
+    const loadRegistrarSubjects = async () => {
+        try {
+            const data = await auth.getRegistrarSubjects();
+            state.registrarSubjects = data.subjects || [];
+            renderRegistrarSubjects();
+        } catch (error) {
+            console.error("Failed to load registrar subjects", error);
+            if (registrarSubjectsTbody) {
+                const tr = document.createElement("tr");
+                const td = document.createElement("td");
+                td.colSpan = 8;
+                td.style.padding = "16px";
+                td.style.textAlign = "center";
+                td.style.color = "var(--color-danger, #c0392b)";
+                td.textContent = "Could not load subjects catalog. Click Refresh to try again.";
+                tr.append(td);
+                registrarSubjectsTbody.replaceChildren(tr);
+            }
+        }
+    };
+
+    registrarOfferingProgram?.addEventListener("change", updateRegistrarOfferingCurricula);
+    registrarOfferingCurriculum?.addEventListener("change", updateRegistrarOfferingSubjects);
+    registrarOfferingSearch?.addEventListener("input", renderRegistrarOfferings);
+    registrarOfferingProgramFilter?.addEventListener("change", renderRegistrarOfferings);
+    registrarOfferingStatusFilter?.addEventListener("change", renderRegistrarOfferings);
+    registrarOfferingSort?.addEventListener("change", renderRegistrarOfferings);
+    registrarSubjectSearch?.addEventListener("input", renderRegistrarSubjects);
+    registrarSubjectProgramFilter?.addEventListener("change", renderRegistrarSubjects);
+    refreshRegistrarOfferingsBtn?.addEventListener("click", () => {
+        void loadRegistrarOfferingOptions();
+        void loadRegistrarOfferings();
+    });
+    refreshRegistrarSubjectsBtn?.addEventListener("click", () => void loadRegistrarSubjects());
+
+    registrarOfferingForm?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const values = new FormData(registrarOfferingForm);
+        setBusy(registrarOfferingForm, true);
+        if (registrarOfferingStatus) registrarOfferingStatus.textContent = "";
+
+        const payload = {
+            academicTermId: String(values.get("academicTermId") || "").trim(),
+            programId: String(values.get("programId") || "").trim(),
+            curriculumId: String(values.get("curriculumId") || "").trim(),
+            subjectId: String(values.get("subjectId") || "").trim(),
+            sectionCode: String(values.get("sectionCode") || "").trim(),
+            offeringCode: String(values.get("offeringCode") || "").trim(),
+            capacity: values.get("capacity") ? Number(values.get("capacity")) : null,
+            facultyId: String(values.get("facultyId") || "").trim() || null,
+            weekday: String(values.get("weekday") || "").trim() || null,
+            startsAt: String(values.get("startsAt") || "").trim() || null,
+            endsAt: String(values.get("endsAt") || "").trim() || null,
+            roomId: String(values.get("roomId") || "").trim() || null,
+            status: "OPEN"
+        };
+
+        try {
+            await auth.createRegistrarOffering(payload);
+            registrarOfferingForm.reset();
+            if (registrarOfferingStatus) registrarOfferingStatus.textContent = `Offering ${payload.offeringCode} opened successfully!`;
+            await loadRegistrarOfferings();
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            const errMap = {
+                OFFERING_DUPLICATE: "An offering with this code already exists in the academic term.",
+                SCHEDULE_CONFLICT: "Schedule conflict: the selected faculty or room is already booked at that time.",
+                SECTION_CONFLICT: "Section conflict: section code already exists for a different curriculum or year level.",
+                OFFERING_INVALID: "Invalid offering data. Check section code and capacity."
+            };
+            if (registrarOfferingStatus) {
+                registrarOfferingStatus.textContent = errMap[error.message] || error.message || "Failed to create class offering.";
+            }
+        } finally {
+            setBusy(registrarOfferingForm, false);
+        }
+    });
+
+    registrarOfferingEditForm?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const values = new FormData(registrarOfferingEditForm);
+        const offeringId = String(values.get("id") || values.get("offeringId") || select("[data-reg-edit-id]")?.value || "");
+        if (!offeringId) {
+            console.error("Missing offering ID in registrar offering edit form");
+            if (registrarOfferingEditStatus) registrarOfferingEditStatus.textContent = "Error: Offering ID is missing.";
+            return;
+        }
+
+        setBusy(registrarOfferingEditForm, true);
+        if (registrarOfferingEditStatus) registrarOfferingEditStatus.textContent = "";
+
+        const weekday = String(values.get("weekday") || "").trim() || null;
+        const startsAt = String(values.get("startsAt") || "").trim() || null;
+        const endsAt = String(values.get("endsAt") || "").trim() || null;
+
+        // Schedule validation
+        if ((weekday && (!startsAt || !endsAt)) || (!weekday && (startsAt || endsAt))) {
+            if (registrarOfferingEditStatus) {
+                registrarOfferingEditStatus.textContent = "To set a schedule, Day, Start time, and End time must all be specified together. Or set Day to TBA and clear times.";
+            }
+            setBusy(registrarOfferingEditForm, false);
+            return;
+        }
+        if (startsAt && endsAt && startsAt >= endsAt) {
+            if (registrarOfferingEditStatus) {
+                registrarOfferingEditStatus.textContent = "Schedule start time must be earlier than end time.";
+            }
+            setBusy(registrarOfferingEditForm, false);
+            return;
+        }
+
+        const payload = {
+            offeringCode: String(values.get("offeringCode") || "").trim(),
+            status: String(values.get("status") || "OPEN"),
+            sectionCode: String(values.get("sectionCode") || "").trim(),
+            capacity: values.get("capacity") ? Number(values.get("capacity")) : null,
+            facultyId: String(values.get("facultyId") || "").trim() || null,
+            weekday,
+            startsAt,
+            endsAt,
+            roomId: String(values.get("roomId") || "").trim() || null,
+            overrideReason: String(values.get("overrideReason") || "").trim() || undefined
+        };
+
+        try {
+            await auth.updateRegistrarOffering(offeringId, payload);
+            registrarOfferingEditDialog?.close();
+            await loadRegistrarOfferings();
+            if (registrarOfferingStatus) registrarOfferingStatus.textContent = `Offering ${payload.offeringCode} updated successfully.`;
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            const errMap = {
+                OFFERING_DUPLICATE: "An offering with this code already exists in the academic term.",
+                SCHEDULE_CONFLICT: "Schedule conflict: the selected faculty or room is already booked at that time.",
+                SECTION_CONFLICT: "Section conflict: section code already exists for a different curriculum or year level.",
+                OFFERING_INVALID: "Invalid offering data. Check section code and capacity.",
+                CROSS_COLLEGE_OVERRIDE_REQUIRED: "Faculty member belongs to a different College. Please provide an override reason below to proceed.",
+                CROSS_COLLEGE_FACULTY_FORBIDDEN: "Faculty member belongs to a different College. Cross-college assignment requires Registrar or Administrator override.",
+                SCHEDULE_INVALID: "Invalid schedule times or weekday.",
+                OFFERING_CODE_INVALID: "Offering code format is invalid.",
+                SECTION_CODE_INVALID: "Section code format is invalid.",
+                FACULTY_INVALID: "Selected faculty member is not found or inactive.",
+                ROOM_INVALID: "Selected room is not found or inactive."
+            };
+            if (error.message === "CROSS_COLLEGE_OVERRIDE_REQUIRED" || error.code === "CROSS_COLLEGE_OVERRIDE_REQUIRED") {
+                const overrideWrap = select("[data-reg-edit-override-wrap]");
+                if (overrideWrap) overrideWrap.style.display = "block";
+                select("#reg-edit-override-reason")?.focus();
+            }
+            if (registrarOfferingEditStatus) {
+                registrarOfferingEditStatus.textContent = errMap[error.message] || errMap[error.code] || error.message || "Failed to update class offering.";
+            }
+        } finally {
+            setBusy(registrarOfferingEditForm, false);
+        }
+    });
+
+    selectAll("[data-close-registrar-offering-edit]").forEach((btn) => btn.addEventListener("click", () => registrarOfferingEditDialog?.close()));
 
     const renderProgramHeadCurriculum = () => {
         const curricula = state.programHeadDashboard?.curricula || [];
@@ -1255,6 +2236,9 @@
 
     const renderProgramHeadDashboard = (dashboard) => {
         state.programHeadDashboard = dashboard;
+        state.programHeadFaculty = dashboard?.faculty || [];
+        state.programHeadRooms = dashboard?.rooms || [];
+        state.programHeadOfferings = dashboard?.courseOfferings || [];
         const curricula = dashboard?.curricula || [];
         const officialStudents = dashboard?.officialStudents || [];
         const pending = (dashboard?.evaluations || []).filter((item) => item.status === "PENDING");
@@ -1327,8 +2311,11 @@
                 container?.append(section);
             }
             if (!student.enrollments?.length) container?.append(programHeadEmpty("No enrollment or grade history is available."));
-            if (typeof programHeadStudentDialog?.showModal === "function") programHeadStudentDialog.showModal();
-            else programHeadStudentDialog?.setAttribute("open", "");
+            if (typeof programHeadStudentDialog?.showModal === "function") {
+                if (!programHeadStudentDialog.open) programHeadStudentDialog.showModal();
+            } else {
+                programHeadStudentDialog?.setAttribute("open", "");
+            }
         } catch (error) {
             if (handleExpiredSession(error)) return;
             if (programHeadStatus) programHeadStatus.textContent = error.message || "The student record could not be loaded.";
@@ -1377,18 +2364,264 @@
             line.textContent = issue.message;
             container?.append(line);
         }
-        if (programHeadEvaluationForm) programHeadEvaluationForm.elements.enrollmentId.value = evaluation.enrollment.id;
+        if (programHeadEvaluationForm?.elements?.enrollmentId) {
+            programHeadEvaluationForm.elements.enrollmentId.value = evaluation.enrollment.id;
+        }
     };
 
     const openProgramHeadEvaluation = async (enrollmentId) => {
         try {
+            state.programHeadEvaluationEnrollmentId = enrollmentId;
             const evaluation = await auth.getProgramHeadEnrollmentEvaluation(enrollmentId);
             renderProgramHeadEvaluation(evaluation);
-            if (typeof programHeadEvaluationDialog?.showModal === "function") programHeadEvaluationDialog.showModal();
-            else programHeadEvaluationDialog?.setAttribute("open", "");
+            if (programHeadEvaluationForm?.elements?.enrollmentId) {
+                programHeadEvaluationForm.elements.enrollmentId.value = enrollmentId;
+            }
+            if (typeof programHeadEvaluationDialog?.showModal === "function") {
+                if (!programHeadEvaluationDialog.open) programHeadEvaluationDialog.showModal();
+            } else {
+                programHeadEvaluationDialog?.setAttribute("open", "");
+            }
         } catch (error) {
             if (handleExpiredSession(error)) return;
             if (programHeadStatus) programHeadStatus.textContent = error.message || "The enrollment evaluation could not be loaded.";
+        }
+    };
+
+    const openProgramHeadOfferingEdit = (offering) => {
+        if (!programHeadOfferingEditDialog) return;
+        const idInput = select("[data-ph-edit-id]");
+        if (idInput) idInput.value = offering.id;
+        const offeringIdInput = programHeadOfferingEditForm?.querySelector('input[name="offeringId"]');
+        if (offeringIdInput) offeringIdInput.value = offering.id;
+
+        setText("[data-ph-edit-code-display]", offering.offeringCode);
+        setText("[data-ph-edit-term-display]", offering.academicTerm?.name || offering.academicTerm?.code || "—");
+        setText("[data-ph-edit-subject-display]", `${offering.subject?.code} — ${offering.subject?.title}`);
+        setText("[data-ph-edit-status-display]", offering.status);
+
+        const sectionInput = select("#ph-edit-section");
+        if (sectionInput) sectionInput.value = offering.classSection?.code || "";
+
+        const capacityInput = select("#ph-edit-capacity");
+        if (capacityInput) capacityInput.value = offering.capacity ?? "";
+
+        const facultySelect = select("#ph-edit-faculty");
+        if (facultySelect) {
+            facultySelect.replaceChildren(new Option("To be assigned", ""));
+            for (const f of state.programHeadFaculty || []) {
+                facultySelect.append(new Option(`${f.employeeNumber ? `${f.employeeNumber} · ` : ""}${f.name || `${f.firstName} ${f.lastName}`}`, f.id));
+            }
+            const currentFacultyId = offering.faculty?.[0]?.faculty?.id || offering.faculty?.[0]?.facultyId || "";
+            facultySelect.value = currentFacultyId;
+        }
+
+        const schedule = offering.schedules?.[0];
+        const daySelect = select("#ph-edit-day");
+        if (daySelect) daySelect.value = schedule?.weekday || "";
+
+        const startInput = select("#ph-edit-start");
+        if (startInput) startInput.value = formatTimeInput(schedule?.startsAt);
+
+        const endInput = select("#ph-edit-end");
+        if (endInput) endInput.value = formatTimeInput(schedule?.endsAt);
+
+        const roomSelect = select("#ph-edit-room");
+        if (roomSelect) {
+            roomSelect.replaceChildren(new Option("TBA", ""));
+            for (const r of state.programHeadRooms || []) {
+                roomSelect.append(new Option(`${r.building ? `${r.building} · ` : ""}${r.code} · ${r.name}`, r.id));
+            }
+            roomSelect.value = schedule?.room?.id || schedule?.roomId || "";
+        }
+
+        if (programHeadOfferingEditStatus) programHeadOfferingEditStatus.textContent = "";
+        if (typeof programHeadOfferingEditDialog?.showModal === "function") {
+            if (!programHeadOfferingEditDialog.open) programHeadOfferingEditDialog.showModal();
+        } else {
+            programHeadOfferingEditDialog?.setAttribute("open", "");
+        }
+    };
+
+    const renderProgramHeadOfferings = () => {
+        const offeringList = select("[data-program-head-offerings]");
+        if (!offeringList) return;
+        offeringList.replaceChildren();
+
+        const query = (programHeadOfferingSearch?.value || "").toLowerCase().trim();
+        const statusFilter = programHeadOfferingStatusFilter?.value || "ACTIVE";
+        const sortBy = programHeadOfferingSort?.value || "code_asc";
+
+        let offerings = (state.programHeadOfferings || []).filter((offering) => {
+            if (statusFilter === "ACTIVE") {
+                if (offering.status === "ARCHIVED") return false;
+            } else if (statusFilter !== "ALL") {
+                if (offering.status !== statusFilter) return false;
+            }
+            if (query) {
+                const matchCode = offering.offeringCode?.toLowerCase().includes(query);
+                const matchSubCode = offering.subject?.code?.toLowerCase().includes(query);
+                const matchSubTitle = offering.subject?.title?.toLowerCase().includes(query);
+                const matchSec = offering.classSection?.code?.toLowerCase().includes(query);
+                const matchFac = offering.faculty?.[0]?.faculty?.lastName?.toLowerCase().includes(query) ||
+                    offering.faculty?.[0]?.faculty?.firstName?.toLowerCase().includes(query) ||
+                    offering.faculty?.[0]?.name?.toLowerCase().includes(query);
+                if (!matchCode && !matchSubCode && !matchSubTitle && !matchSec && !matchFac) return false;
+            }
+            return true;
+        });
+
+        offerings.sort((a, b) => {
+            if (sortBy === "code_asc") return (a.subject?.code || "").localeCompare(b.subject?.code || "");
+            if (sortBy === "code_desc") return (b.subject?.code || "").localeCompare(a.subject?.code || "");
+            if (sortBy === "offering_asc") return (a.offeringCode || "").localeCompare(b.offeringCode || "");
+            if (sortBy === "section_asc") return (a.classSection?.code || "").localeCompare(b.classSection?.code || "");
+            if (sortBy === "capacity_desc") return (b.capacity || 0) - (a.capacity || 0);
+            if (sortBy === "status") return (a.status || "").localeCompare(b.status || "");
+            return 0;
+        });
+
+        if (!offerings.length) {
+            offeringList.append(programHeadEmpty("No subject offerings match the filter criteria."));
+            return;
+        }
+
+        for (const offering of offerings) {
+            const item = document.createElement("div");
+            item.className = `offering-card ${offering.status === "ARCHIVED" ? "is-archived" : ""}`;
+
+            const main = document.createElement("div");
+            main.className = "offering-card__main";
+
+            const header = document.createElement("div");
+            header.className = "offering-card__header";
+
+            const codeBadge = document.createElement("span");
+            codeBadge.className = "offering-card__code";
+            codeBadge.textContent = offering.offeringCode;
+
+            const title = document.createElement("h4");
+            title.className = "offering-card__title";
+            title.textContent = `${offering.subject.code} — ${offering.subject.title}`;
+
+            const statusPill = document.createElement("span");
+            statusPill.className = `status-pill status-${offering.status.toLowerCase()}`;
+            statusPill.textContent = offering.status;
+
+            header.append(codeBadge, title, statusPill);
+
+            const details = document.createElement("div");
+            details.className = "offering-card__details";
+
+            const secText = offering.classSection?.code || "No section";
+            const termText = offering.academicTerm?.name || "Term TBA";
+            const schedule = offering.schedules?.[0];
+            const scheduleText = schedule ? `${humanize(schedule.weekday)} ${schedule.startsAt}–${schedule.endsAt} (${schedule.room?.building || ""} ${schedule.room?.code || ""})` : "Schedule TBA";
+            const facultyName = offering.faculty?.[0]?.faculty ? `${offering.faculty[0].faculty.firstName} ${offering.faculty[0].faculty.lastName}` : (offering.faculty?.[0]?.name || "Instructor TBA");
+            const capText = `Cap: ${offering.capacity ?? "∞"}`;
+
+            const secChip = document.createElement("span");
+            secChip.className = "offering-card__chip";
+            secChip.innerHTML = `<strong>Section:</strong> ${escapeHtml(secText)}`;
+
+            const termChip = document.createElement("span");
+            termChip.className = "offering-card__chip";
+            termChip.textContent = termText;
+
+            const facultyChip = document.createElement("span");
+            facultyChip.className = "offering-card__chip";
+            facultyChip.innerHTML = `<strong>Instructor:</strong> ${escapeHtml(facultyName)}`;
+
+            const schedChip = document.createElement("span");
+            schedChip.className = "offering-card__chip";
+            schedChip.innerHTML = `<strong>Time:</strong> ${escapeHtml(scheduleText)}`;
+
+            const capChip = document.createElement("span");
+            capChip.className = "offering-card__chip";
+            capChip.textContent = capText;
+
+            details.append(secChip, termChip, facultyChip, schedChip, capChip);
+            main.append(header, details);
+
+            const actions = document.createElement("div");
+            actions.className = "offering-card__actions";
+
+            // Edit button (Program Head: Section, Capacity, Instructor, Room)
+            const editBtn = document.createElement("button");
+            editBtn.type = "button";
+            editBtn.className = "button button--small button--quiet";
+            editBtn.textContent = "Edit";
+            editBtn.addEventListener("click", () => openProgramHeadOfferingEdit(offering));
+            actions.append(editBtn);
+
+            // Close / Reopen button
+            if (offering.status === "OPEN") {
+                const closeBtn = document.createElement("button");
+                closeBtn.type = "button";
+                closeBtn.className = "button button--small button--quiet";
+                closeBtn.textContent = "Close";
+                closeBtn.addEventListener("click", async () => {
+                    if (!confirm(`Close offering ${offering.offeringCode}? Students will no longer be assigned to it.`)) return;
+                    try {
+                        await auth.closeProgramHeadOffering(offering.id);
+                        await loadProgramHeadData();
+                    } catch (err) {
+                        alert(err.message || "Failed to close offering.");
+                    }
+                });
+                actions.append(closeBtn);
+            } else if (offering.status === "CLOSED") {
+                const reopenBtn = document.createElement("button");
+                reopenBtn.type = "button";
+                reopenBtn.className = "button button--small button--quiet";
+                reopenBtn.textContent = "Reopen";
+                reopenBtn.addEventListener("click", async () => {
+                    try {
+                        await auth.updateProgramHeadOffering(offering.id, { status: "OPEN" });
+                        await loadProgramHeadData();
+                    } catch (err) {
+                        alert(err.message || "Failed to reopen offering.");
+                    }
+                });
+                actions.append(reopenBtn);
+            }
+
+            // Archive / Restore button
+            if (offering.status !== "ARCHIVED") {
+                const archiveBtn = document.createElement("button");
+                archiveBtn.type = "button";
+                archiveBtn.className = "button button--small button--quiet";
+                archiveBtn.textContent = "Archive";
+                archiveBtn.title = "Archive this offering to keep your list clean";
+                archiveBtn.addEventListener("click", async () => {
+                    if (!confirm(`Archive offering ${offering.offeringCode}? It will be hidden from the active view.`)) return;
+                    try {
+                        await auth.archiveProgramHeadOffering(offering.id);
+                        await loadProgramHeadData();
+                    } catch (err) {
+                        alert(err.message || "Failed to archive offering.");
+                    }
+                });
+                actions.append(archiveBtn);
+            } else {
+                const restoreBtn = document.createElement("button");
+                restoreBtn.type = "button";
+                restoreBtn.className = "button button--small button--quiet";
+                restoreBtn.textContent = "Restore";
+                restoreBtn.title = "Restore this offering from archive";
+                restoreBtn.addEventListener("click", async () => {
+                    try {
+                        await auth.unarchiveProgramHeadOffering(offering.id);
+                        await loadProgramHeadData();
+                    } catch (err) {
+                        alert(err.message || "Failed to restore offering.");
+                    }
+                });
+                actions.append(restoreBtn);
+            }
+
+            item.append(main, actions);
+            offeringList.append(item);
         }
     };
 
@@ -1420,17 +2653,7 @@
         }
         if (!officialStudents.length) studentList?.append(programHeadEmpty("No officially enrolled students are linked to this program yet."));
 
-        const offeringList = select("[data-program-head-offerings]");
-        offeringList?.replaceChildren();
-        for (const offering of dashboard?.courseOfferings || []) {
-            const item = document.createElement("div"); item.className = "dashboard-list__item";
-            const title = document.createElement("strong"); title.textContent = `${offering.offeringCode} · ${offering.subject.code} — ${offering.subject.title}`;
-            const schedule = offering.schedules?.[0];
-            const details = document.createElement("small");
-            details.textContent = `${offering.academicTerm.name} · ${offering.classSection?.code || "No section"} · ${offering.faculty?.[0]?.name || "Instructor TBA"} · ${schedule ? `${humanize(schedule.weekday)} ${schedule.startsAt}–${schedule.endsAt}` : "Schedule TBA"}`;
-            item.append(title, details); offeringList?.append(item);
-        }
-        if (!dashboard?.courseOfferings?.length) offeringList?.append(programHeadEmpty("No subject offerings have been opened for this program."));
+        renderProgramHeadOfferings();
 
         const evaluationList = select("[data-program-head-evaluations]");
         evaluationList?.replaceChildren();
@@ -1546,6 +2769,11 @@
         }
     });
 
+    programHeadOfferingSearch?.addEventListener("input", renderProgramHeadOfferings);
+    programHeadOfferingStatusFilter?.addEventListener("change", renderProgramHeadOfferings);
+    programHeadOfferingSort?.addEventListener("change", renderProgramHeadOfferings);
+    refreshProgramHeadOfferingsBtn?.addEventListener("click", () => void loadProgramHeadData());
+
     programHeadOfferingForm?.addEventListener("submit", async (event) => {
         event.preventDefault();
         const values = new FormData(programHeadOfferingForm);
@@ -1564,17 +2792,95 @@
         }
     });
 
+    programHeadOfferingEditForm?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const values = new FormData(programHeadOfferingEditForm);
+        const offeringId = String(values.get("id") || values.get("offeringId") || select("[data-ph-edit-id]")?.value || "");
+        if (!offeringId) {
+            console.error("Missing offering ID in Program Head offering edit form");
+            if (programHeadOfferingEditStatus) programHeadOfferingEditStatus.textContent = "Error: Offering ID is missing.";
+            return;
+        }
+
+        setBusy(programHeadOfferingEditForm, true);
+        if (programHeadOfferingEditStatus) programHeadOfferingEditStatus.textContent = "";
+
+        const weekday = String(values.get("weekday") || "").trim() || null;
+        const startsAt = String(values.get("startsAt") || "").trim() || null;
+        const endsAt = String(values.get("endsAt") || "").trim() || null;
+
+        if ((weekday && (!startsAt || !endsAt)) || (!weekday && (startsAt || endsAt))) {
+            if (programHeadOfferingEditStatus) {
+                programHeadOfferingEditStatus.textContent = "To set a schedule, Day, Start time, and End time must all be specified together. Or set Day to TBA and clear times.";
+            }
+            setBusy(programHeadOfferingEditForm, false);
+            return;
+        }
+        if (startsAt && endsAt && startsAt >= endsAt) {
+            if (programHeadOfferingEditStatus) {
+                programHeadOfferingEditStatus.textContent = "Schedule start time must be earlier than end time.";
+            }
+            setBusy(programHeadOfferingEditForm, false);
+            return;
+        }
+
+        const payload = {
+            sectionCode: String(values.get("sectionCode") || "").trim(),
+            capacity: values.get("capacity") ? Number(values.get("capacity")) : null,
+            facultyId: String(values.get("facultyId") || "").trim() || null,
+            weekday,
+            startsAt,
+            endsAt,
+            roomId: String(values.get("roomId") || "").trim() || null
+        };
+
+        try {
+            await auth.updateProgramHeadOffering(offeringId, payload);
+            programHeadOfferingEditDialog?.close();
+            await loadProgramHeadData();
+            if (programHeadStatus) programHeadStatus.textContent = "Subject offering updated successfully.";
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            const errMap = {
+                OFFERING_DUPLICATE: "An offering with this code already exists in the academic term.",
+                SCHEDULE_CONFLICT: "Schedule conflict: the selected faculty or room is already booked at that time.",
+                SECTION_CONFLICT: "Section conflict: section code already exists for a different curriculum or year level.",
+                OFFERING_INVALID: "Invalid offering data. Check section code and capacity.",
+                CROSS_COLLEGE_FACULTY_FORBIDDEN: "Faculty member belongs to a different College. Cross-college assignment requires Registrar or Administrator override.",
+                SCHEDULE_INVALID: "Invalid schedule times or weekday.",
+                SECTION_CODE_INVALID: "Section code format is invalid.",
+                FACULTY_INVALID: "Selected faculty member is not found or inactive.",
+                ROOM_INVALID: "Selected room is not found or inactive."
+            };
+            if (programHeadOfferingEditStatus) {
+                programHeadOfferingEditStatus.textContent = errMap[error.message] || errMap[error.code] || error.message || "Failed to update subject offering.";
+            }
+        } finally {
+            setBusy(programHeadOfferingEditForm, false);
+        }
+    });
+
+    selectAll("[data-close-program-head-offering-edit]").forEach((btn) => btn.addEventListener("click", () => programHeadOfferingEditDialog?.close()));
+
     programHeadEvaluationForm?.addEventListener("submit", async (event) => {
         event.preventDefault();
         const values = new FormData(programHeadEvaluationForm);
-        const enrollmentId = String(values.get("enrollmentId") || "");
-        const overrideItemIds = values.getAll("overrideItemIds").map(String);
+        const enrollmentId = String(values.get("enrollmentId") || state.programHeadEvaluationEnrollmentId || "");
+        const checkedBoxes = selectAll('input[name="overrideItemIds"]:checked', programHeadEvaluationDialog || programHeadEvaluationForm);
+        const overrideItemIds = checkedBoxes.length > 0
+            ? checkedBoxes.map((cb) => cb.value).filter(Boolean)
+            : values.getAll("overrideItemIds").map(String);
         setBusy(programHeadEvaluationForm, true);
         try {
             const result = await auth.approveProgramHeadEnrollmentEvaluation(enrollmentId, {
                 overrideItemIds,
                 overrideReason: String(values.get("overrideReason") || "").trim()
             });
+            if (typeof programHeadEvaluationDialog?.close === "function" && programHeadEvaluationDialog.open) {
+                programHeadEvaluationDialog.close();
+            } else {
+                programHeadEvaluationDialog?.removeAttribute("open");
+            }
             renderProgramHeadEvaluation(result.evaluation);
             await loadProgramHeadData();
             if (programHeadStatus) programHeadStatus.textContent = "Academic evaluation approved. The enrollment is now assessed.";
@@ -1588,55 +2894,88 @@
     });
 
     select("[data-close-program-head-student]")?.addEventListener("click", () => programHeadStudentDialog?.close());
+
+    const syncProgramHeadApplicationButtons = (review) => {
+        if (!programHeadApplicationDecision) return;
+        selectAll("button[type=submit]", programHeadApplicationDecision).forEach((button) => {
+            const isSubmitted = review?.application?.status === "SUBMITTED";
+            const isBlockedApproval = button.value === "APPROVED" && !review?.canApprove;
+            button.disabled = !isSubmitted || isBlockedApproval;
+            if (!isSubmitted) {
+                button.title = `Application is already ${review?.application?.status || "processed"}`;
+            } else if (isBlockedApproval) {
+                button.title = "Prerequisite or academic limits block approval. Return for correction or reject.";
+            } else {
+                button.removeAttribute("title");
+            }
+        });
+    };
+
     const openProgramHeadApplication = async (id) => {
         try {
             programHeadApplicationReview = await auth.getProgramHeadEnrollmentApplication(id);
             const review = programHeadApplicationReview;
             setText("[data-program-head-application-title]", `${review.application.student.studentNumber} · ${review.application.student.name}`);
-            const container = select("[data-program-head-application-detail]"); container.replaceChildren();
+            const container = select("[data-program-head-application-detail]");
+            container?.replaceChildren();
             const summary = document.createElement("p");
             summary.className = `program-head-evaluation-summary ${review.canApprove ? "is-clear" : "has-blockers"}`;
             summary.textContent = `${review.application.program.code} · ${review.application.academicTerm.academicYear.code} · ${review.application.academicTerm.name} · Year ${review.application.yearLevel} · ${review.curriculum ? `${review.curriculum.code} v${review.curriculum.version}` : "Curriculum unresolved"} · ${review.totalUnits}/${review.maximumUnits} units`;
-            container.append(summary);
-            for (const item of review.items) {
+            container?.append(summary);
+            for (const item of review.items || []) {
                 const row = document.createElement("p"); row.className = "program-head-evaluation-item";
-                row.textContent = `${item.subject.code} — ${item.subject.title} · ${item.creditUnits} units`; container.append(row);
+                row.textContent = `${item.subject.code} — ${item.subject.title} · ${item.creditUnits} units`;
+                container?.append(row);
             }
-            for (const issue of review.issues) {
-                const message = document.createElement("p"); message.className = "form-error"; message.textContent = issue.message; container.append(message);
+            for (const issue of review.issues || []) {
+                const message = document.createElement("p"); message.className = "form-error"; message.textContent = issue.message;
+                container?.append(message);
             }
-            programHeadApplicationDecision.reset();
+            programHeadApplicationDecision?.reset();
             setText("[data-program-head-application-status]", review.canApprove ? "Academic checks passed." : "Resolve the academic issues or return the application for correction.");
-            selectAll("button[type=submit]", programHeadApplicationDecision).forEach((button) => {
-                button.disabled = review.application.status !== "SUBMITTED" || (button.value === "APPROVED" && !review.canApprove);
-            });
-            if (!programHeadApplicationDialog.open) programHeadApplicationDialog.showModal();
+            syncProgramHeadApplicationButtons(review);
+            if (typeof programHeadApplicationDialog?.showModal === "function") {
+                if (!programHeadApplicationDialog.open) programHeadApplicationDialog.showModal();
+            } else {
+                programHeadApplicationDialog?.setAttribute("open", "");
+            }
         } catch (error) {
             if (!handleExpiredSession(error) && programHeadStatus) programHeadStatus.textContent = error.message || "Application review could not be loaded.";
         }
     };
+
+    let lastApplicationDecision = null;
+    selectAll("button[type=submit]", programHeadApplicationDecision).forEach((button) => {
+        button.addEventListener("click", () => {
+            lastApplicationDecision = button.value;
+        });
+    });
+
     programHeadApplicationDecision?.addEventListener("submit", async (event) => {
         event.preventDefault();
-        const status = event.submitter?.value;
-        const id = programHeadApplicationReview?.application.id;
+        const status = event.submitter?.value || lastApplicationDecision;
+        const id = programHeadApplicationReview?.application?.id;
         if (!status || !id || programHeadApplicationDecision.getAttribute("aria-busy") === "true") return;
-        const remarks = programHeadApplicationDecision.elements.remarks.value.trim();
+        const remarks = programHeadApplicationDecision.elements.remarks?.value?.trim() || "";
         if (status !== "APPROVED" && !remarks) {
             setText("[data-program-head-application-status]", "Enter feedback before returning or rejecting this application.");
-            programHeadApplicationDecision.elements.remarks.focus(); return;
+            programHeadApplicationDecision.elements.remarks?.focus(); return;
         }
         setBusy(programHeadApplicationDecision, true);
         try {
             await auth.decideProgramHeadEnrollmentApplication(id, { status, remarks });
-            programHeadApplicationDialog.close();
+            if (typeof programHeadApplicationDialog?.close === "function" && programHeadApplicationDialog.open) {
+                programHeadApplicationDialog.close();
+            } else {
+                programHeadApplicationDialog?.removeAttribute("open");
+            }
             await loadProgramHeadData();
             if (programHeadStatus) programHeadStatus.textContent = status === "APPROVED" ? "Application forwarded to Registrar verification." : "Decision saved and feedback sent to the student.";
         } catch (error) {
             if (!handleExpiredSession(error)) setText("[data-program-head-application-status]", error.message || "The decision could not be saved.");
         } finally {
             setBusy(programHeadApplicationDecision, false);
-            const approve = select('button[value="APPROVED"]', programHeadApplicationDecision);
-            if (approve) approve.disabled = !programHeadApplicationReview?.canApprove;
+            syncProgramHeadApplicationButtons(programHeadApplicationReview);
         }
     });
     select("[data-close-program-head-application]")?.addEventListener("click", () => programHeadApplicationDialog?.close());
@@ -1908,6 +3247,14 @@
         const sectionFields = select("[data-enrollment-section-assignments]"); sectionFields?.replaceChildren();
         if (enrollmentReview) {
             setText("[data-enrollment-section-summary]", `${enrollmentReview.curriculum?.code || "Curriculum unresolved"} · ${enrollmentReview.totalUnits} approved units`);
+            const saEncoding = enrollmentReview.saEncoding;
+            const saBanner = select("[data-sa-footprint-banner]", sectionPanel || document);
+            if (saBanner) {
+                saBanner.hidden = !saEncoding;
+                if (saEncoding) {
+                    setText("[data-sa-footprint-info]", `Encoded by Student Assistant ${saEncoding.encodedByDisplayName} (@${saEncoding.encodedByUsername || "sa"}) on ${formatDate(saEncoding.encodedAt)}`);
+                }
+            }
             for (const item of enrollmentReview.items) {
                 const field = document.createElement("div"); field.className = "field";
                 const label = document.createElement("label"); label.textContent = `${item.subject.code} — ${item.subject.title} (${item.creditUnits} units)`;
@@ -1916,8 +3263,14 @@
                 input.append(new Option("Choose a class section", ""));
                 const choices = enrollmentReview.offeringChoices.filter((choice) => choice.subjectId === item.subjectId);
                 for (const choice of choices) {
-                    const option = new Option(`${choice.sectionCode} · ${choice.offeringCode}${choice.availableSeats == null ? "" : ` · ${choice.availableSeats} seats available`}`, choice.id);
+                    const instructorName = choice.instructor?.name ? ` · ${choice.instructor.name}` : "";
+                    const schedSummary = choice.schedule?.summary ? ` · ${choice.schedule.summary}` : "";
+                    const option = new Option(`${choice.sectionCode} · ${choice.offeringCode}${instructorName}${schedSummary}${choice.availableSeats == null ? "" : ` · ${choice.availableSeats} seats available`}`, choice.id);
                     option.disabled = !choice.available; input.append(option);
+                }
+                const preAssignment = saEncoding?.assignments?.find((a) => a.curriculumSubjectId === item.id);
+                if (preAssignment && choices.some((choice) => choice.id === preAssignment.courseOfferingId)) {
+                    input.value = preAssignment.courseOfferingId;
                 }
                 input.disabled = !enrollmentReview.requiresSectionAssignments;
                 field.append(label, input);
@@ -2183,1170 +3536,1196 @@
         }
     });
     select("[data-refresh-registrar]")?.addEventListener("click", () => loadRegistrarData());
-const updateUserStatus = async (user, nextStatus, button) => {
-    if (!isAdministrator() || needsPasswordChange()) return;
-    button.disabled = true;
-    button.setAttribute("aria-busy", "true");
-    const priorLabel = button.textContent;
-    button.textContent = nextStatus === "active" ? "Activating…" : "Disabling…";
-    if (usersStatus) usersStatus.textContent = "Updating account status…";
-    try {
-        await auth.updateUserStatus(user.id, nextStatus);
-        user.status = nextStatus;
-        renderUsers();
-        if (usersStatus) usersStatus.textContent = `Account ${nextStatus === "active" ? "activated" : "disabled"}.`;
-    } catch (error) {
-        if (handleExpiredSession(error)) return;
-        button.disabled = false;
-        button.setAttribute("aria-busy", "false");
-        button.textContent = priorLabel;
-        if (usersStatus) {
-            usersStatus.textContent = error.status === 409
-                ? "That status change would leave the project without a required administrator."
-                : "The account status could not be changed.";
+    const updateUserStatus = async (user, nextStatus, button) => {
+        if (!isAdministrator() || needsPasswordChange()) return;
+        button.disabled = true;
+        button.setAttribute("aria-busy", "true");
+        const priorLabel = button.textContent;
+        button.textContent = nextStatus === "active" ? "Activating…" : "Disabling…";
+        if (usersStatus) usersStatus.textContent = "Updating account status…";
+        try {
+            await auth.updateUserStatus(user.id, nextStatus);
+            user.status = nextStatus;
+            renderUsers();
+            if (usersStatus) usersStatus.textContent = `Account ${nextStatus === "active" ? "activated" : "disabled"}.`;
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            button.disabled = false;
+            button.setAttribute("aria-busy", "false");
+            button.textContent = priorLabel;
+            if (usersStatus) {
+                usersStatus.textContent = error.status === 409
+                    ? "That status change would leave the project without a required administrator."
+                    : "The account status could not be changed.";
+            }
         }
-    }
-};
-
-createForm?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    if (!isAdministrator() || needsPasswordChange() || createForm.getAttribute("aria-busy") === "true") return;
-    clearMessage(createError);
-    if (createStatus) createStatus.textContent = "";
-    const values = new FormData(createForm);
-    const account = {
-        displayName: String(values.get("displayName") || "").trim(),
-        username: String(values.get("username") || "").trim(),
-        email: String(values.get("email") || "").trim(),
-        password: String(values.get("password") || ""),
-        role: String(values.get("role") || ""),
-        programId: String(values.get("role") || "") === "program_head"
-            ? String(values.get("programId") || "")
-            : null,
-        mustChangePassword: values.get("mustChangePassword") === "on",
     };
-    let message = "";
-    let focusTarget = null;
-    if (passwordLength(account.displayName) < 2 || passwordLength(account.displayName) > 120) {
-        message = "Enter a display name containing 2–120 characters.";
-        focusTarget = createForm.elements.displayName;
-    } else if (!/^[A-Za-z0-9._-]{3,64}$/.test(account.username)) {
-        message = "Username must contain 3–64 letters, numbers, periods, underscores, or hyphens.";
-        focusTarget = createForm.elements.username;
-    } else if (account.email && createForm.elements.email.validity.typeMismatch) {
-        message = "Enter a valid email address.";
-        focusTarget = createForm.elements.email;
-    } else if (passwordLength(account.password) < 12 || passwordLength(account.password) > 128) {
-        message = "The temporary password must contain 12–128 characters.";
-        focusTarget = createForm.elements.password;
-    } else if (!state.roleCatalog.some((role) => role.slug === account.role)) {
-        message = "Choose an available role.";
-        focusTarget = createForm.elements.role;
-    } else if (account.role === "program_head" && !account.programId) {
-        message = "Choose the program assigned to this Program Head.";
-        focusTarget = createForm.elements.programId;
-    }
-    if (message) {
-        showError(createError, message);
-        focusTarget?.focus();
-        return;
-    }
 
-    setBusy(createForm, true);
-    if (createStatus) createStatus.textContent = "Creating account…";
-    try {
-        await auth.createUser(account);
-        createForm.reset();
-        createForm.elements.password.value = "";
-        syncProgramAssignment();
-        if (createStatus) createStatus.textContent = "Project account created successfully.";
-        await loadUsers();
-    } catch (error) {
-        if (handleExpiredSession(error)) return;
-        if (error.status === 409) {
-            showError(createError, "That username or email is already assigned to a project account.");
-        } else if (error.status === 422) {
-            showError(createError, error.message || "Review the account details and try again.");
-        } else if (error.code === "NETWORK_ERROR") {
-            showError(createError, error.message);
-        } else {
-            showError(createError, "The account could not be created. Review the details and try again.");
-        }
+    createForm?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!isAdministrator() || needsPasswordChange() || createForm.getAttribute("aria-busy") === "true") return;
+        clearMessage(createError);
         if (createStatus) createStatus.textContent = "";
-        createForm.elements.password.value = "";
-    } finally {
-        setBusy(createForm, false);
-    }
-});
-
-retryUsers?.addEventListener("click", loadUsers);
-select("[data-refresh-users]")?.addEventListener("click", loadUsers);
-const refreshStudentDashboard = () => {
-    state.studentLoaded = false;
-    void loadStudentDashboard();
-};
-select("[data-refresh-student]")?.addEventListener("click", refreshStudentDashboard);
-select("[data-retry-student]")?.addEventListener("click", refreshStudentDashboard);
-
-select("[data-payment-obligation-list]")?.addEventListener("click", async (event) => {
-    const button = event.target.closest("[data-pay-obligation]");
-    if (!button) return;
-
-    const obligationId = button.dataset.payObligation;
-    const status = select("[data-financial-status]");
-    if (!obligationId) return;
-    if (!window.confirm("Process this payment using the simulated development gateway?")) return;
-
-    button.disabled = true;
-    button.classList.add("is-busy");
-    if (status) status.textContent = "Processing simulated payment...";
-
-    try {
-        const initiated = await auth.initiateFinancialPayment(obligationId, "ONLINE");
-        const transactionId = initiated?.transaction?.id;
-        if (!transactionId) throw new Error("The payment transaction was not created.");
-
-        const processed = await auth.processFinancialPayment(transactionId);
-        await loadStudentDashboard();
-        const refreshedStatus = select("[data-financial-status]");
-        if (refreshedStatus) {
-            refreshedStatus.textContent = processed?.transaction?.status === "VERIFIED"
-                ? "Payment verified successfully."
-                : "The simulated gateway declined this payment. You may try again.";
+        const values = new FormData(createForm);
+        const account = {
+            displayName: String(values.get("displayName") || "").trim(),
+            username: String(values.get("username") || "").trim(),
+            email: String(values.get("email") || "").trim(),
+            password: String(values.get("password") || ""),
+            role: String(values.get("role") || ""),
+            programId: String(values.get("role") || "") === "program_head"
+                ? String(values.get("programId") || "")
+                : null,
+            departmentId: String(values.get("role") || "") === "student_assistant"
+                ? String(values.get("departmentId") || "")
+                : null,
+            collegeId: String(values.get("role") || "") === "dean"
+                ? String(values.get("collegeId") || "")
+                : null,
+            mustChangePassword: values.get("mustChangePassword") === "on",
+        };
+        let message = "";
+        let focusTarget = null;
+        if (passwordLength(account.displayName) < 2 || passwordLength(account.displayName) > 120) {
+            message = "Enter a display name containing 2–120 characters.";
+            focusTarget = createForm.elements.displayName;
+        } else if (!/^[A-Za-z0-9._-]{3,64}$/.test(account.username)) {
+            message = "Username must contain 3–64 letters, numbers, periods, underscores, or hyphens.";
+            focusTarget = createForm.elements.username;
+        } else if (account.email && createForm.elements.email.validity.typeMismatch) {
+            message = "Enter a valid email address.";
+            focusTarget = createForm.elements.email;
+        } else if (passwordLength(account.password) < 12 || passwordLength(account.password) > 128) {
+            message = "The temporary password must contain 12–128 characters.";
+            focusTarget = createForm.elements.password;
+        } else if (!state.roleCatalog.some((role) => role.slug === account.role)) {
+            message = "Choose an available role.";
+            focusTarget = createForm.elements.role;
+        } else if (account.role === "program_head" && !account.programId) {
+            message = "Choose the program assigned to this Program Head.";
+            focusTarget = createForm.elements.programId;
+        } else if (account.role === "student_assistant" && !account.departmentId) {
+            message = "Choose the department/college assigned to this Student Assistant.";
+            focusTarget = createForm.elements.departmentId;
+        } else if (account.role === "dean" && !account.collegeId) {
+            message = "Choose the college assigned to this Dean.";
+            focusTarget = createForm.elements.collegeId;
         }
-    } catch (error) {
-        if (handleExpiredSession(error)) return;
-        
-        // Handle existing payment attempt (409 Conflict)
-        if (error.status === 409 && error.code === "PENDING_TRANSACTION_EXISTS") {
-            try {
-                const payments = await auth.getObligationPayments(obligationId);
-                const existing = payments?.transactions?.[0];
-                if (existing) {
-                    const statusText = getPaymentStatusMessage(existing);
-                    if (status) status.textContent = statusText;
-                    
-                    // Allow continuing with PENDING/CREATED transactions, or retry FAILED
-                    if (existing.status === "VERIFIED" || existing.status === "PAID") {
-                        // Payment already completed - keep button disabled
-                        return;
-                    }
-                    
-                    if (existing.status === "PENDING" || existing.status === "CREATED") {
-                        // Can continue with existing transaction - auto-process it
-                        try {
-                            const processed = await auth.processFinancialPayment(existing.id);
-                            await loadStudentDashboard();
-                            const refreshedStatus = select("[data-financial-status]");
-                            if (refreshedStatus) {
-                                refreshedStatus.textContent = processed?.transaction?.status === "VERIFIED"
-                                    ? "✓ Payment verified successfully."
-                                    : "Payment declined. You may try again.";
+        if (message) {
+            showError(createError, message);
+            focusTarget?.focus();
+            return;
+        }
+
+        setBusy(createForm, true);
+        if (createStatus) createStatus.textContent = "Creating account…";
+        try {
+            await auth.createUser(account);
+            createForm.reset();
+            createForm.elements.password.value = "";
+            syncRoleAssignments();
+            if (createStatus) createStatus.textContent = "Project account created successfully.";
+            await loadUsers();
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            if (error.status === 409) {
+                showError(createError, "That username or email is already assigned to a project account.");
+            } else if (error.status === 422) {
+                showError(createError, error.message || "Review the account details and try again.");
+            } else if (error.code === "NETWORK_ERROR") {
+                showError(createError, error.message);
+            } else {
+                showError(createError, "The account could not be created. Review the details and try again.");
+            }
+            if (createStatus) createStatus.textContent = "";
+            createForm.elements.password.value = "";
+        } finally {
+            setBusy(createForm, false);
+        }
+    });
+
+    retryUsers?.addEventListener("click", loadUsers);
+    select("[data-refresh-users]")?.addEventListener("click", loadUsers);
+    const refreshStudentDashboard = () => {
+        state.studentLoaded = false;
+        void loadStudentDashboard();
+    };
+    select("[data-refresh-student]")?.addEventListener("click", refreshStudentDashboard);
+    select("[data-retry-student]")?.addEventListener("click", refreshStudentDashboard);
+
+    select("[data-payment-obligation-list]")?.addEventListener("click", async (event) => {
+        const button = event.target.closest("[data-pay-obligation]");
+        if (!button) return;
+
+        const obligationId = button.dataset.payObligation;
+        const status = select("[data-financial-status]");
+        if (!obligationId) return;
+        if (!window.confirm("Process this payment using the simulated development gateway?")) return;
+
+        button.disabled = true;
+        button.classList.add("is-busy");
+        if (status) status.textContent = "Processing simulated payment...";
+
+        try {
+            const initiated = await auth.initiateFinancialPayment(obligationId, "ONLINE");
+            const transactionId = initiated?.transaction?.id;
+            if (!transactionId) throw new Error("The payment transaction was not created.");
+
+            const processed = await auth.processFinancialPayment(transactionId);
+            await loadStudentDashboard();
+            const refreshedStatus = select("[data-financial-status]");
+            if (refreshedStatus) {
+                refreshedStatus.textContent = processed?.transaction?.status === "VERIFIED"
+                    ? "Payment verified successfully."
+                    : "The simulated gateway declined this payment. You may try again.";
+            }
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+
+            // Handle existing payment attempt (409 Conflict)
+            if (error.status === 409 && error.code === "PENDING_TRANSACTION_EXISTS") {
+                try {
+                    const payments = await auth.getObligationPayments(obligationId);
+                    const existing = payments?.transactions?.[0];
+                    if (existing) {
+                        const statusText = getPaymentStatusMessage(existing);
+                        if (status) status.textContent = statusText;
+
+                        // Allow continuing with PENDING/CREATED transactions, or retry FAILED
+                        if (existing.status === "VERIFIED" || existing.status === "PAID") {
+                            // Payment already completed - keep button disabled
+                            return;
+                        }
+
+                        if (existing.status === "PENDING" || existing.status === "CREATED") {
+                            // Can continue with existing transaction - auto-process it
+                            try {
+                                const processed = await auth.processFinancialPayment(existing.id);
+                                await loadStudentDashboard();
+                                const refreshedStatus = select("[data-financial-status]");
+                                if (refreshedStatus) {
+                                    refreshedStatus.textContent = processed?.transaction?.status === "VERIFIED"
+                                        ? "✓ Payment verified successfully."
+                                        : "Payment declined. You may try again.";
+                                }
+                            } catch (processError) {
+                                if (status) status.textContent = processError.message || "The payment could not be processed.";
+                                button.disabled = false;
+                                button.classList.remove("is-busy");
                             }
-                        } catch (processError) {
-                            if (status) status.textContent = processError.message || "The payment could not be processed.";
+                        } else {
+                            // For PROCESSING, FAILED, or other statuses - re-enable button
                             button.disabled = false;
                             button.classList.remove("is-busy");
                         }
-                    } else {
-                        // For PROCESSING, FAILED, or other statuses - re-enable button
-                        button.disabled = false;
-                        button.classList.remove("is-busy");
+                        return;
                     }
-                    return;
+                } catch (fetchError) {
+                    // Fall through to standard error handling if fetch fails
                 }
-            } catch (fetchError) {
-                // Fall through to standard error handling if fetch fails
             }
+
+            if (status) status.textContent = error.message || "The payment could not be processed.";
+            button.disabled = false;
+            button.classList.remove("is-busy");
         }
-        
-        if (status) status.textContent = error.message || "The payment could not be processed.";
-        button.disabled = false;
-        button.classList.remove("is-busy");
-    }
-});
+    });
 
-// ── Edit Contact Information Dialog ──────────────────────────────────
-const profileDialog = select("[data-profile-dialog]");
-const profileForm = select("[data-profile-form]");
-const profileError = select("[data-profile-error]");
-const profileStatus = select("[data-profile-status]");
+    // ── Edit Contact Information Dialog ──────────────────────────────────
+    const profileDialog = select("[data-profile-dialog]");
+    const profileForm = select("[data-profile-form]");
+    const profileError = select("[data-profile-error]");
+    const profileStatus = select("[data-profile-status]");
 
-const openProfileDialog = () => {
-    if (!profileDialog) return;
-    profileForm?.reset();
-    clearMessage(profileError);
-    if (profileStatus) profileStatus.textContent = "";
-    setBusy(profileForm, false);
-    // Pre-populate fields from current dashboard data
-    const student = state.studentDashboard?.student;
-    if (student) {
-        const emailInput = profileForm?.elements?.institutionalEmail;
-        const dateOfBirthInput = profileForm?.elements?.dateOfBirth;
-        if (emailInput && student.institutionalEmail) emailInput.value = student.institutionalEmail;
-        if (dateOfBirthInput && student.dateOfBirth) dateOfBirthInput.value = student.dateOfBirth;
-    }
-    if (typeof profileDialog.showModal === "function") {
-        if (!profileDialog.open) profileDialog.showModal();
-    } else {
-        profileDialog.setAttribute("open", "");
-    }
-    window.setTimeout(() => select("#edit-institutional-email")?.focus(), 60);
-};
-
-const closeProfileDialog = () => {
-    if (!profileDialog) return;
-    if (typeof profileDialog.close === "function" && profileDialog.open) profileDialog.close();
-    else profileDialog.removeAttribute("open");
-    profileForm?.reset();
-    clearMessage(profileError);
-    if (profileStatus) profileStatus.textContent = "";
-};
-
-select("[data-open-edit-profile]")?.addEventListener("click", openProfileDialog);
-select("[data-close-profile-dialog]")?.addEventListener("click", closeProfileDialog);
-profileDialog?.addEventListener("click", (event) => {
-    if (event.target === profileDialog) closeProfileDialog();
-});
-
-profileForm?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    if (profileForm.getAttribute("aria-busy") === "true") return;
-    clearMessage(profileError);
-    if (profileStatus) profileStatus.textContent = "";
-
-    const emailValue = profileForm.elements.institutionalEmail?.value?.trim() || "";
-    const dateOfBirthValue = profileForm.elements.dateOfBirth?.value || "";
-
-    setBusy(profileForm, true);
-    if (profileStatus) profileStatus.textContent = "Saving changes…";
-    try {
-        const payload = {};
-        if (emailValue) payload.institutionalEmail = emailValue;
-        if (dateOfBirthValue) payload.dateOfBirth = dateOfBirthValue;
-
-        const response = await auth.updateStudentProfile(payload);
-        const updatedProfile = response?.profile;
-
-        if (updatedProfile && state.studentDashboard?.student) {
-            state.studentDashboard.student = {
-                ...state.studentDashboard.student,
-                institutionalEmail: updatedProfile.institutionalEmail,
-                dateOfBirth: updatedProfile.dateOfBirth,
-                fullName: updatedProfile.fullName
-            };
-            setText("[data-student-email]", updatedProfile.institutionalEmail || "Not provided");
-        }
-
-        if (profileStatus) profileStatus.textContent = "Contact information updated.";
-        window.setTimeout(closeProfileDialog, 900);
-    } catch (error) {
-        if (handleExpiredSession(error)) return;
-        if (error.status === 422) {
-            showError(profileError, error.message || "Review the information and try again.");
-        } else if (error.code === "NETWORK_ERROR") {
-            showError(profileError, error.message);
-        } else {
-            showError(profileError, "Could not save changes. Try again.");
-        }
+    const openProfileDialog = () => {
+        if (!profileDialog) return;
+        profileForm?.reset();
+        clearMessage(profileError);
         if (profileStatus) profileStatus.textContent = "";
-    } finally {
         setBusy(profileForm, false);
-    }
-});
-
-// ── Submit Student Request Dialog ─────────────────────────────────────
-const requestDialog = select("[data-request-dialog]");
-const requestForm = select("[data-request-form]");
-const requestError = select("[data-request-error]");
-const requestStatus = select("[data-request-status]");
-const requestTypeSelect = select("[data-request-form] #request-type");
-const requestTypeDesc = select("[data-request-type-desc]");
-const estimatedFee = select("[data-estimated-fee]");
-const serviceDays = select("[data-service-days]");
-const purposeRemaining = select("[data-purpose-remaining]");
-const purposeInput = select("#request-purpose");
-let requestTypeCatalog = [];
-
-const populateRequestTypes = async () => {
-    if (!requestTypeSelect) return;
-    try {
-        const data = await auth.getRequestTypes();
-        requestTypeCatalog = data?.requestTypes || [];
-        requestTypeSelect.replaceChildren();
-        const placeholder = document.createElement("option");
-        placeholder.value = "";
-        placeholder.textContent = requestTypeCatalog.length ? "Select a request type…" : "No request types available";
-        requestTypeSelect.append(placeholder);
-        requestTypeCatalog.forEach((type) => {
-            const option = document.createElement("option");
-            option.value = type.code;
-            option.textContent = type.name;
-            option.dataset.desc = type.description || "";
-            option.dataset.fee = type.defaultFeeAmount || "0.00";
-            option.dataset.days = type.serviceDays || "–";
-            requestTypeSelect.append(option);
-        });
-    } catch {
-        // Silently handle — the form validation will block submission
-    }
-};
-
-const updateRequestTypeInfo = () => {
-    const selected = requestTypeSelect?.selectedOptions?.[0];
-    if (requestTypeDesc) requestTypeDesc.textContent = selected?.dataset.desc || "";
-    if (estimatedFee) estimatedFee.textContent = selected?.value
-        ? formatMoney(selected.dataset.fee || 0)
-        : "PHP 0.00";
-    if (serviceDays) serviceDays.textContent = selected?.value
-        ? `${selected.dataset.days} business day${Number(selected.dataset.days) === 1 ? "" : "s"}`
-        : "–";
-};
-
-requestTypeSelect?.addEventListener("change", updateRequestTypeInfo);
-purposeInput?.addEventListener("input", () => {
-    const remaining = 500 - (purposeInput.value?.length || 0);
-    if (purposeRemaining) purposeRemaining.textContent = String(Math.max(0, remaining));
-});
-
-const openRequestDialog = async () => {
-    if (!requestDialog) return;
-    requestForm?.reset();
-    clearMessage(requestError);
-    if (requestStatus) requestStatus.textContent = "";
-    updateRequestTypeInfo();
-    if (purposeRemaining) purposeRemaining.textContent = "500";
-    setBusy(requestForm, false);
-    if (requestTypeCatalog.length === 0) await populateRequestTypes();
-    if (typeof requestDialog.showModal === "function") {
-        if (!requestDialog.open) requestDialog.showModal();
-    } else {
-        requestDialog.setAttribute("open", "");
-    }
-    window.setTimeout(() => requestTypeSelect?.focus(), 60);
-};
-
-const closeRequestDialog = () => {
-    if (!requestDialog) return;
-    if (typeof requestDialog.close === "function" && requestDialog.open) requestDialog.close();
-    else requestDialog.removeAttribute("open");
-    requestForm?.reset();
-    clearMessage(requestError);
-    if (requestStatus) requestStatus.textContent = "";
-};
-
-select("[data-open-new-request]")?.addEventListener("click", openRequestDialog);
-select("[data-close-request-dialog]")?.addEventListener("click", closeRequestDialog);
-requestDialog?.addEventListener("click", (event) => {
-    if (event.target === requestDialog) closeRequestDialog();
-});
-
-requestForm?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    if (requestForm.getAttribute("aria-busy") === "true") return;
-    clearMessage(requestError);
-    if (requestStatus) requestStatus.textContent = "";
-
-    const requestCode = requestForm.elements.requestCode?.value?.trim() || "";
-    const copies = Number(requestForm.elements.copies?.value) || 1;
-    const purpose = requestForm.elements.purpose?.value?.trim() || "";
-
-    if (!requestCode) {
-        showError(requestError, "Select a request type before submitting.");
-        requestTypeSelect?.focus();
-        return;
-    }
-
-    setBusy(requestForm, true);
-    if (requestStatus) requestStatus.textContent = "Submitting request…";
-    try {
-        const response = await auth.submitStudentRequest({ requestCode, copies, purpose });
-        const created = response?.request;
-
-        // Refresh the requests list on the dashboard
-        if (created) {
-            if (!state.studentDashboard) state.studentDashboard = {};
-            if (!Array.isArray(state.studentDashboard.requests)) state.studentDashboard.requests = [];
-            state.studentDashboard.requests.unshift(created);
-            const requestList = select("[data-request-list]");
-            if (requestList) {
-                const item = dashboardListItem(
-                    created.requestType?.name || "Student request",
-                    `${created.requestNumber} · Just now`,
-                    humanize(created.status)
-                );
-                requestList.prepend(item);
-                // Remove any "empty" placeholder
-                select(".dashboard-list__empty", requestList)?.remove();
-            }
-            setText("[data-request-count]", plural(state.studentDashboard.requests.length, "request"));
+        // Pre-populate fields from current dashboard data
+        const student = state.studentDashboard?.student;
+        if (student) {
+            const emailInput = profileForm?.elements?.institutionalEmail;
+            const dateOfBirthInput = profileForm?.elements?.dateOfBirth;
+            if (emailInput && student.institutionalEmail) emailInput.value = student.institutionalEmail;
+            if (dateOfBirthInput && student.dateOfBirth) dateOfBirthInput.value = student.dateOfBirth;
         }
-
-        if (requestStatus) requestStatus.textContent = `Request ${created?.requestNumber || ""} submitted successfully.`;
-        window.setTimeout(closeRequestDialog, 1200);
-    } catch (error) {
-        if (handleExpiredSession(error)) return;
-        if (error.status === 422) {
-            showError(requestError, error.message || "Review your selection and try again.");
-        } else if (error.code === "NETWORK_ERROR") {
-            showError(requestError, error.message);
+        if (typeof profileDialog.showModal === "function") {
+            if (!profileDialog.open) profileDialog.showModal();
         } else {
-            showError(requestError, "The request could not be submitted. Try again.");
+            profileDialog.setAttribute("open", "");
         }
-        if (requestStatus) requestStatus.textContent = "";
-    } finally {
-        setBusy(requestForm, false);
-    }
-});
-
-const enrollmentDialog = select("[data-enrollment-dialog]");
-const enrollmentForm = select("[data-enrollment-form]");
-const enrollmentError = select("[data-enrollment-error]");
-const enrollmentStatus = select("[data-enrollment-status]");
-const enrollmentSave = select("[data-save-enrollment]");
-const enrollmentSubmit = select("[data-submit-enrollment]");
-let enrollmentApplication = null;
-let admissionApplication = null;
-let enrollmentOptions = null;
-
-const selectedSubjectState = {
-    items: [], locked: false
-};
-
-const selectedProgram = () => (enrollmentOptions?.programs || []).find((entry) => entry.id === enrollmentInput("programId")?.value) || null;
-const selectedProgramLabel = () => selectedProgram()?.code ? `${selectedProgram().code} — ${selectedProgram().name}` : "Choose a program";
-const selectedYearLevel = () => {
-    const raw = enrollmentInput("yearLevel")?.value;
-    const value = Number(raw);
-    return Number.isInteger(value) && value > 0 ? value : null;
-};
-const selectedAcademicTerm = () => {
-    const value = enrollmentInput("academicTermId")?.value;
-    return (enrollmentOptions?.terms || []).find((entry) => entry.id === value) || null;
-};
-const availableSubjectsForSelection = () => {
-    const programId = enrollmentInput("programId")?.value;
-    const yearLevel = selectedYearLevel();
-    const term = selectedAcademicTerm();
-    if (!programId || yearLevel == null || !term) return [];
-    return (enrollmentOptions?.curriculumSubjects || []).filter((item) => (
-        item.academicTermId === term.id
-        &&
-        item.programId === programId
-        && Number(item.yearLevel) === yearLevel
-        && Number(item.termNumber) === Number(term.termNumber)
-    )).sort((a, b) => (Number(a.sortOrder) || 0) - (Number(b.sortOrder) || 0) || String(a.subjectCode).localeCompare(String(b.subjectCode)));
-};
-const updateSubjectCartSummary = () => {
-    const selectedCount = selectedSubjectState.items.length;
-    const totalUnits = selectedSubjectState.items.reduce((sum, item) => sum + Number(item.creditUnits || 0), 0);
-    const count = select("[data-subject-count]");
-    const total = select("[data-subject-total]");
-    const program = select("[data-subject-program]");
-    const loadStatus = select("[data-subject-load-status]");
-    if (count) count.textContent = `${selectedCount} selected`;
-    if (total) total.textContent = `${totalUnits} unit${totalUnits === 1 ? "" : "s"}`;
-    if (program) program.textContent = selectedProgramLabel();
-    if (loadStatus) {
-        loadStatus.textContent = selectedSubjectState.locked ? "Submitted · read only" : selectedCount === 0 ? "Waiting for selection" : totalUnits > 29 ? "Over limit" : "Within limit";
-    }
-};
-const renderSubjectSelection = () => {
-    const catalogContainer = select("[data-subject-catalog]");
-    const cartContainer = select("[data-subject-cart]");
-    if (!catalogContainer || !cartContainer) return;
-    const catalog = availableSubjectsForSelection();
-    const selectedIds = new Set(selectedSubjectState.items.map((item) => item.id || item.subjectId));
-    catalogContainer.replaceChildren();
-    if (!enrollmentInput("programId")?.value || !selectedYearLevel() || !selectedAcademicTerm()) {
-        const empty = document.createElement("div");
-        empty.className = "subject-cart__empty";
-        empty.innerHTML = "<strong>Waiting for academic context</strong><small>Select a program, year level, and term to load the active curriculum subjects.</small>";
-        catalogContainer.append(empty);
-        cartContainer.replaceChildren();
-        updateSubjectCartSummary();
-        return;
-    }
-    if (!catalog.length) {
-        const empty = document.createElement("div");
-        empty.className = "subject-cart__empty";
-        empty.innerHTML = `<strong>No curriculum subjects available</strong><small>No active curriculum items match ${selectedProgram()?.code || "this program"} for Year ${selectedYearLevel()} in ${selectedAcademicTerm()?.name || "this term"}.</small>`;
-        catalogContainer.append(empty);
-        cartContainer.replaceChildren();
-        updateSubjectCartSummary();
-        return;
-    }
-    catalog.forEach((item) => {
-        const card = document.createElement("article");
-        const selected = selectedIds.has(item.id || item.subjectId);
-        const requirements = item.requirements || item.prerequisites || [];
-        const blockedPrerequisites = requirements.filter((requirement) => requirement.type !== "COREQUISITE" && !requirement.eligible);
-        const pendingCorequisites = requirements.filter((requirement) => requirement.type === "COREQUISITE" && !requirement.eligible);
-        card.className = `subject-card${selected ? " is-selected" : ""}`;
-        const meta = document.createElement("div");
-        meta.className = "subject-card__meta";
-        meta.innerHTML = `<strong>${item.subjectCode} · ${item.subjectTitle}</strong><small>${Number(item.creditUnits || 0)} units · ${item.type || "REQUIRED"} · ${item.curriculumCode}</small>`;
-        if (blockedPrerequisites.length) {
-            const prerequisiteMessage = document.createElement("small");
-            prerequisiteMessage.textContent = blockedPrerequisites.map((requirement) => `${requirement.requiredSubject.code}: ${humanize(requirement.state)}`).join(" · ");
-            prerequisiteMessage.className = "subject-card__warning";
-            meta.append(prerequisiteMessage);
-        }
-        if (pendingCorequisites.length) {
-            const corequisiteMessage = document.createElement("small");
-            corequisiteMessage.textContent = pendingCorequisites.map((requirement) => `Corequisite: ${requirement.requiredSubject.code}`).join(" · ");
-            corequisiteMessage.className = "subject-card__warning";
-            meta.append(corequisiteMessage);
-        }
-        const details = document.createElement("div");
-        details.className = "subject-card__details";
-        const badge = document.createElement("span");
-        badge.className = "subject-card__pill";
-        badge.textContent = item.type || "REQUIRED";
-        details.append(badge);
-        meta.append(details);
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = `subject-card__button${selected ? " subject-card__button--selected" : ""}`;
-        button.dataset.subjectAction = selected ? "remove" : "add";
-        button.dataset.subjectId = item.id || item.subjectId;
-        button.disabled = selectedSubjectState.locked || Boolean(blockedPrerequisites.length && !selected);
-        button.hidden = selectedSubjectState.locked;
-        button.textContent = selected ? "Remove" : blockedPrerequisites.length ? "Prerequisite required" : "Add to cart";
-        card.append(meta, button);
-        catalogContainer.append(card);
-    });
-    const activeCartItems = selectedSubjectState.locked ? selectedSubjectState.items : selectedSubjectState.items.filter((item) => catalog.some((entry) => (entry.id || entry.subjectId) === (item.id || item.subjectId)));
-    selectedSubjectState.items = activeCartItems;
-    cartContainer.replaceChildren();
-    if (!activeCartItems.length) {
-        const empty = document.createElement("div");
-        empty.className = "subject-cart__empty";
-        empty.innerHTML = "<strong>No subjects selected</strong><small>Add subjects from the active curriculum to build your cart.</small>";
-        cartContainer.append(empty);
-    } else {
-        activeCartItems.forEach((item) => {
-            const row = document.createElement("article");
-            row.className = "subject-cart__item";
-            const details = document.createElement("div");
-            details.innerHTML = `<strong>${item.subjectCode} · ${item.subjectTitle}</strong><small>${Number(item.creditUnits || 0)} units · ${item.type || "REQUIRED"}</small>`;
-            const tag = document.createElement("span");
-            tag.className = "subject-cart__tag";
-            tag.textContent = item.type || "REQUIRED";
-            const removeButton = document.createElement("button");
-            removeButton.type = "button";
-            removeButton.className = "subject-cart__remove";
-            removeButton.dataset.subjectAction = "remove";
-            removeButton.dataset.subjectId = item.id || item.subjectId;
-            removeButton.textContent = "Remove";
-            removeButton.disabled = selectedSubjectState.locked;
-            removeButton.hidden = selectedSubjectState.locked;
-            row.append(details, tag, removeButton);
-            cartContainer.append(row);
-        });
-    }
-    updateSubjectCartSummary();
-};
-const getPaymentStatusMessage = (transaction) => {
-    if (!transaction) return "Payment status unavailable.";
-    
-    switch (String(transaction.status).toUpperCase()) {
-        case "VERIFIED":
-        case "PAID":
-            return "✓ Payment already completed. Proceeding to next step.";
-        case "PENDING":
-            return "Your payment is pending. Continue processing it now.";
-        case "PROCESSING":
-            return "Your payment is currently being processed. Please wait...";
-        case "FAILED":
-        case "EXPIRED":
-            return "Previous payment failed or expired. You can try again.";
-        case "CREATED":
-            return "Payment initiated. Continue processing your payment.";
-        default:
-            return `Payment status: ${transaction.status}. Please try again or contact support.`;
-    }
-};
-
-const handleSubjectSelectionToggle = (event) => {
-    const button = event.target.closest("[data-subject-action]");
-    if (!button || button.disabled || selectedSubjectState.locked || enrollmentForm?.getAttribute("aria-busy") === "true") return;
-    const catalog = availableSubjectsForSelection();
-    const subjectId = button.dataset.subjectId;
-    if (!subjectId) return;
-    const item = catalog.find((entry) => String(entry.id || entry.subjectId) === String(subjectId));
-    if (!item) return;
-    const current = selectedSubjectState.items.find((entry) => String(entry.id || entry.subjectId) === String(subjectId));
-    if (button.dataset.subjectAction === "add" && !current) {
-        selectedSubjectState.items.push({ ...item });
-    }
-    if (button.dataset.subjectAction === "remove" && current) {
-        selectedSubjectState.items = selectedSubjectState.items.filter((entry) => String(entry.id || entry.subjectId) !== String(subjectId));
-    }
-    renderSubjectSelection();
-};
-const setSubjectSelectionState = () => {
-    const catalog = availableSubjectsForSelection();
-    if (!selectedSubjectState.locked) selectedSubjectState.items = selectedSubjectState.items.filter((selected) => catalog.some((item) => String(item.id || item.subjectId) === String(selected.id || selected.subjectId)));
-    renderSubjectSelection();
-};
-
-const enrollmentInput = (name) => select(`[data-enrollment-form] [name="${name}"]`);
-const setNestedValue = (target, path, value) => {
-    const parts = path.split(".");
-    let current = target;
-    parts.forEach((part, index) => {
-        if (index === parts.length - 1) current[part] = value;
-        else current = current[part] ||= {};
-    });
-};
-const enrollmentFormData = () => {
-    const data = {};
-    selectAll("[data-enrollment-form] [name]").forEach((input) => {
-        if (input.name === "studentNumber" || input.name === "schoolEmail" || input.name === "programId" || input.name === "academicTermId" || input.name === "yearLevel") return;
-        setNestedValue(data, input.name, input.value.trim());
-    });
-    return data;
-};
-const fillEnrollmentForm = (application, profile) => {
-    enrollmentInput("studentNumber").value = profile?.studentNumber || "";
-    enrollmentInput("schoolEmail").value = profile?.schoolEmail || "";
-    const data = application?.formData || {};
-    const fill = (object, prefix = "") => Object.entries(object || {}).forEach(([key, value]) => {
-        const path = prefix ? `${prefix}.${key}` : key;
-        if (value && typeof value === "object" && !Array.isArray(value)) fill(value, path);
-        else if (enrollmentInput(path)) enrollmentInput(path).value = value ?? "";
-    });
-    fill(data);
-    if (!data.personal?.fullName) enrollmentInput("personal.fullName").value = profile?.fullName || "";
-    if (!data.personal?.birthday) enrollmentInput("personal.birthday").value = profile?.birthday || "";
-    enrollmentInput("contact.personalEmail").value ||= profile?.personalEmail || "";
-    enrollmentInput("contact.mobileNumber").value ||= profile?.mobileNumber || "";
-    if (application) {
-        enrollmentInput("programId").value = application.programId || "";
-        if (application.programId) updateYearLevelOptionsForProgram(application.programId);
-        enrollmentInput("academicTermId").value = application.academicTermId || "";
-        enrollmentInput("yearLevel").value = application.yearLevel || profile?.currentYearLevel || "";
-        selectedSubjectState.items = (application.formData?.selection?.subjectIds || [])
-            .map((subjectId) => (enrollmentOptions?.curriculumSubjects || []).find((item) => item.academicTermId === application.academicTermId && (item.subjectId === subjectId || item.id === subjectId)))
-            .filter(Boolean);
-    } else if (profile?.currentYearLevel) {
-        enrollmentInput("yearLevel").value = profile.currentYearLevel;
-    }
-    setSubjectSelectionState();
-};
-const updateYearLevelOptionsForProgram = (programId) => {
-    const yearSelect = enrollmentInput("yearLevel");
-    if (!yearSelect) return;
-    const prog = (enrollmentOptions?.programs || []).find((p) => p.id === programId);
-    const maxYears = Number(prog?.durationYears || 4);
-    const currentVal = yearSelect.value;
-    yearSelect.replaceChildren(new Option("Select", ""));
-    for (let year = 1; year <= maxYears; year += 1) {
-        yearSelect.append(new Option(`Year ${year}`, String(year)));
-    }
-    if (currentVal && Number(currentVal) <= maxYears) {
-        yearSelect.value = currentVal;
-    } else {
-        yearSelect.value = "1";
-    }
-};
-const populateEnrollmentOptions = (options) => {
-    const programSelect = enrollmentInput("programId");
-    const termSelect = enrollmentInput("academicTermId");
-    const yearSelect = enrollmentInput("yearLevel");
-    programSelect.replaceChildren(new Option("Choose a program", ""));
-    termSelect.replaceChildren(new Option("Choose an academic term", ""));
-    (options?.programs || []).forEach((item) => programSelect.append(new Option(`${item.code} — ${item.name}`, item.id)));
-    (options?.terms || []).forEach((item) => {
-        const label = item.enrollmentOpen ? `${item.name} (enrollment open)`
-            : item.periodStatus === "CLOSED" ? `${item.name} (enrollment closed)` : item.name;
-        termSelect.append(new Option(label, item.id));
-    });
-    const assignedProgram = (options?.programs || []).find((item) => item.id === options?.studentContext?.programId);
-    if (assignedProgram) {
-        programSelect.value = assignedProgram.id;
-        if (yearSelect) {
-            yearSelect.replaceChildren(new Option("Select", ""));
-            for (let year = 1; year <= Number(assignedProgram.durationYears || 0); year += 1) {
-                yearSelect.append(new Option(`Year ${year}`, String(year)));
-            }
-            yearSelect.value = String(options?.studentContext?.currentYearLevel || "");
-        }
-    } else {
-        if (yearSelect && !yearSelect.value) {
-            yearSelect.replaceChildren(new Option("Select", ""));
-            for (let year = 1; year <= 4; year += 1) {
-                yearSelect.append(new Option(`Year ${year}`, String(year)));
-            }
-            yearSelect.value = "1";
-        }
-    }
-    programSelect.dataset.enrollmentLocked = assignedProgram ? "true" : "false";
-    yearSelect.dataset.enrollmentLocked = assignedProgram ? "true" : "false";
-    setSubjectSelectionState();
-};
-const selectedEnrollmentTerm = () => (enrollmentOptions?.terms || []).find(
-    (item) => item.id === enrollmentInput("academicTermId")?.value
-);
-const updateEnrollmentWindow = () => {
-    const term = selectedEnrollmentTerm();
-    setText("[data-enrollment-window]", !term ? ""
-        : term.enrollmentOpen ? "Enrollment is open for this term." : "Enrollment is not open for this term.");
-    if (!enrollmentApplication || ["DRAFT", "REJECTED", "RETURNED_FOR_CORRECTION"].includes(enrollmentApplication.status)) {
-        enrollmentSubmit.disabled = !term?.enrollmentOpen;
-    }
-    setSubjectSelectionState();
-    return Boolean(term?.enrollmentOpen);
-};
-const setEnrollmentLocked = (locked) => {
-    selectedSubjectState.locked = locked;
-    selectAll("input, select, textarea", enrollmentForm).forEach((input) => {
-        input.disabled = locked || input.readOnly || input.dataset.enrollmentLocked === "true";
-    });
-    enrollmentSave.disabled = locked;
-    enrollmentSubmit.disabled = locked;
-    renderSubjectSelection();
-};
-
-// ── Document handling for enrollment form ──────────────────────────────
-let documentTypes = [];
-let studentDocuments = [];
-const documentsList = select("[data-documents-list]");
-const documentsHint = select("[data-documents-hint]");
-
-const fetchDocumentTypes = async () => {
-    try {
-        const data = await auth.getDocumentTypes();
-        documentTypes = data?.documentTypes || [];
-    } catch {
-        documentTypes = [];
-    }
-};
-
-const fetchStudentDocuments = async (admissionApplicationId) => {
-    if (!admissionApplicationId) {
-        studentDocuments = [];
-        return;
-    }
-    try {
-        const data = await auth.getStudentDocuments();
-        studentDocuments = data?.documents || [];
-    } catch {
-        studentDocuments = [];
-    }
-};
-
-const renderDocumentsList = () => {
-    if (!documentsList) return;
-    documentsList.replaceChildren();
-    if (!documentTypes.length) {
-        const empty = document.createElement("p");
-        empty.className = "dashboard-list__empty";
-        empty.textContent = "Loading required documents...";
-        documentsList.append(empty);
-        return;
-    }
-    const requiredTypes = documentTypes.filter((dt) => dt.required);
-    if (!requiredTypes.length) {
-        const empty = document.createElement("p");
-        empty.className = "dashboard-list__empty";
-        empty.textContent = "No required documents configured.";
-        documentsList.append(empty);
-        return;
-    }
-    requiredTypes.forEach((docType) => {
-        const existingDoc = studentDocuments.find((d) => d.documentTypeId === docType.id);
-        const item = document.createElement("article");
-        item.className = "document-item";
-        item.dataset.documentTypeId = docType.id;
-
-        const header = document.createElement("div");
-        header.className = "document-item__header";
-
-        const title = document.createElement("h4");
-        title.textContent = docType.name;
-
-        const requiredBadge = document.createElement("span");
-        requiredBadge.className = "status-pill status-required";
-        requiredBadge.textContent = "Required";
-
-        header.append(title, requiredBadge);
-
-        const detail = document.createElement("p");
-        detail.className = "document-item__detail";
-
-        const actions = document.createElement("div");
-        actions.className = "document-item__actions";
-
-        if (existingDoc) {
-            const status = existingDoc.status;
-            const statusMap = {
-                PENDING: "Pending",
-                SUBMITTED: "Uploaded",
-                VERIFIED: "Verified",
-                REJECTED: "Rejected",
-                RETURNED_FOR_CORRECTION: "Returned for correction"
-            };
-            detail.textContent = `${statusMap[status] || status} · ${existingDoc.originalFileName || "Document"} · ${formatDate(existingDoc.uploadedAt)}`;
-            detail.classList.add(`status-${String(status).toLowerCase()}`);
-
-            if (existingDoc.remarks) {
-                const remark = document.createElement("small");
-                remark.textContent = `Remark: ${existingDoc.remarks}`;
-                remark.style.display = "block";
-                remark.style.marginTop = "4px";
-                detail.append(remark);
-            }
-
-            if (existingDoc.filePath) {
-                const viewBtn = document.createElement("a");
-                viewBtn.className = "button button--quiet button--small";
-                viewBtn.href = `/api/v1/student/documents/${existingDoc.id}/view`;
-                viewBtn.target = "_blank";
-                viewBtn.rel = "noopener";
-                viewBtn.textContent = "View";
-                actions.append(viewBtn);
-            }
-
-            // Allow replacement if document was returned for correction or is still pending
-            if (["PENDING", "RETURNED_FOR_CORRECTION", "REJECTED"].includes(status)) {
-                const replaceInput = document.createElement("input");
-                replaceInput.type = "file";
-                replaceInput.accept = ".pdf,.jpg,.jpeg,.png";
-                replaceInput.className = "document-replace-input";
-                replaceInput.style.display = "none";
-                replaceInput.dataset.documentTypeId = docType.id;
-                replaceInput.dataset.documentId = existingDoc.id;
-                replaceInput.addEventListener("change", handleDocumentReplace);
-                actions.append(replaceInput);
-
-                const replaceBtn = document.createElement("button");
-                replaceBtn.type = "button";
-                replaceBtn.className = "button button--quiet button--small";
-                replaceBtn.textContent = "Replace";
-                replaceBtn.addEventListener("click", () => replaceInput.click());
-                actions.append(replaceBtn);
-            }
-        } else {
-            detail.textContent = "Not submitted";
-
-            const uploadInput = document.createElement("input");
-            uploadInput.type = "file";
-            uploadInput.accept = ".pdf,.jpg,.jpeg,.png";
-            uploadInput.className = "document-upload-input";
-            uploadInput.style.display = "none";
-            uploadInput.dataset.documentTypeId = docType.id;
-            uploadInput.addEventListener("change", handleDocumentUpload);
-            actions.append(uploadInput);
-
-            const uploadBtn = document.createElement("button");
-            uploadBtn.type = "button";
-            uploadBtn.className = "button button--primary button--small";
-            uploadBtn.textContent = "Upload";
-            uploadBtn.addEventListener("click", () => uploadInput.click());
-            actions.append(uploadBtn);
-        }
-
-        item.append(header, detail, actions);
-        documentsList.append(item);
-    });
-
-    // Show/hide hint based on completion
-    const allUploaded = requiredTypes.every((dt) => studentDocuments.some((d) => d.documentTypeId === dt.id));
-    if (documentsHint) documentsHint.hidden = allUploaded;
-};
-
-const handleDocumentUpload = async (event) => {
-    const input = event.target;
-    const file = input.files?.[0];
-    const documentTypeId = input.dataset.documentTypeId;
-    if (!file || !documentTypeId || !admissionApplication?.id) return;
-
-    const uploadBtn = input.nextElementSibling;
-    const originalText = uploadBtn?.textContent;
-    uploadBtn.disabled = true;
-    uploadBtn.textContent = "Uploading...";
-
-    try {
-        const result = await auth.uploadStudentDocument(documentTypeId, admissionApplication.id, file);
-        if (result?.document) {
-            await fetchStudentDocuments(admissionApplication.id);
-            renderDocumentsList();
-        }
-    } catch (error) {
-        if (handleExpiredSession(error)) return;
-        showError(enrollmentError, error.message || "Failed to upload document. Please try again.");
-    } finally {
-        uploadBtn.disabled = false;
-        uploadBtn.textContent = originalText;
-        input.value = "";
-    }
-};
-
-const handleDocumentReplace = async (event) => {
-    const input = event.target;
-    const file = input.files?.[0];
-    const documentTypeId = input.dataset.documentTypeId;
-    const documentId = input.dataset.documentId;
-    if (!file || !documentTypeId || !documentId || !admissionApplication?.id) return;
-
-    const replaceBtn = input.nextElementSibling;
-    const originalText = replaceBtn?.textContent;
-    replaceBtn.disabled = true;
-    replaceBtn.textContent = "Replacing...";
-
-    try {
-        // The upload endpoint replaces the existing document atomically by type.
-        const result = await auth.uploadStudentDocument(documentTypeId, admissionApplication.id, file);
-        if (result?.document) {
-            await fetchStudentDocuments(admissionApplication.id);
-            renderDocumentsList();
-        }
-    } catch (error) {
-        if (handleExpiredSession(error)) return;
-        showError(enrollmentError, error.message || "Failed to replace document. Please try again.");
-    } finally {
-        replaceBtn.disabled = false;
-        replaceBtn.textContent = originalText;
-        input.value = "";
-    }
-};
-
-const validateRequiredDocuments = () => {
-    const requiredTypes = documentTypes.filter((dt) => dt.required);
-    const missing = requiredTypes.filter((dt) => !studentDocuments.some((d) => d.documentTypeId === dt.id));
-    return missing.map((dt) => dt.name);
-};
-
-const loadEnrollmentApplication = async () => {
-    const [application, options, docTypes] = await Promise.all([
-        auth.getEnrollmentApplication(),
-        auth.getEnrollmentOptions(),
-        auth.getDocumentTypes()
-    ]);
-    enrollmentApplication = application.application;
-    admissionApplication = application.admission;
-    enrollmentOptions = options;
-    documentTypes = docTypes?.documentTypes || [];
-    populateEnrollmentOptions(options);
-    fillEnrollmentForm(enrollmentApplication, application.profile);
-    const locked = Boolean(enrollmentApplication && !["DRAFT", "REJECTED", "RETURNED_FOR_CORRECTION"].includes(enrollmentApplication.status));
-    setEnrollmentLocked(locked);
-    updateEnrollmentWindow();
-    setText("[data-enrollment-form-status]", enrollmentApplication?.status ? humanize(enrollmentApplication.status) : "Draft");
-    if (enrollmentApplication?.reviewRemarks) enrollmentStatus.textContent = `Returned for correction: ${enrollmentApplication.reviewRemarks}`;
-    await fetchStudentDocuments(admissionApplication?.id);
-    renderDocumentsList();
-};
-const openEnrollmentDialog = async () => {
-    if (!enrollmentDialog) return;
-    clearMessage(enrollmentError);
-    enrollmentStatus.textContent = "Loading enrollment application...";
-    try {
-        await loadEnrollmentApplication();
-        if (typeof enrollmentDialog.showModal === "function") enrollmentDialog.showModal();
-        else enrollmentDialog.setAttribute("open", "");
-        window.setTimeout(() => enrollmentInput("personal.fullName")?.focus(), 60);
-    } catch (error) {
-        if (handleExpiredSession(error)) return;
-        showError(enrollmentError, "The enrollment form could not be loaded. Try again.");
-        enrollmentStatus.textContent = "";
-    }
-};
-const closeEnrollmentDialog = () => {
-    if (!enrollmentDialog || enrollmentForm?.getAttribute("aria-busy") === "true") return;
-    if (typeof enrollmentDialog.close === "function" && enrollmentDialog.open) enrollmentDialog.close();
-    else enrollmentDialog.removeAttribute("open");
-    clearMessage(enrollmentError);
-    enrollmentStatus.textContent = "";
-};
-const saveEnrollment = async (submit) => {
-    clearMessage(enrollmentError);
-    const payload = {
-        programId: enrollmentInput("programId").value,
-        academicTermId: enrollmentInput("academicTermId").value,
-        yearLevel: enrollmentInput("yearLevel").value,
-        selectedSubjectIds: selectedSubjectState.items.map((item) => item.id || item.subjectId),
-        formData: enrollmentFormData()
+        window.setTimeout(() => select("#edit-institutional-email")?.focus(), 60);
     };
-    const required = [payload.programId, payload.academicTermId, payload.yearLevel];
-    if (required.some((value) => !value)) {
-        showError(enrollmentError, "Choose a program, academic term, and year level.");
-        return;
-    }
-    if (submit && !updateEnrollmentWindow()) {
-        showError(enrollmentError, "Enrollment is not open for the selected academic term.");
-        return;
-    }
-    if (submit) {
-        const missingDocs = validateRequiredDocuments();
-        if (missingDocs.length > 0) {
-            showError(enrollmentError, `Please complete all required documents before submitting your application. Missing: ${missingDocs.join(", ")}`);
-            if (documentsHint) documentsHint.hidden = false;
+
+    const closeProfileDialog = () => {
+        if (!profileDialog) return;
+        if (typeof profileDialog.close === "function" && profileDialog.open) profileDialog.close();
+        else profileDialog.removeAttribute("open");
+        profileForm?.reset();
+        clearMessage(profileError);
+        if (profileStatus) profileStatus.textContent = "";
+    };
+
+    select("[data-open-edit-profile]")?.addEventListener("click", openProfileDialog);
+    select("[data-close-profile-dialog]")?.addEventListener("click", closeProfileDialog);
+    profileDialog?.addEventListener("click", (event) => {
+        if (event.target === profileDialog) closeProfileDialog();
+    });
+
+    profileForm?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (profileForm.getAttribute("aria-busy") === "true") return;
+        clearMessage(profileError);
+        if (profileStatus) profileStatus.textContent = "";
+
+        const emailValue = profileForm.elements.institutionalEmail?.value?.trim() || "";
+        const dateOfBirthValue = profileForm.elements.dateOfBirth?.value || "";
+
+        setBusy(profileForm, true);
+        if (profileStatus) profileStatus.textContent = "Saving changes…";
+        try {
+            const payload = {};
+            if (emailValue) payload.institutionalEmail = emailValue;
+            if (dateOfBirthValue) payload.dateOfBirth = dateOfBirthValue;
+
+            const response = await auth.updateStudentProfile(payload);
+            const updatedProfile = response?.profile;
+
+            if (updatedProfile && state.studentDashboard?.student) {
+                state.studentDashboard.student = {
+                    ...state.studentDashboard.student,
+                    institutionalEmail: updatedProfile.institutionalEmail,
+                    dateOfBirth: updatedProfile.dateOfBirth,
+                    fullName: updatedProfile.fullName
+                };
+                setText("[data-student-email]", updatedProfile.institutionalEmail || "Not provided");
+            }
+
+            if (profileStatus) profileStatus.textContent = "Contact information updated.";
+            window.setTimeout(closeProfileDialog, 900);
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            if (error.status === 422) {
+                showError(profileError, error.message || "Review the information and try again.");
+            } else if (error.code === "NETWORK_ERROR") {
+                showError(profileError, error.message);
+            } else {
+                showError(profileError, "Could not save changes. Try again.");
+            }
+            if (profileStatus) profileStatus.textContent = "";
+        } finally {
+            setBusy(profileForm, false);
+        }
+    });
+
+    // ── Submit Student Request Dialog ─────────────────────────────────────
+    const requestDialog = select("[data-request-dialog]");
+    const requestForm = select("[data-request-form]");
+    const requestError = select("[data-request-error]");
+    const requestStatus = select("[data-request-status]");
+    const requestTypeSelect = select("[data-request-form] #request-type");
+    const requestTypeDesc = select("[data-request-type-desc]");
+    const estimatedFee = select("[data-estimated-fee]");
+    const serviceDays = select("[data-service-days]");
+    const purposeRemaining = select("[data-purpose-remaining]");
+    const purposeInput = select("#request-purpose");
+    let requestTypeCatalog = [];
+
+    const populateRequestTypes = async () => {
+        if (!requestTypeSelect) return;
+        try {
+            const data = await auth.getRequestTypes();
+            requestTypeCatalog = data?.requestTypes || [];
+            requestTypeSelect.replaceChildren();
+            const placeholder = document.createElement("option");
+            placeholder.value = "";
+            placeholder.textContent = requestTypeCatalog.length ? "Select a request type…" : "No request types available";
+            requestTypeSelect.append(placeholder);
+            requestTypeCatalog.forEach((type) => {
+                const option = document.createElement("option");
+                option.value = type.code;
+                option.textContent = type.name;
+                option.dataset.desc = type.description || "";
+                option.dataset.fee = type.defaultFeeAmount || "0.00";
+                option.dataset.days = type.serviceDays || "–";
+                requestTypeSelect.append(option);
+            });
+        } catch {
+            // Silently handle — the form validation will block submission
+        }
+    };
+
+    const updateRequestTypeInfo = () => {
+        const selected = requestTypeSelect?.selectedOptions?.[0];
+        if (requestTypeDesc) requestTypeDesc.textContent = selected?.dataset.desc || "";
+        if (estimatedFee) estimatedFee.textContent = selected?.value
+            ? formatMoney(selected.dataset.fee || 0)
+            : "PHP 0.00";
+        if (serviceDays) serviceDays.textContent = selected?.value
+            ? `${selected.dataset.days} business day${Number(selected.dataset.days) === 1 ? "" : "s"}`
+            : "–";
+    };
+
+    requestTypeSelect?.addEventListener("change", updateRequestTypeInfo);
+    purposeInput?.addEventListener("input", () => {
+        const remaining = 500 - (purposeInput.value?.length || 0);
+        if (purposeRemaining) purposeRemaining.textContent = String(Math.max(0, remaining));
+    });
+
+    const openRequestDialog = async () => {
+        if (!requestDialog) return;
+        requestForm?.reset();
+        clearMessage(requestError);
+        if (requestStatus) requestStatus.textContent = "";
+        updateRequestTypeInfo();
+        if (purposeRemaining) purposeRemaining.textContent = "500";
+        setBusy(requestForm, false);
+        if (requestTypeCatalog.length === 0) await populateRequestTypes();
+        if (typeof requestDialog.showModal === "function") {
+            if (!requestDialog.open) requestDialog.showModal();
+        } else {
+            requestDialog.setAttribute("open", "");
+        }
+        window.setTimeout(() => requestTypeSelect?.focus(), 60);
+    };
+
+    const closeRequestDialog = () => {
+        if (!requestDialog) return;
+        if (typeof requestDialog.close === "function" && requestDialog.open) requestDialog.close();
+        else requestDialog.removeAttribute("open");
+        requestForm?.reset();
+        clearMessage(requestError);
+        if (requestStatus) requestStatus.textContent = "";
+    };
+
+    select("[data-open-new-request]")?.addEventListener("click", openRequestDialog);
+    select("[data-close-request-dialog]")?.addEventListener("click", closeRequestDialog);
+    requestDialog?.addEventListener("click", (event) => {
+        if (event.target === requestDialog) closeRequestDialog();
+    });
+
+    requestForm?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (requestForm.getAttribute("aria-busy") === "true") return;
+        clearMessage(requestError);
+        if (requestStatus) requestStatus.textContent = "";
+
+        const requestCode = requestForm.elements.requestCode?.value?.trim() || "";
+        const copies = Number(requestForm.elements.copies?.value) || 1;
+        const purpose = requestForm.elements.purpose?.value?.trim() || "";
+
+        if (!requestCode) {
+            showError(requestError, "Select a request type before submitting.");
+            requestTypeSelect?.focus();
             return;
         }
-    }
-    setBusy(enrollmentForm, true);
-    enrollmentStatus.textContent = submit ? "Submitting enrollment application..." : "Saving draft...";
-    try {
-        const result = submit
-            ? await auth.submitEnrollmentApplication(payload)
-            : await auth.saveEnrollmentApplication(payload);
-        enrollmentApplication = result.application;
-        setText("[data-enrollment-form-status]", humanize(enrollmentApplication.status));
-        enrollmentStatus.textContent = submit
-            ? "Enrollment submitted for Program Head review. Your selected subjects are now read only."
-            : "Enrollment draft saved. You can continue later.";
-        if (submit) setEnrollmentLocked(true);
-    } catch (error) {
-        if (handleExpiredSession(error)) return;
-        showError(enrollmentError, error.message || "The enrollment application could not be saved.");
-        enrollmentStatus.textContent = "";
-    } finally {
-        // Always release busy state so dialog controls (including close) work after request completion.
-        setBusy(enrollmentForm, false);
-        const locked = Boolean(
-            enrollmentApplication
-            && !["DRAFT", "RETURNED_FOR_CORRECTION", "REJECTED"].includes(enrollmentApplication.status)
-        );
+
+        setBusy(requestForm, true);
+        if (requestStatus) requestStatus.textContent = "Submitting request…";
+        try {
+            const response = await auth.submitStudentRequest({ requestCode, copies, purpose });
+            const created = response?.request;
+
+            // Refresh the requests list on the dashboard
+            if (created) {
+                if (!state.studentDashboard) state.studentDashboard = {};
+                if (!Array.isArray(state.studentDashboard.requests)) state.studentDashboard.requests = [];
+                state.studentDashboard.requests.unshift(created);
+                const requestList = select("[data-request-list]");
+                if (requestList) {
+                    const item = dashboardListItem(
+                        created.requestType?.name || "Student request",
+                        `${created.requestNumber} · Just now`,
+                        humanize(created.status)
+                    );
+                    requestList.prepend(item);
+                    // Remove any "empty" placeholder
+                    select(".dashboard-list__empty", requestList)?.remove();
+                }
+                setText("[data-request-count]", plural(state.studentDashboard.requests.length, "request"));
+            }
+
+            if (requestStatus) requestStatus.textContent = `Request ${created?.requestNumber || ""} submitted successfully.`;
+            window.setTimeout(closeRequestDialog, 1200);
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            if (error.status === 422) {
+                showError(requestError, error.message || "Review your selection and try again.");
+            } else if (error.code === "NETWORK_ERROR") {
+                showError(requestError, error.message);
+            } else {
+                showError(requestError, "The request could not be submitted. Try again.");
+            }
+            if (requestStatus) requestStatus.textContent = "";
+        } finally {
+            setBusy(requestForm, false);
+        }
+    });
+
+    const enrollmentDialog = select("[data-enrollment-dialog]");
+    const enrollmentForm = select("[data-enrollment-form]");
+    const enrollmentError = select("[data-enrollment-error]");
+    const enrollmentStatus = select("[data-enrollment-status]");
+    const enrollmentSave = select("[data-save-enrollment]");
+    const enrollmentSubmit = select("[data-submit-enrollment]");
+    let enrollmentApplication = null;
+    let admissionApplication = null;
+    let enrollmentOptions = null;
+
+    const selectedSubjectState = {
+        items: [], locked: false
+    };
+
+    const selectedProgram = () => (enrollmentOptions?.programs || []).find((entry) => entry.id === enrollmentInput("programId")?.value) || null;
+    const selectedProgramLabel = () => selectedProgram()?.code ? `${selectedProgram().code} — ${selectedProgram().name}` : "Choose a program";
+    const selectedYearLevel = () => {
+        const raw = enrollmentInput("yearLevel")?.value;
+        const value = Number(raw);
+        return Number.isInteger(value) && value > 0 ? value : null;
+    };
+    const selectedAcademicTerm = () => {
+        const value = enrollmentInput("academicTermId")?.value;
+        return (enrollmentOptions?.terms || []).find((entry) => entry.id === value) || null;
+    };
+    const availableSubjectsForSelection = () => {
+        const programId = enrollmentInput("programId")?.value;
+        const yearLevel = selectedYearLevel();
+        const term = selectedAcademicTerm();
+        if (!programId || yearLevel == null || !term) return [];
+        return (enrollmentOptions?.curriculumSubjects || []).filter((item) => (
+            item.academicTermId === term.id
+            &&
+            item.programId === programId
+            && Number(item.yearLevel) === yearLevel
+            && Number(item.termNumber) === Number(term.termNumber)
+        )).sort((a, b) => (Number(a.sortOrder) || 0) - (Number(b.sortOrder) || 0) || String(a.subjectCode).localeCompare(String(b.subjectCode)));
+    };
+    const updateSubjectCartSummary = () => {
+        const selectedCount = selectedSubjectState.items.length;
+        const totalUnits = selectedSubjectState.items.reduce((sum, item) => sum + Number(item.creditUnits || 0), 0);
+        const count = select("[data-subject-count]");
+        const total = select("[data-subject-total]");
+        const program = select("[data-subject-program]");
+        const loadStatus = select("[data-subject-load-status]");
+        if (count) count.textContent = `${selectedCount} selected`;
+        if (total) total.textContent = `${totalUnits} unit${totalUnits === 1 ? "" : "s"}`;
+        if (program) program.textContent = selectedProgramLabel();
+        if (loadStatus) {
+            loadStatus.textContent = selectedSubjectState.locked ? "Submitted · read only" : selectedCount === 0 ? "Waiting for selection" : totalUnits > 29 ? "Over limit" : "Within limit";
+        }
+    };
+    const renderSubjectSelection = () => {
+        const catalogContainer = select("[data-subject-catalog]");
+        const cartContainer = select("[data-subject-cart]");
+        if (!catalogContainer || !cartContainer) return;
+        const catalog = availableSubjectsForSelection();
+        const selectedIds = new Set(selectedSubjectState.items.map((item) => item.id || item.subjectId));
+        catalogContainer.replaceChildren();
+        if (!enrollmentInput("programId")?.value || !selectedYearLevel() || !selectedAcademicTerm()) {
+            const empty = document.createElement("div");
+            empty.className = "subject-cart__empty";
+            empty.innerHTML = "<strong>Waiting for academic context</strong><small>Select a program, year level, and term to load the active curriculum subjects.</small>";
+            catalogContainer.append(empty);
+            cartContainer.replaceChildren();
+            updateSubjectCartSummary();
+            return;
+        }
+        if (!catalog.length) {
+            const empty = document.createElement("div");
+            empty.className = "subject-cart__empty";
+            empty.innerHTML = `<strong>No curriculum subjects available</strong><small>No active curriculum items match ${escapeHtml(selectedProgram()?.code || "this program")} for Year ${escapeHtml(selectedYearLevel())} in ${escapeHtml(selectedAcademicTerm()?.name || "this term")}.</small>`;
+            catalogContainer.append(empty);
+            cartContainer.replaceChildren();
+            updateSubjectCartSummary();
+            return;
+        }
+        catalog.forEach((item) => {
+            const card = document.createElement("article");
+            const selected = selectedIds.has(item.id || item.subjectId);
+            const requirements = item.requirements || item.prerequisites || [];
+            const blockedPrerequisites = requirements.filter((requirement) => requirement.type !== "COREQUISITE" && !requirement.eligible);
+            const pendingCorequisites = requirements.filter((requirement) => requirement.type === "COREQUISITE" && !requirement.eligible);
+            card.className = `subject-card${selected ? " is-selected" : ""}`;
+            const meta = document.createElement("div");
+            meta.className = "subject-card__meta";
+            meta.innerHTML = `<strong>${escapeHtml(item.subjectCode)} · ${escapeHtml(item.subjectTitle)}</strong><small>${Number(item.creditUnits || 0)} units · ${escapeHtml(item.type || "REQUIRED")} · ${escapeHtml(item.curriculumCode)}</small>`;
+            if (blockedPrerequisites.length) {
+                const prerequisiteMessage = document.createElement("small");
+                prerequisiteMessage.textContent = blockedPrerequisites.map((requirement) => `${requirement.requiredSubject.code}: ${humanize(requirement.state)}`).join(" · ");
+                prerequisiteMessage.className = "subject-card__warning";
+                meta.append(prerequisiteMessage);
+            }
+            if (pendingCorequisites.length) {
+                const corequisiteMessage = document.createElement("small");
+                corequisiteMessage.textContent = pendingCorequisites.map((requirement) => `Corequisite: ${requirement.requiredSubject.code}`).join(" · ");
+                corequisiteMessage.className = "subject-card__warning";
+                meta.append(corequisiteMessage);
+            }
+            const details = document.createElement("div");
+            details.className = "subject-card__details";
+            const badge = document.createElement("span");
+            badge.className = "subject-card__pill";
+            badge.textContent = item.type || "REQUIRED";
+            details.append(badge);
+            meta.append(details);
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = `subject-card__button${selected ? " subject-card__button--selected" : ""}`;
+            button.dataset.subjectAction = selected ? "remove" : "add";
+            button.dataset.subjectId = item.id || item.subjectId;
+            button.disabled = selectedSubjectState.locked || Boolean(blockedPrerequisites.length && !selected);
+            button.hidden = selectedSubjectState.locked;
+            button.textContent = selected ? "Remove" : blockedPrerequisites.length ? "Prerequisite required" : "Add to cart";
+            card.append(meta, button);
+            catalogContainer.append(card);
+        });
+        const activeCartItems = selectedSubjectState.locked ? selectedSubjectState.items : selectedSubjectState.items.filter((item) => catalog.some((entry) => (entry.id || entry.subjectId) === (item.id || item.subjectId)));
+        selectedSubjectState.items = activeCartItems;
+        cartContainer.replaceChildren();
+        if (!activeCartItems.length) {
+            const empty = document.createElement("div");
+            empty.className = "subject-cart__empty";
+            empty.innerHTML = "<strong>No subjects selected</strong><small>Add subjects from the active curriculum to build your cart.</small>";
+            cartContainer.append(empty);
+        } else {
+            activeCartItems.forEach((item) => {
+                const row = document.createElement("article");
+                row.className = "subject-cart__item";
+                const details = document.createElement("div");
+                details.innerHTML = `<strong>${escapeHtml(item.subjectCode)} · ${escapeHtml(item.subjectTitle)}</strong><small>${Number(item.creditUnits || 0)} units · ${escapeHtml(item.type || "REQUIRED")}</small>`;
+                const tag = document.createElement("span");
+                tag.className = "subject-cart__tag";
+                tag.textContent = item.type || "REQUIRED";
+                const removeButton = document.createElement("button");
+                removeButton.type = "button";
+                removeButton.className = "subject-cart__remove";
+                removeButton.dataset.subjectAction = "remove";
+                removeButton.dataset.subjectId = item.id || item.subjectId;
+                removeButton.textContent = "Remove";
+                removeButton.disabled = selectedSubjectState.locked;
+                removeButton.hidden = selectedSubjectState.locked;
+                row.append(details, tag, removeButton);
+                cartContainer.append(row);
+            });
+        }
+        updateSubjectCartSummary();
+    };
+    const getPaymentStatusMessage = (transaction) => {
+        if (!transaction) return "Payment status unavailable.";
+
+        switch (String(transaction.status).toUpperCase()) {
+            case "VERIFIED":
+            case "PAID":
+                return "✓ Payment already completed. Proceeding to next step.";
+            case "PENDING":
+                return "Your payment is pending. Continue processing it now.";
+            case "PROCESSING":
+                return "Your payment is currently being processed. Please wait...";
+            case "FAILED":
+            case "EXPIRED":
+                return "Previous payment failed or expired. You can try again.";
+            case "CREATED":
+                return "Payment initiated. Continue processing your payment.";
+            default:
+                return `Payment status: ${transaction.status}. Please try again or contact support.`;
+        }
+    };
+
+    const handleSubjectSelectionToggle = (event) => {
+        const button = event.target.closest("[data-subject-action]");
+        if (!button || button.disabled || selectedSubjectState.locked || enrollmentForm?.getAttribute("aria-busy") === "true") return;
+        const catalog = availableSubjectsForSelection();
+        const subjectId = button.dataset.subjectId;
+        if (!subjectId) return;
+        const item = catalog.find((entry) => String(entry.id || entry.subjectId) === String(subjectId));
+        if (!item) return;
+        const current = selectedSubjectState.items.find((entry) => String(entry.id || entry.subjectId) === String(subjectId));
+        if (button.dataset.subjectAction === "add" && !current) {
+            selectedSubjectState.items.push({ ...item });
+        }
+        if (button.dataset.subjectAction === "remove" && current) {
+            selectedSubjectState.items = selectedSubjectState.items.filter((entry) => String(entry.id || entry.subjectId) !== String(subjectId));
+        }
+        renderSubjectSelection();
+    };
+    const setSubjectSelectionState = () => {
+        const catalog = availableSubjectsForSelection();
+        if (!selectedSubjectState.locked) selectedSubjectState.items = selectedSubjectState.items.filter((selected) => catalog.some((item) => String(item.id || item.subjectId) === String(selected.id || selected.subjectId)));
+        renderSubjectSelection();
+    };
+
+    const enrollmentInput = (name) => select(`[data-enrollment-form] [name="${name}"]`);
+    const setNestedValue = (target, path, value) => {
+        const parts = path.split(".");
+        let current = target;
+        parts.forEach((part, index) => {
+            if (index === parts.length - 1) current[part] = value;
+            else current = current[part] ||= {};
+        });
+    };
+    const enrollmentFormData = () => {
+        const data = {};
+        selectAll("[data-enrollment-form] [name]").forEach((input) => {
+            if (input.name === "studentNumber" || input.name === "schoolEmail" || input.name === "programId" || input.name === "academicTermId" || input.name === "yearLevel") return;
+            setNestedValue(data, input.name, input.value.trim());
+        });
+        return data;
+    };
+    const fillEnrollmentForm = (application, profile) => {
+        enrollmentInput("studentNumber").value = profile?.studentNumber || "";
+        enrollmentInput("schoolEmail").value = profile?.schoolEmail || "";
+        const data = application?.formData || {};
+        const fill = (object, prefix = "") => Object.entries(object || {}).forEach(([key, value]) => {
+            const path = prefix ? `${prefix}.${key}` : key;
+            if (value && typeof value === "object" && !Array.isArray(value)) fill(value, path);
+            else if (enrollmentInput(path)) enrollmentInput(path).value = value ?? "";
+        });
+        fill(data);
+        if (!data.personal?.fullName) enrollmentInput("personal.fullName").value = profile?.fullName || "";
+        if (!data.personal?.birthday) enrollmentInput("personal.birthday").value = profile?.birthday || "";
+        enrollmentInput("contact.personalEmail").value ||= profile?.personalEmail || "";
+        enrollmentInput("contact.mobileNumber").value ||= profile?.mobileNumber || "";
+        if (application) {
+            enrollmentInput("programId").value = application.programId || enrollmentOptions?.studentContext?.programId || "";
+            enrollmentInput("academicTermId").value = application.academicTermId || "";
+            enrollmentInput("yearLevel").value = application.yearLevel || profile?.currentYearLevel || "";
+            selectedSubjectState.items = (application.formData?.selection?.subjectIds || [])
+                .map((subjectId) => (enrollmentOptions?.curriculumSubjects || []).find((item) => item.academicTermId === application.academicTermId && (item.subjectId === subjectId || item.id === subjectId)))
+                .filter(Boolean);
+        } else {
+            if (enrollmentOptions?.studentContext?.programId) {
+                enrollmentInput("programId").value = enrollmentOptions.studentContext.programId;
+            }
+            if (profile?.currentYearLevel) {
+                enrollmentInput("yearLevel").value = String(profile.currentYearLevel);
+            }
+            const openTerm = (enrollmentOptions?.terms || []).find((item) => item.enrollmentOpen) || (enrollmentOptions?.terms || [])[0];
+            if (openTerm && !enrollmentInput("academicTermId").value) {
+                enrollmentInput("academicTermId").value = openTerm.id;
+            }
+        }
+        setSubjectSelectionState();
+    };
+    const populateEnrollmentOptions = (options) => {
+        const programSelect = enrollmentInput("programId");
+        const termSelect = enrollmentInput("academicTermId");
+        const yearSelect = enrollmentInput("yearLevel");
+        programSelect.replaceChildren(new Option("Choose a program", ""));
+        termSelect.replaceChildren(new Option("Choose an academic term", ""));
+        (options?.programs || []).forEach((item) => programSelect.append(new Option(`${item.code} — ${item.name}`, item.id)));
+        (options?.terms || []).forEach((item) => {
+            const label = item.enrollmentOpen ? `${item.name} (enrollment open)`
+                : item.periodStatus === "CLOSED" ? `${item.name} (enrollment closed)` : item.name;
+            termSelect.append(new Option(label, item.id));
+        });
+        const assignedProgram = (options?.programs || []).find((item) => item.id === options?.studentContext?.programId);
+        if (assignedProgram) {
+            programSelect.value = assignedProgram.id;
+        }
+        const openTerm = (options?.terms || []).find((item) => item.enrollmentOpen) || (options?.terms || [])[0];
+        if (openTerm && !termSelect.value) {
+            termSelect.value = openTerm.id;
+        }
+        const currentProgram = assignedProgram || (options?.programs || []).find((item) => item.id === programSelect.value) || options?.programs?.[0];
+        if (yearSelect && currentProgram) {
+            const currentYearVal = yearSelect.value;
+            yearSelect.replaceChildren(new Option("Select", ""));
+            for (let year = 1; year <= Number(currentProgram.durationYears || 0); year += 1) {
+                yearSelect.append(new Option(`Year ${year}`, String(year)));
+            }
+            yearSelect.value = currentYearVal || String(options?.studentContext?.currentYearLevel || "1");
+        }
+        programSelect.dataset.enrollmentLocked = assignedProgram ? "true" : "false";
+        yearSelect.dataset.enrollmentLocked = "false";
+        setSubjectSelectionState();
+    };
+    const selectedEnrollmentTerm = () => (enrollmentOptions?.terms || []).find(
+        (item) => item.id === enrollmentInput("academicTermId")?.value
+    );
+    const updateEnrollmentWindow = () => {
+        const term = selectedEnrollmentTerm();
+        setText("[data-enrollment-window]", !term ? ""
+            : term.enrollmentOpen ? "Enrollment is open for this term." : "Enrollment is not open for this term.");
+        if (!enrollmentApplication || ["DRAFT", "REJECTED", "RETURNED_FOR_CORRECTION"].includes(enrollmentApplication.status)) {
+            enrollmentSubmit.disabled = !term?.enrollmentOpen;
+        }
+        setSubjectSelectionState();
+        return Boolean(term?.enrollmentOpen);
+    };
+    const setEnrollmentLocked = (locked) => {
+        selectedSubjectState.locked = locked;
+        selectAll("input, select, textarea", enrollmentForm).forEach((input) => {
+            input.disabled = locked || input.readOnly || input.dataset.enrollmentLocked === "true";
+        });
+        enrollmentSave.disabled = locked;
+        enrollmentSubmit.disabled = locked;
+        renderSubjectSelection();
+    };
+
+    // ── Document handling for enrollment form ──────────────────────────────
+    let documentTypes = [];
+    let studentDocuments = [];
+    const documentsList = select("[data-documents-list]");
+    const documentsHint = select("[data-documents-hint]");
+
+    const fetchDocumentTypes = async () => {
+        try {
+            const data = await auth.getDocumentTypes();
+            documentTypes = data?.documentTypes || [];
+        } catch {
+            documentTypes = [];
+        }
+    };
+
+    const fetchStudentDocuments = async (admissionApplicationId) => {
+        if (!admissionApplicationId) {
+            studentDocuments = [];
+            return;
+        }
+        try {
+            const data = await auth.getStudentDocuments();
+            studentDocuments = data?.documents || [];
+        } catch {
+            studentDocuments = [];
+        }
+    };
+
+    const renderDocumentsList = () => {
+        if (!documentsList) return;
+        documentsList.replaceChildren();
+        if (!documentTypes.length) {
+            const empty = document.createElement("p");
+            empty.className = "dashboard-list__empty";
+            empty.textContent = "Loading required documents...";
+            documentsList.append(empty);
+            return;
+        }
+        const requiredTypes = documentTypes.filter((dt) => dt.required);
+        if (!requiredTypes.length) {
+            const empty = document.createElement("p");
+            empty.className = "dashboard-list__empty";
+            empty.textContent = "No required documents configured.";
+            documentsList.append(empty);
+            return;
+        }
+        const isLocked = Boolean(enrollmentApplication && !["DRAFT", "REJECTED", "RETURNED_FOR_CORRECTION"].includes(enrollmentApplication.status));
+        requiredTypes.forEach((docType) => {
+            const existingDoc = studentDocuments.find((d) => d.documentTypeId === docType.id);
+            const item = document.createElement("article");
+            item.className = "document-item";
+            item.dataset.documentTypeId = docType.id;
+
+            const header = document.createElement("div");
+            header.className = "document-item__header";
+
+            const title = document.createElement("h4");
+            title.textContent = docType.name;
+
+            const requiredBadge = document.createElement("span");
+            requiredBadge.className = "status-pill status-required";
+            requiredBadge.textContent = "Required";
+
+            header.append(title, requiredBadge);
+
+            const detail = document.createElement("p");
+            detail.className = "document-item__detail";
+
+            const actions = document.createElement("div");
+            actions.className = "document-item__actions";
+
+            if (existingDoc) {
+                const status = existingDoc.status;
+                const statusMap = {
+                    PENDING: "Pending",
+                    SUBMITTED: "Uploaded",
+                    VERIFIED: "Verified",
+                    REJECTED: "Rejected",
+                    RETURNED_FOR_CORRECTION: "Returned for correction"
+                };
+                detail.textContent = `${statusMap[status] || status} · ${existingDoc.originalFileName || "Document"} · ${formatDate(existingDoc.uploadedAt)}`;
+                detail.classList.add(`status-${String(status).toLowerCase()}`);
+
+                if (existingDoc.remarks) {
+                    const remark = document.createElement("small");
+                    remark.textContent = `Remark: ${existingDoc.remarks}`;
+                    remark.style.display = "block";
+                    remark.style.marginTop = "4px";
+                    detail.append(remark);
+                }
+
+                if (existingDoc.filePath) {
+                    const viewBtn = document.createElement("a");
+                    viewBtn.className = "button button--quiet button--small";
+                    viewBtn.href = `/api/v1/student/documents/${existingDoc.id}/view`;
+                    viewBtn.target = "_blank";
+                    viewBtn.rel = "noopener";
+                    viewBtn.textContent = "View";
+                    actions.append(viewBtn);
+                }
+
+                // Allow replacement ONLY if not locked, or if explicitly returned for correction
+                if (!isLocked || status === "RETURNED_FOR_CORRECTION") {
+                    if (["PENDING", "SUBMITTED", "RETURNED_FOR_CORRECTION", "REJECTED"].includes(status)) {
+                        const replaceInput = document.createElement("input");
+                        replaceInput.type = "file";
+                        replaceInput.accept = ".pdf,.jpg,.jpeg,.png";
+                        replaceInput.className = "document-replace-input";
+                        replaceInput.style.display = "none";
+                        replaceInput.dataset.documentTypeId = docType.id;
+                        replaceInput.dataset.documentId = existingDoc.id;
+                        replaceInput.addEventListener("change", handleDocumentReplace);
+                        actions.append(replaceInput);
+
+                        const replaceBtn = document.createElement("button");
+                        replaceBtn.type = "button";
+                        replaceBtn.className = "button button--quiet button--small";
+                        replaceBtn.textContent = "Replace";
+                        replaceBtn.addEventListener("click", () => replaceInput.click());
+                        actions.append(replaceBtn);
+                    }
+                }
+            } else {
+                detail.textContent = isLocked ? "Not submitted (Locked)" : "Not submitted";
+
+                if (!isLocked) {
+                    const uploadInput = document.createElement("input");
+                    uploadInput.type = "file";
+                    uploadInput.accept = ".pdf,.jpg,.jpeg,.png";
+                    uploadInput.className = "document-upload-input";
+                    uploadInput.style.display = "none";
+                    uploadInput.dataset.documentTypeId = docType.id;
+                    uploadInput.addEventListener("change", handleDocumentUpload);
+                    actions.append(uploadInput);
+
+                    const uploadBtn = document.createElement("button");
+                    uploadBtn.type = "button";
+                    uploadBtn.className = "button button--primary button--small";
+                    uploadBtn.textContent = "Upload";
+                    uploadBtn.addEventListener("click", () => uploadInput.click());
+                    actions.append(uploadBtn);
+                }
+            }
+
+            item.append(header, detail, actions);
+            documentsList.append(item);
+        });
+
+        // Show/hide hint based on completion
+        const allUploaded = requiredTypes.every((dt) => studentDocuments.some((d) => d.documentTypeId === dt.id));
+        if (documentsHint) documentsHint.hidden = isLocked || allUploaded;
+    };
+
+    const handleDocumentUpload = async (event) => {
+        const input = event.target;
+        const file = input.files?.[0];
+        const documentTypeId = input.dataset.documentTypeId;
+        if (!file || !documentTypeId) return;
+        if (!admissionApplication?.id) {
+            showError(enrollmentError, "Admission application record could not be loaded. Please refresh the page.");
+            return;
+        }
+
+        const uploadBtn = input.nextElementSibling;
+        const originalText = uploadBtn?.textContent;
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = "Uploading...";
+
+        try {
+            const result = await auth.uploadStudentDocument(documentTypeId, admissionApplication.id, file);
+            if (result?.document) {
+                await fetchStudentDocuments(admissionApplication.id);
+                renderDocumentsList();
+            }
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            showError(enrollmentError, error.message || "Failed to upload document. Please try again.");
+        } finally {
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = originalText;
+            input.value = "";
+        }
+    };
+
+    const handleDocumentReplace = async (event) => {
+        const input = event.target;
+        const file = input.files?.[0];
+        const documentTypeId = input.dataset.documentTypeId;
+        const documentId = input.dataset.documentId;
+        if (!file || !documentTypeId || !documentId) return;
+        if (!admissionApplication?.id) {
+            showError(enrollmentError, "Admission application record could not be loaded. Please refresh the page.");
+            return;
+        }
+
+        const replaceBtn = input.nextElementSibling;
+        const originalText = replaceBtn?.textContent;
+        replaceBtn.disabled = true;
+        replaceBtn.textContent = "Replacing...";
+
+        try {
+            // The upload endpoint replaces the existing document atomically by type.
+            const result = await auth.uploadStudentDocument(documentTypeId, admissionApplication.id, file);
+            if (result?.document) {
+                await fetchStudentDocuments(admissionApplication.id);
+                renderDocumentsList();
+            }
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            showError(enrollmentError, error.message || "Failed to replace document. Please try again.");
+        } finally {
+            replaceBtn.disabled = false;
+            replaceBtn.textContent = originalText;
+            input.value = "";
+        }
+    };
+
+    const validateRequiredDocuments = () => {
+        const requiredTypes = documentTypes.filter((dt) => dt.required);
+        const missing = requiredTypes.filter((dt) => !studentDocuments.some((d) => d.documentTypeId === dt.id));
+        return missing.map((dt) => dt.name);
+    };
+
+    const loadEnrollmentApplication = async () => {
+        const [application, options, docTypes] = await Promise.all([
+            auth.getEnrollmentApplication(),
+            auth.getEnrollmentOptions(),
+            auth.getDocumentTypes()
+        ]);
+        enrollmentApplication = application.application;
+        admissionApplication = application.admission;
+        enrollmentOptions = options;
+        documentTypes = docTypes?.documentTypes || [];
+        populateEnrollmentOptions(options);
+        fillEnrollmentForm(enrollmentApplication, application.profile);
+        const locked = Boolean(enrollmentApplication && !["DRAFT", "REJECTED", "RETURNED_FOR_CORRECTION"].includes(enrollmentApplication.status));
         setEnrollmentLocked(locked);
         updateEnrollmentWindow();
-    }
-};
-select("[data-open-enrollment-application]")?.addEventListener("click", openEnrollmentDialog);
-select("[data-close-enrollment]")?.addEventListener("click", closeEnrollmentDialog);
-enrollmentDialog?.addEventListener("click", (event) => { if (event.target === enrollmentDialog) closeEnrollmentDialog(); });
-enrollmentInput("academicTermId")?.addEventListener("change", updateEnrollmentWindow);
-enrollmentInput("programId")?.addEventListener("change", (event) => {
-    if (event.target.value) {
-        updateYearLevelOptionsForProgram(event.target.value);
-    }
-    setSubjectSelectionState();
-    updateEnrollmentWindow();
-});
-enrollmentInput("yearLevel")?.addEventListener("change", () => {
-    setSubjectSelectionState();
-    updateEnrollmentWindow();
-});
-document.addEventListener("click", handleSubjectSelectionToggle);
-enrollmentSave?.addEventListener("click", () => saveEnrollment(false));
-enrollmentSubmit?.addEventListener("click", () => saveEnrollment(true));
-
-// --- System Monitoring ---
-const escapeHtml = (unsafe) => (unsafe || "").toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-
-const systemLogsTable = select("[data-system-logs-table]");
-const systemLogsBody = select("[data-system-logs-body]");
-const systemLogsStatus = select("[data-system-logs-status]");
-const logSeverityFilter = select("[data-log-filter]");
-const refreshLogsBtn = select("[data-refresh-system-logs]");
-const monitoringHealthStatus = select("[data-monitoring-health-status]");
-
-const renderMonitoringHealth = (health) => {
-    state.monitoringHealth = health;
-    const performance = health?.performance || {};
-    const incidents = health?.incidents || {};
-    setText("[data-monitoring-database]", health?.database?.status === "available" ? "Available" : "Unavailable");
-    setText("[data-monitoring-database-latency]", health?.database?.latencyMs == null ? "Latency unavailable" : `${health.database.latencyMs} ms latency`);
-    setText("[data-monitoring-requests]", String(performance.requestsTotal || 0));
-    setText("[data-monitoring-average]", `${performance.averageDurationMs || 0} ms average`);
-    setText("[data-monitoring-errors]", String(performance.serverErrorsTotal || 0));
-    setText("[data-monitoring-slow]", `${performance.slowRequestsTotal || 0} slow requests`);
-    setText("[data-monitoring-incidents]", String(incidents.openHighPriority ?? 0));
-    setText("[data-monitoring-critical]", `${incidents.criticalLast24Hours ?? 0} critical in 24 hours`);
-    if (monitoringHealthStatus) {
-        monitoringHealthStatus.textContent = health?.status === "healthy" ? "Healthy" : "Degraded";
-        monitoringHealthStatus.className = `status-pill ${health?.status === "healthy" ? "status-pill--info" : "status-pill--critical"}`;
-    }
-    setText("[data-monitoring-health-updated]", health?.checkedAt ? `Last checked ${new Date(health.checkedAt).toLocaleString()}` : "");
-};
-
-const deleteUser = async (user, button) => {
-    if (!isAdministrator() || needsPasswordChange()) return;
-    const name = displayName(user);
-    if (!window.confirm(`Delete ${name}'s account? This permanently removes sign-in access and anonymizes the account while retaining required audit references. Disable it instead if you need to keep the account identifiable.`)) return;
-
-    button.disabled = true;
-    button.setAttribute("aria-busy", "true");
-    const priorLabel = button.textContent;
-    button.textContent = "Deleting…";
-    if (usersStatus) usersStatus.textContent = "Deleting account…";
-    try {
-        await auth.deleteUser(user.id);
-        state.users = state.users.filter((candidate) => String(candidate.id) !== String(user.id));
-        renderUsers();
-        if (usersStatus) usersStatus.textContent = `${name}'s account was deleted.`;
-    } catch (error) {
-        if (handleExpiredSession(error)) return;
-        button.disabled = false;
-        button.setAttribute("aria-busy", "false");
-        button.textContent = priorLabel;
-        if (usersStatus) {
-            usersStatus.textContent = error.code === "ACCOUNT_DELETE_BLOCKED"
-                ? "That account has protected records. Disable it instead of deleting it."
-                : error.message || "The account could not be deleted.";
+        setText("[data-enrollment-form-status]", enrollmentApplication?.status ? humanize(enrollmentApplication.status) : "Draft");
+        if (enrollmentApplication?.reviewRemarks) enrollmentStatus.textContent = `Returned for correction: ${enrollmentApplication.reviewRemarks}`;
+        await fetchStudentDocuments(admissionApplication?.id);
+        renderDocumentsList();
+    };
+    const openEnrollmentDialog = async () => {
+        if (!enrollmentDialog) return;
+        clearMessage(enrollmentError);
+        enrollmentStatus.textContent = "Loading enrollment application...";
+        try {
+            await loadEnrollmentApplication();
+            if (typeof enrollmentDialog.showModal === "function") {
+                if (!enrollmentDialog.open) enrollmentDialog.showModal();
+            } else {
+                enrollmentDialog.setAttribute("open", "");
+            }
+            window.setTimeout(() => enrollmentInput("personal.fullName")?.focus(), 60);
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            showError(enrollmentError, "The enrollment form could not be loaded. Try again.");
+            enrollmentStatus.textContent = "";
         }
-    }
-};
+    };
+    const closeEnrollmentDialog = () => {
+        if (!enrollmentDialog || enrollmentForm?.getAttribute("aria-busy") === "true") return;
+        if (typeof enrollmentDialog.close === "function" && enrollmentDialog.open) enrollmentDialog.close();
+        else enrollmentDialog.removeAttribute("open");
+        clearMessage(enrollmentError);
+        enrollmentStatus.textContent = "";
+    };
+    const saveEnrollment = async (submit) => {
+        clearMessage(enrollmentError);
+        const payload = {
+            programId: enrollmentInput("programId").value,
+            academicTermId: enrollmentInput("academicTermId").value,
+            yearLevel: enrollmentInput("yearLevel").value,
+            selectedSubjectIds: selectedSubjectState.items.map((item) => item.id || item.subjectId),
+            formData: enrollmentFormData()
+        };
+        const required = [payload.programId, payload.academicTermId, payload.yearLevel];
+        if (required.some((value) => !value)) {
+            showError(enrollmentError, "Choose a program, academic term, and year level.");
+            return;
+        }
+        if (submit && !updateEnrollmentWindow()) {
+            showError(enrollmentError, "Enrollment is not open for the selected academic term.");
+            return;
+        }
+        if (submit) {
+            const missingDocs = validateRequiredDocuments();
+            if (missingDocs.length > 0) {
+                showError(enrollmentError, `Please complete all required documents before submitting your application. Missing: ${missingDocs.join(", ")}`);
+                if (documentsHint) documentsHint.hidden = false;
+                return;
+            }
+        }
+        setBusy(enrollmentForm, true);
+        enrollmentStatus.textContent = submit ? "Submitting enrollment application..." : "Saving draft...";
+        try {
+            const result = submit
+                ? await auth.submitEnrollmentApplication(payload)
+                : await auth.saveEnrollmentApplication(payload);
+            enrollmentApplication = result.application;
+            setText("[data-enrollment-form-status]", humanize(enrollmentApplication.status));
+            enrollmentStatus.textContent = submit
+                ? "Enrollment submitted for Program Head review. Your selected subjects are now read only."
+                : "Enrollment draft saved. You can continue later.";
+            if (submit) setEnrollmentLocked(true);
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            showError(enrollmentError, error.message || "The enrollment application could not be saved.");
+            enrollmentStatus.textContent = "";
+        } finally {
+            // Always release busy state so dialog controls (including close) work after request completion.
+            setBusy(enrollmentForm, false);
+            const locked = Boolean(
+                enrollmentApplication
+                && !["DRAFT", "RETURNED_FOR_CORRECTION", "REJECTED"].includes(enrollmentApplication.status)
+            );
+            setEnrollmentLocked(locked);
+            updateEnrollmentWindow();
+        }
+    };
+    select("[data-open-enrollment-application]")?.addEventListener("click", openEnrollmentDialog);
+    select("[data-close-enrollment]")?.addEventListener("click", closeEnrollmentDialog);
+    enrollmentDialog?.addEventListener("click", (event) => { if (event.target === enrollmentDialog) closeEnrollmentDialog(); });
+    enrollmentInput("academicTermId")?.addEventListener("change", updateEnrollmentWindow);
+    enrollmentInput("programId")?.addEventListener("change", () => {
+        const prog = selectedProgram();
+        const yearSelect = enrollmentInput("yearLevel");
+        if (prog && yearSelect) {
+            const currentYear = yearSelect.value;
+            yearSelect.replaceChildren(new Option("Select", ""));
+            for (let year = 1; year <= Number(prog.durationYears || 0); year += 1) {
+                yearSelect.append(new Option(`Year ${year}`, String(year)));
+            }
+            if (currentYear && Number(currentYear) <= Number(prog.durationYears || 0)) {
+                yearSelect.value = currentYear;
+            }
+        }
+        setSubjectSelectionState();
+        updateEnrollmentWindow();
+    });
+    enrollmentInput("yearLevel")?.addEventListener("change", () => {
+        setSubjectSelectionState();
+        updateEnrollmentWindow();
+    });
+    document.addEventListener("click", handleSubjectSelectionToggle);
+    enrollmentSave?.addEventListener("click", () => saveEnrollment(false));
+    enrollmentSubmit?.addEventListener("click", () => saveEnrollment(true));
 
-const loadMonitoringHealth = async () => {
-    try {
-        renderMonitoringHealth(await auth.getMonitoringHealth());
-    } catch (error) {
-        if (handleExpiredSession(error)) return;
+    // --- System Monitoring ---
+    const systemLogsTable = select("[data-system-logs-table]");
+    const systemLogsBody = select("[data-system-logs-body]");
+    const systemLogsStatus = select("[data-system-logs-status]");
+    const logSeverityFilter = select("[data-log-filter]");
+    const refreshLogsBtn = select("[data-refresh-system-logs]");
+    const monitoringHealthStatus = select("[data-monitoring-health-status]");
+
+    const renderMonitoringHealth = (health) => {
+        state.monitoringHealth = health;
+        const performance = health?.performance || {};
+        const incidents = health?.incidents || {};
+        setText("[data-monitoring-database]", health?.database?.status === "available" ? "Available" : "Unavailable");
+        setText("[data-monitoring-database-latency]", health?.database?.latencyMs == null ? "Latency unavailable" : `${health.database.latencyMs} ms latency`);
+        setText("[data-monitoring-requests]", String(performance.requestsTotal || 0));
+        setText("[data-monitoring-average]", `${performance.averageDurationMs || 0} ms average`);
+        setText("[data-monitoring-errors]", String(performance.serverErrorsTotal || 0));
+        setText("[data-monitoring-slow]", `${performance.slowRequestsTotal || 0} slow requests`);
+        setText("[data-monitoring-incidents]", String(incidents.openHighPriority ?? 0));
+        setText("[data-monitoring-critical]", `${incidents.criticalLast24Hours ?? 0} critical in 24 hours`);
         if (monitoringHealthStatus) {
-            monitoringHealthStatus.textContent = "Unavailable";
-            monitoringHealthStatus.className = "status-pill status-pill--critical";
+            monitoringHealthStatus.textContent = health?.status === "healthy" ? "Healthy" : "Degraded";
+            monitoringHealthStatus.className = `status-pill ${health?.status === "healthy" ? "status-pill--info" : "status-pill--critical"}`;
         }
-        setText("[data-monitoring-health-updated]", "Health data could not be loaded.");
-    }
-};
+        setText("[data-monitoring-health-updated]", health?.checkedAt ? `Last checked ${new Date(health.checkedAt).toLocaleString()}` : "");
+    };
 
-const loadSystemLogs = async () => {
-    if (!systemLogsTable) return;
-    try {
-        systemLogsStatus.textContent = "Loading system logs...";
-        systemLogsStatus.hidden = false;
-        systemLogsTable.hidden = true;
-        
-        const options = {};
-        if (logSeverityFilter?.value) options.severity = logSeverityFilter.value;
+    const deleteUser = async (user, button) => {
+        if (!isAdministrator() || needsPasswordChange()) return;
+        const name = displayName(user);
+        if (!window.confirm(`Delete ${name}'s account? This permanently removes sign-in access and anonymizes the account while retaining required audit references. Disable it instead if you need to keep the account identifiable.`)) return;
 
-        const { data } = await auth.getSystemLogs(options);
-        state.systemLogs = data.entries || [];
-        renderSystemLogs();
-        systemLogsStatus.hidden = true;
-        systemLogsTable.hidden = false;
-    } catch (error) {
-        if (handleExpiredSession(error)) return;
-        systemLogsStatus.textContent = "Failed to load system logs.";
-    }
-};
+        button.disabled = true;
+        button.setAttribute("aria-busy", "true");
+        const priorLabel = button.textContent;
+        button.textContent = "Deleting…";
+        if (usersStatus) usersStatus.textContent = "Deleting account…";
+        try {
+            await auth.deleteUser(user.id);
+            state.users = state.users.filter((candidate) => String(candidate.id) !== String(user.id));
+            renderUsers();
+            if (usersStatus) usersStatus.textContent = `${name}'s account was deleted.`;
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            button.disabled = false;
+            button.setAttribute("aria-busy", "false");
+            button.textContent = priorLabel;
+            if (usersStatus) {
+                usersStatus.textContent = error.code === "ACCOUNT_DELETE_BLOCKED"
+                    ? "That account has protected records. Disable it instead of deleting it."
+                    : error.message || "The account could not be deleted.";
+            }
+        }
+    };
 
-const renderSystemLogs = () => {
-    if (!systemLogsBody) return;
-    systemLogsBody.innerHTML = "";
-    
-    if (!state.systemLogs || state.systemLogs.length === 0) {
-        systemLogsBody.insertAdjacentHTML("beforeend", `<tr><td colspan="6" class="empty-state">No system logs found.</td></tr>`);
-        return;
-    }
-    
-    for (const log of state.systemLogs) {
-        const tr = document.createElement("tr");
-        
-        const dateStr = new Date(log.createdAt).toLocaleString();
-        
-        const severityMap = { INFO: "status-pill--info", WARNING: "status-pill--warning", HIGH: "status-pill--high", CRITICAL: "status-pill--critical" };
-        const severityBadge = "status-pill " + (severityMap[log.severity] || "");
+    const loadMonitoringHealth = async () => {
+        try {
+            renderMonitoringHealth(await auth.getMonitoringHealth());
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            if (monitoringHealthStatus) {
+                monitoringHealthStatus.textContent = "Unavailable";
+                monitoringHealthStatus.className = "status-pill status-pill--critical";
+            }
+            setText("[data-monitoring-health-updated]", "Health data could not be loaded.");
+        }
+    };
 
-        tr.innerHTML = `
+    const loadSystemLogs = async () => {
+        if (!systemLogsTable) return;
+        try {
+            systemLogsStatus.textContent = "Loading system logs...";
+            systemLogsStatus.hidden = false;
+            systemLogsTable.hidden = true;
+
+            const options = {};
+            if (logSeverityFilter?.value) options.severity = logSeverityFilter.value;
+
+            const response = await auth.getSystemLogs(options);
+            state.systemLogs = response?.entries || response?.data?.entries || [];
+            renderSystemLogs();
+            systemLogsStatus.hidden = true;
+            systemLogsTable.hidden = false;
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            console.error("Failed to load system logs", error);
+            systemLogsStatus.textContent = "Failed to load system logs.";
+        }
+    };
+
+    const renderSystemLogs = () => {
+        if (!systemLogsBody) return;
+        systemLogsBody.innerHTML = "";
+
+        if (!state.systemLogs || state.systemLogs.length === 0) {
+            systemLogsBody.insertAdjacentHTML("beforeend", `<tr><td colspan="6" class="empty-state">No system logs found.</td></tr>`);
+            return;
+        }
+
+        for (const log of state.systemLogs) {
+            const tr = document.createElement("tr");
+
+            const dateStr = new Date(log.createdAt).toLocaleString();
+
+            const severityMap = { INFO: "status-pill--info", WARNING: "status-pill--warning", HIGH: "status-pill--high", CRITICAL: "status-pill--critical" };
+            const severityBadge = "status-pill " + (severityMap[log.severity] || "");
+
+            tr.innerHTML = `
             <td>
-                <small>${log.errorId || log.id}</small><br/>
-                <span class="muted">${dateStr}</span>
+                <small>${escapeHtml(log.errorId || log.id)}</small><br/>
+                <span class="muted">${escapeHtml(dateStr)}</span>
             </td>
-            <td><span class="${severityBadge}">${log.severity}</span></td>
+            <td><span class="${severityBadge}">${escapeHtml(log.severity)}</span></td>
             <td>${escapeHtml(log.category)}</td>
             <td>
                 <strong>${escapeHtml(log.message)}</strong>
@@ -3357,7 +4736,7 @@ const renderSystemLogs = () => {
             </td>
             <td><span class="status-pill">${escapeHtml(log.status)}</span></td>
             <td>
-                <select data-log-id="${log.id}" class="status-select">
+                <select data-log-id="${escapeHtml(log.id)}" class="status-select">
                     <option value="OPEN" ${log.status === "OPEN" ? "selected" : ""}>OPEN</option>
                     <option value="INVESTIGATING" ${log.status === "INVESTIGATING" ? "selected" : ""}>INVESTIGATING</option>
                     <option value="RESOLVED" ${log.status === "RESOLVED" ? "selected" : ""}>RESOLVED</option>
@@ -3365,41 +4744,3285 @@ const renderSystemLogs = () => {
                 </select>
             </td>
         `;
-        systemLogsBody.appendChild(tr);
-    }
-};
-
-systemLogsBody?.addEventListener("change", async (event) => {
-    if (event.target.classList.contains("status-select")) {
-        const select = event.target;
-        const logId = select.dataset.logId;
-        const newStatus = select.value;
-        select.disabled = true;
-        try {
-            await auth.updateSystemLogStatus(logId, newStatus);
-            const log = state.systemLogs.find(l => l.id === logId);
-            if (log) log.status = newStatus;
-            renderSystemLogs();
-        } catch (error) {
-            handleExpiredSession(error);
-            select.value = state.systemLogs.find(l => l.id === logId)?.status || "OPEN";
-            alert("Failed to update status.");
-        } finally {
-            select.disabled = false;
+            systemLogsBody.appendChild(tr);
         }
-    }
-});
+    };
 
-logSeverityFilter?.addEventListener("change", loadSystemLogs);
-refreshLogsBtn?.addEventListener("click", () => {
-    void Promise.allSettled([loadSystemLogs(), loadMonitoringHealth()]);
-});
+    systemLogsBody?.addEventListener("change", async (event) => {
+        if (event.target.classList.contains("status-select")) {
+            const select = event.target;
+            const logId = select.dataset.logId;
+            const newStatus = select.value;
+            select.disabled = true;
+            try {
+                await auth.updateSystemLogStatus(logId, newStatus);
+                const log = state.systemLogs.find(l => l.id === logId);
+                if (log) log.status = newStatus;
+                renderSystemLogs();
+            } catch (error) {
+                handleExpiredSession(error);
+                select.value = state.systemLogs.find(l => l.id === logId)?.status || "OPEN";
+                alert("Failed to update status.");
+            } finally {
+                select.disabled = false;
+            }
+        }
+    });
 
-// Hook into existing load routine
-const originalLoadUsers = loadUsers;
-loadUsers = async () => {
-    await Promise.allSettled([originalLoadUsers(), loadSystemLogs(), loadMonitoringHealth()]);
-};
+    logSeverityFilter?.addEventListener("change", loadSystemLogs);
+    refreshLogsBtn?.addEventListener("click", () => {
+        void Promise.allSettled([loadSystemLogs(), loadMonitoringHealth()]);
+    });
 
-void bootstrap();
+    // Hook into existing load routine
+    const originalLoadUsers = loadUsers;
+    loadUsers = async () => {
+        await Promise.allSettled([originalLoadUsers(), loadSystemLogs(), loadMonitoringHealth(), loadAdminFaculty()]);
+    };
+
+    // ── Admin Faculty Management ─────────────────────────────────────
+
+    const loadAdminFaculty = async () => {
+        if (!adminFacultyTbody) return;
+        try {
+            adminFacultyTbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:1rem;">Loading faculty...</td></tr>`;
+
+            const [facultyRes, collegesRes] = await Promise.all([
+                auth.getAdminFaculty(),
+                state.adminColleges.length === 0 ? auth.getAdminColleges() : Promise.resolve({ colleges: state.adminColleges })
+            ]);
+
+            state.adminFaculty = facultyRes?.faculty || facultyRes?.data?.faculty || [];
+            const colleges = collegesRes?.colleges || collegesRes?.data?.colleges;
+            if (colleges) {
+                state.adminColleges = colleges;
+                populateFacultyColleges();
+            }
+
+            renderAdminFaculty();
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            console.error("Failed to load faculty accounts:", error);
+            adminFacultyTbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:1rem; color:var(--color-error)">Failed to load faculty accounts.</td></tr>`;
+        }
+    };
+
+    const populateFacultyColleges = () => {
+        if (!facultyCollegeSelect) return;
+        const currentVal = facultyCollegeSelect.value;
+        facultyCollegeSelect.innerHTML = `<option value="">Select college...</option>`;
+        const colleges = Array.isArray(state.adminColleges) ? state.adminColleges : [];
+        for (const c of colleges) {
+            const opt = document.createElement("option");
+            opt.value = c.id;
+            opt.textContent = `${c.code} · ${c.name}`;
+            facultyCollegeSelect.appendChild(opt);
+        }
+        if (currentVal) facultyCollegeSelect.value = currentVal;
+    };
+
+    const renderAdminFaculty = () => {
+        if (!adminFacultyTbody) return;
+        adminFacultyTbody.innerHTML = "";
+
+        if (!state.adminFaculty || state.adminFaculty.length === 0) {
+            adminFacultyTbody.innerHTML = `<tr><td colspan="7" class="empty-state" style="text-align:center; padding:1.5rem;">No faculty accounts found.</td></tr>`;
+            return;
+        }
+
+        for (const f of state.adminFaculty) {
+            const tr = document.createElement("tr");
+            const isActive = f.status === "ACTIVE";
+            const statusBadge = isActive
+                ? `<span class="status-pill status-pill--info">Active</span>`
+                : `<span class="status-pill status-pill--critical">Inactive</span>`;
+
+            tr.innerHTML = `
+                <td><strong>${escapeHtml(f.employeeNumber)}</strong></td>
+                <td>${escapeHtml(f.fullName)}</td>
+                <td>${escapeHtml(f.institutionalEmail || "—")}</td>
+                <td>${escapeHtml(f.college?.code || "—")}</td>
+                <td>${f.assignedClassesCount}</td>
+                <td>${statusBadge}</td>
+                <td>
+                    <button class="button button--quiet button--small" type="button" data-toggle-faculty-status="${f.id}" data-current-status="${f.status}">
+                        ${isActive ? "Deactivate" : "Activate"}
+                    </button>
+                </td>
+            `;
+            adminFacultyTbody.appendChild(tr);
+        }
+    };
+
+    adminFacultyTbody?.addEventListener("click", async (e) => {
+        const toggleBtn = e.target.closest("[data-toggle-faculty-status]");
+        if (!toggleBtn) return;
+        const facultyId = toggleBtn.getAttribute("data-toggle-faculty-status");
+        const currentStatus = toggleBtn.getAttribute("data-current-status");
+        const newStatus = currentStatus === "ACTIVE" ? "DEACTIVATED" : "ACTIVE";
+
+        if (!confirm(`Are you sure you want to ${newStatus === "ACTIVE" ? "activate" : "deactivate"} this faculty account?`)) return;
+
+        toggleBtn.disabled = true;
+        try {
+            await auth.updateAdminFaculty(facultyId, { status: newStatus });
+            await loadAdminFaculty();
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            alert(error.message || "Failed to update faculty status.");
+            toggleBtn.disabled = false;
+        }
+    });
+
+    showFacultyFormBtn?.addEventListener("click", async () => {
+        if (facultyCreateForm) facultyCreateForm.reset();
+        if (facultyCreateError) {
+            facultyCreateError.textContent = "";
+            facultyCreateError.style.display = "none";
+        }
+        if (!state.adminColleges || state.adminColleges.length === 0) {
+            if (facultyCollegeSelect) {
+                facultyCollegeSelect.innerHTML = `<option value="">Loading colleges...</option>`;
+            }
+            try {
+                const collegesRes = await auth.getAdminColleges();
+                const colleges = collegesRes?.colleges || collegesRes?.data?.colleges || [];
+                state.adminColleges = colleges;
+            } catch (err) {
+                console.error("Failed to load colleges for faculty form:", err);
+            }
+        }
+        populateFacultyColleges();
+        if (typeof facultyCreateDialog?.showModal === "function") {
+            if (!facultyCreateDialog.open) facultyCreateDialog.showModal();
+        } else {
+            facultyCreateDialog?.setAttribute("open", "");
+        }
+    });
+
+    closeFacultyCreateDialogBtn?.addEventListener("click", () => {
+        facultyCreateDialog?.close();
+    });
+
+    facultyCreateForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const submitBtn = facultyCreateForm.querySelector("[type='submit']");
+        submitBtn.disabled = true;
+        if (facultyCreateError) {
+            facultyCreateError.textContent = "";
+            facultyCreateError.style.display = "none";
+        }
+
+        const formData = new FormData(facultyCreateForm);
+        const payload = {
+            firstName: formData.get("firstName"),
+            middleName: formData.get("middleName") || undefined,
+            lastName: formData.get("lastName"),
+            suffix: formData.get("suffix") || undefined,
+            employeeNumber: formData.get("employeeNumber"),
+            email: formData.get("email"),
+            collegeId: formData.get("collegeId"),
+            password: formData.get("password") || undefined
+        };
+
+        try {
+            const res = await auth.createAdminFaculty(payload);
+            facultyCreateDialog?.close();
+            await loadAdminFaculty();
+            const created = res?.data ?? res;
+            if (created?.tempPassword) {
+                alert(`Faculty account created successfully!\n\nUsername: ${created.username}\nTemporary Password: ${created.tempPassword}\n\nPlease share this temporary password securely with the faculty member.`);
+            }
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            if (facultyCreateError) {
+                facultyCreateError.textContent = error.message || "Failed to create faculty account.";
+                facultyCreateError.style.display = "block";
+            }
+        } finally {
+            submitBtn.disabled = false;
+        }
+    });
+
+    refreshAdminFacultyBtn?.addEventListener("click", () => {
+        void loadAdminFaculty();
+    });
+
+
+    // ── Teacher Workspace (Assigned Classes & Grade Encoding) ─────────
+
+    const loadFacultyClasses = async () => {
+        if (!facultyClassesGrid) return;
+        try {
+            facultyClassesGrid.innerHTML = `<p style="text-align:center; padding:2rem; color:var(--color-text-tertiary)">Loading assigned classes...</p>`;
+            const res = await auth.getFacultyClasses();
+            state.facultyClasses = res?.classes || res?.data?.classes || [];
+            renderFacultyClasses();
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            console.error("Failed to load faculty classes:", error);
+            facultyClassesGrid.innerHTML = `<p style="text-align:center; padding:2rem; color:var(--color-error)">Failed to load assigned classes.</p>`;
+        }
+    };
+
+    const renderFacultyClasses = () => {
+        if (!facultyClassesGrid) return;
+        facultyClassesGrid.innerHTML = "";
+
+        if (!state.facultyClasses || state.facultyClasses.length === 0) {
+            facultyClassesGrid.innerHTML = `<p style="text-align:center; padding:2rem; color:var(--color-text-tertiary)">No classes currently assigned to you for this term.</p>`;
+            return;
+        }
+
+        for (const c of state.facultyClasses) {
+            const card = document.createElement("div");
+            card.className = "faculty-class-card";
+
+            const schedulesStr = c.schedules?.length
+                ? c.schedules.map(s => `${s.weekday} ${s.startsAt ? s.startsAt.slice(11, 16) : ""} - ${s.endsAt ? s.endsAt.slice(11, 16) : ""} (${s.room?.code || "TBA"})`).join(", ")
+                : "No schedule set";
+
+            card.innerHTML = `
+                <div class="faculty-class-card__header">
+                    <div>
+                        <span class="eyebrow">${escapeHtml(c.offeringCode)}</span>
+                        <h3 class="faculty-class-card__title">${escapeHtml(c.subject.code)} · ${escapeHtml(c.subject.title)}</h3>
+                    </div>
+                    <span class="status-pill status-pill--info">${escapeHtml(c.status)}</span>
+                </div>
+                <div class="faculty-class-card__meta">
+                    <div><strong>Section:</strong> ${escapeHtml(c.section?.code || "—")}</div>
+                    <div><strong>Term:</strong> ${escapeHtml(c.academicTerm?.name || "—")} (${escapeHtml(c.academicTerm?.academicYear?.code || "")})</div>
+                    <div><strong>Schedule:</strong> ${escapeHtml(schedulesStr)}</div>
+                    <div><strong>Enrolled:</strong> ${c.enrolledCount} / ${c.capacity != null ? c.capacity : "∞"} students</div>
+                </div>
+                <div class="faculty-class-card__footer">
+                    <button class="button button--primary button--small" type="button" data-open-roster="${c.offeringId}">
+                        Open Class Roster &amp; Grades
+                    </button>
+                </div>
+            `;
+            facultyClassesGrid.appendChild(card);
+        }
+    };
+
+    refreshFacultyBtn?.addEventListener("click", () => {
+        void loadFacultyClasses();
+    });
+
+    facultyClassesGrid?.addEventListener("click", async (e) => {
+        const btn = e.target.closest("[data-open-roster]");
+        if (!btn) return;
+        const offeringId = btn.getAttribute("data-open-roster");
+        await openFacultyRoster(offeringId);
+    });
+
+    const openFacultyRoster = async (offeringId) => {
+        if (!facultyRosterDialog) return;
+        facultyRosterTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:1.5rem;">Loading class roster and grades...</td></tr>`;
+        if (typeof facultyRosterDialog?.showModal === "function") {
+            if (!facultyRosterDialog.open) facultyRosterDialog.showModal();
+        } else {
+            facultyRosterDialog?.setAttribute("open", "");
+        }
+
+        try {
+            const res = await auth.getFacultyClassRoster(offeringId);
+            const data = res?.offering ? res : (res?.data || {});
+            state.activeOfferingRoster = data;
+
+            if (facultyRosterTitle) {
+                facultyRosterTitle.textContent = `${data.offering.subjectCode} · ${data.offering.subjectTitle} (${data.offering.section || "No Section"})`;
+            }
+            if (facultyRosterInfo) {
+                facultyRosterInfo.innerHTML = `
+                    <span><strong>Offering Code:</strong> ${escapeHtml(data.offering.offeringCode)}</span> &bull; 
+                    <span><strong>Status:</strong> ${escapeHtml(data.offering.status)}</span> &bull; 
+                    <span><strong>Enrolled Students:</strong> ${data.students.length}</span>
+                `;
+            }
+
+            renderFacultyRosterStudents();
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            console.error("Failed to load roster:", error);
+            facultyRosterTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:1.5rem; color:var(--color-error)">Failed to load class roster.</td></tr>`;
+        }
+    };
+
+    const renderFacultyRosterStudents = () => {
+        if (!facultyRosterTbody || !state.activeOfferingRoster) return;
+        facultyRosterTbody.innerHTML = "";
+
+        const students = state.activeOfferingRoster.students || [];
+        if (students.length === 0) {
+            facultyRosterTbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="text-align:center; padding:1.5rem;">No students are officially enrolled in this class yet.</td></tr>`;
+            if (saveDraftGradesBtn) saveDraftGradesBtn.disabled = true;
+            if (submitGradesBtn) submitGradesBtn.disabled = true;
+            return;
+        }
+
+        let allPosted = true;
+        let anySubmitted = false;
+
+        students.forEach((s, idx) => {
+            const tr = document.createElement("tr");
+            const grade = s.grades?.[0];
+            const isPosted = grade?.status === "POSTED";
+            const isSubmitted = grade?.status === "SUBMITTED";
+
+            if (!isPosted) allPosted = false;
+            if (isSubmitted) anySubmitted = true;
+
+            let statusBadge = `<span class="status-pill">Not Graded</span>`;
+            if (grade?.status === "DRAFT") {
+                statusBadge = `<span class="status-pill status-draft">Draft</span>`;
+            } else if (grade?.status === "SUBMITTED") {
+                statusBadge = `<span class="status-pill status-submitted">Submitted</span>`;
+            } else if (grade?.status === "POSTED") {
+                statusBadge = `<span class="status-pill status-posted">Posted</span>`;
+            }
+            if (grade?.remarks && grade?.status === "DRAFT") {
+                statusBadge += `<small class="grade-return-remarks">Returned: ${escapeHtml(grade.remarks)}</small>`;
+            }
+
+            const isInputDisabled = isPosted || isSubmitted;
+
+            tr.innerHTML = `
+                <td>${idx + 1}</td>
+                <td><strong>${escapeHtml(s.studentNumber)}</strong></td>
+                <td>${escapeHtml(s.fullName)}</td>
+                <td>${escapeHtml(s.program?.code || "—")} · Year ${s.yearLevel || "—"}</td>
+                <td>
+                    <input type="number" step="0.25" min="0" max="100" class="grade-input"
+                        data-enrollment-item-id="${s.enrollmentItemId}"
+                        value="${grade?.numericGrade != null ? grade.numericGrade : ""}"
+                        ${isInputDisabled ? "disabled" : ""}
+                        placeholder="0-100">
+                </td>
+                <td>${statusBadge}</td>
+            `;
+            facultyRosterTbody.appendChild(tr);
+        });
+
+        if (saveDraftGradesBtn) saveDraftGradesBtn.disabled = allPosted || anySubmitted;
+        if (submitGradesBtn) submitGradesBtn.disabled = allPosted;
+    };
+
+    closeRosterDialogBtn?.addEventListener("click", () => {
+        facultyRosterDialog?.close();
+    });
+
+    const collectRosterGrades = () => {
+        if (!state.activeOfferingRoster) return [];
+        const gradingPeriodId = state.activeOfferingRoster.gradingPeriods?.[0]?.id || null;
+
+        const inputs = selectAll(".grade-input", facultyRosterTbody);
+        const grades = [];
+        for (const input of inputs) {
+            if (input.disabled) continue;
+            const val = input.value.trim();
+            if (val !== "") {
+                const numericGrade = Number(val);
+                if (!Number.isNaN(numericGrade)) {
+                    grades.push({
+                        enrollmentItemId: input.getAttribute("data-enrollment-item-id"),
+                        gradingPeriodId,
+                        numericGrade
+                    });
+                }
+            }
+        }
+        return grades;
+    };
+
+    saveDraftGradesBtn?.addEventListener("click", async () => {
+        if (!state.activeOfferingRoster) return;
+        const grades = collectRosterGrades();
+        if (grades.length === 0) {
+            alert("Please enter at least one grade before saving.");
+            return;
+        }
+
+        saveDraftGradesBtn.disabled = true;
+        try {
+            await auth.saveFacultyGrades(state.activeOfferingRoster.offering.id, grades);
+            await openFacultyRoster(state.activeOfferingRoster.offering.id);
+            alert("Draft grades saved successfully.");
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            alert(error.message || "Failed to save draft grades.");
+        } finally {
+            saveDraftGradesBtn.disabled = false;
+        }
+    });
+
+    submitGradesBtn?.addEventListener("click", async () => {
+        if (!state.activeOfferingRoster) return;
+        const grades = collectRosterGrades();
+        if (grades.length === 0) {
+            alert("Please enter at least one grade before submitting.");
+            return;
+        }
+
+        if (!confirm("Are you sure you want to submit these grades to the Registrar? Once submitted, you cannot edit them without Registrar approval.")) return;
+
+        submitGradesBtn.disabled = true;
+        try {
+            await auth.submitFacultyGrades(state.activeOfferingRoster.offering.id, grades);
+            await openFacultyRoster(state.activeOfferingRoster.offering.id);
+            alert("Grades submitted to the Dean for review successfully.");
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            alert(error.message || "Failed to submit grades.");
+        } finally {
+            submitGradesBtn.disabled = false;
+        }
+    });
+
+
+    // ── Registrar Grade Approvals ─────────────────────────────────────
+
+    const loadRegistrarGradeSubmissions = async () => {
+        if (!gradeSubmissionsTbody) return;
+        try {
+            gradeSubmissionsTbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:1rem;">Loading submissions...</td></tr>`;
+            const res = await auth.getRegistrarGradeSubmissions();
+            state.gradeSubmissions = res?.submissions || res?.data?.submissions || [];
+            renderRegistrarGradeSubmissions();
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            console.error("Failed to load grade submissions:", error);
+            gradeSubmissionsTbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:1rem; color:var(--color-error)">Failed to load grade submissions.</td></tr>`;
+        }
+    };
+
+    const renderRegistrarGradeSubmissions = () => {
+        const badge = select("[data-registrar-grades-badge]");
+        if (badge) {
+            const count = state.gradeSubmissions ? state.gradeSubmissions.length : 0;
+            badge.textContent = count;
+            badge.hidden = count === 0;
+        }
+
+        if (!gradeSubmissionsTbody) return;
+        gradeSubmissionsTbody.innerHTML = "";
+
+        if (!state.gradeSubmissions || state.gradeSubmissions.length === 0) {
+            gradeSubmissionsTbody.innerHTML = `<tr><td colspan="8" class="empty-state" style="text-align:center; padding:1.5rem;">No pending grade submissions awaiting review.</td></tr>`;
+            return;
+        }
+
+        for (const s of state.gradeSubmissions) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><strong>${escapeHtml(s.offeringCode)}</strong></td>
+                <td>${escapeHtml(s.subjectCode)} · ${escapeHtml(s.subjectTitle)}</td>
+                <td>${escapeHtml(s.section || "—")}</td>
+                <td>${escapeHtml(s.academicTerm)}</td>
+                <td>${escapeHtml(s.instructor)}</td>
+                <td>${s.enrolledCount}</td>
+                <td><span class="status-pill status-submitted">${s.submittedGradeCount} / ${s.totalGradeCount}</span></td>
+                <td>
+                    <button class="button button--primary button--small" type="button" data-review-grades="${s.offeringId}">
+                        Review &amp; Approve
+                    </button>
+                </td>
+            `;
+            gradeSubmissionsTbody.appendChild(tr);
+        }
+    };
+
+    refreshGradeSubmissionsBtn?.addEventListener("click", () => {
+        void loadRegistrarGradeSubmissions();
+    });
+
+    gradeSubmissionsTbody?.addEventListener("click", async (e) => {
+        const btn = e.target.closest("[data-review-grades]");
+        if (!btn) return;
+        const offeringId = btn.getAttribute("data-review-grades");
+        await openRegistrarGradeSheet(offeringId);
+    });
+
+    const openRegistrarGradeSheet = async (offeringId) => {
+        if (!gradeSheetDialog) return;
+        gradeSheetTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:1rem;">Loading grade sheet...</td></tr>`;
+        if (typeof gradeSheetDialog?.showModal === "function") {
+            if (!gradeSheetDialog.open) gradeSheetDialog.showModal();
+        } else {
+            gradeSheetDialog?.setAttribute("open", "");
+        }
+
+        if (approveGradesBtn) approveGradesBtn.disabled = true;
+        if (returnGradesBtn) returnGradesBtn.disabled = true;
+
+        try {
+            const res = await auth.getRegistrarGradeSheet(offeringId);
+            const data = res?.offering ? res : (res?.data || {});
+            state.activeRegistrarGradeSheet = data;
+
+            if (gradeSheetTitle && data.offering) {
+                gradeSheetTitle.textContent = `Grade Sheet · ${data.offering.subjectCode} · ${data.offering.subjectTitle} (${data.instructor || "Unassigned"})`;
+            }
+
+            renderRegistrarGradeSheetStudents();
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            console.error("Failed to load grade sheet:", error);
+            gradeSheetTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:1rem; color:var(--color-error)">Failed to load grade sheet.</td></tr>`;
+            if (approveGradesBtn) approveGradesBtn.disabled = true;
+            if (returnGradesBtn) returnGradesBtn.disabled = true;
+        }
+    };
+
+    const renderRegistrarGradeSheetStudents = () => {
+        if (!gradeSheetTbody || !state.activeRegistrarGradeSheet) return;
+        gradeSheetTbody.innerHTML = "";
+
+        const students = state.activeRegistrarGradeSheet.students || [];
+        if (students.length === 0) {
+            gradeSheetTbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="text-align:center; padding:1rem;">No student grades found for this offering.</td></tr>`;
+            if (approveGradesBtn) approveGradesBtn.disabled = true;
+            return;
+        }
+
+        const hasApproved = students.some(s => s.grades?.some(g => g.status === "APPROVED"));
+        if (approveGradesBtn) {
+            approveGradesBtn.disabled = !hasApproved;
+            approveGradesBtn.textContent = hasApproved ? "Verify & Post Grades" : "Awaiting Dean Approval";
+        }
+        if (returnGradesBtn) returnGradesBtn.disabled = !hasApproved;
+
+        students.forEach((s, idx) => {
+            const tr = document.createElement("tr");
+            const grade = s.grades?.[0];
+
+            let statusBadge = `<span class="status-pill">Not Graded</span>`;
+            if (grade?.status === "DRAFT") {
+                statusBadge = `<span class="status-pill status-draft">Draft</span>`;
+            } else if (grade?.status === "APPROVED") {
+                statusBadge = `<span class="status-pill status-submitted">Dean Approved</span>`;
+            } else if (grade?.status === "POSTED") {
+                statusBadge = `<span class="status-pill status-posted">Posted</span>`;
+            }
+
+            const programText = typeof s.program === "object" ? s.program?.code : s.program;
+
+            tr.innerHTML = `
+                <td>${idx + 1}</td>
+                <td><strong>${escapeHtml(s.studentNumber)}</strong></td>
+                <td>${escapeHtml(s.fullName)}</td>
+                <td>${escapeHtml(programText || "—")} · Year ${s.yearLevel || "—"}</td>
+                <td><strong>${grade?.numericGrade != null ? grade.numericGrade : "—"}</strong></td>
+                <td>${statusBadge}</td>
+            `;
+            gradeSheetTbody.appendChild(tr);
+        });
+    };
+
+    closeGradeSheetDialogBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+            gradeSheetDialog?.close();
+        });
+    });
+
+    approveGradesBtn?.addEventListener("click", async () => {
+        if (!state.activeRegistrarGradeSheet) return;
+        if (!confirm("Are you sure you want to approve and post these grades? This action will permanently lock the grades and publish them to student records.")) return;
+
+        approveGradesBtn.disabled = true;
+        try {
+            await auth.approveRegistrarGrades(state.activeRegistrarGradeSheet.offering.id);
+            gradeSheetDialog?.close();
+            await loadRegistrarGradeSubmissions();
+            alert("Grades approved and posted successfully.");
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            alert(error.message || "Failed to approve grades.");
+        } finally {
+            approveGradesBtn.disabled = false;
+        }
+    });
+
+    returnGradesBtn?.addEventListener("click", async () => {
+        if (!state.activeRegistrarGradeSheet) return;
+        const remarks = window.prompt("Explain why these grades are being returned for correction:");
+        if (!remarks || !remarks.trim()) return;
+
+        returnGradesBtn.disabled = true;
+        try {
+            await auth.returnRegistrarGrades(state.activeRegistrarGradeSheet.offering.id, remarks.trim());
+            gradeSheetDialog?.close();
+            await loadRegistrarGradeSubmissions();
+            alert("Grades returned to the faculty with remarks.");
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            alert(error.message || "Failed to return grades.");
+        } finally {
+            returnGradesBtn.disabled = false;
+        }
+    });
+
+    // ── Student Assistant Workspace ─────────────────────────────────
+    const loadStudentAssistantData = async () => {
+        if (!isStudentAssistant() || needsPasswordChange()) return;
+        clearMessage(saEncodeError);
+        if (saStatus) saStatus.textContent = "Loading Student Assistant workspace…";
+        try {
+            const [dashboard, applicationsData] = await Promise.all([
+                auth.getStudentAssistantDashboard(),
+                auth.getStudentAssistantApplications(state.studentAssistantFilter || "PENDING"),
+            ]);
+            state.studentAssistantDashboard = dashboard;
+            const applications = applicationsData?.applications || [];
+            state.studentAssistantApplications = applications;
+
+            // Render header and metrics
+            if (saDepartmentContext) {
+                const dept = dashboard.department;
+                const programsStr = (dashboard.programs || []).map((p) => p.code).join(", ");
+                saDepartmentContext.textContent = `Assigned Department: ${dept.code} · ${dept.name} (${dept.college?.name || "College"}) [Programs: ${programsStr || "None"}]`;
+            }
+            if (saPendingCount) saPendingCount.textContent = dashboard.metrics.pendingEncoding;
+            if (saEncodedCount) saEncodedCount.textContent = dashboard.metrics.encoded;
+            if (saProgramsCount) saProgramsCount.textContent = (dashboard.programs || []).length;
+            if (saFilterPendingCount) saFilterPendingCount.textContent = dashboard.metrics.pendingEncoding;
+            if (saFilterEncodedCount) saFilterEncodedCount.textContent = dashboard.metrics.encoded;
+
+            renderStudentAssistantApplications(applications);
+
+            if (state.selectedSaApplicationId) {
+                await loadStudentAssistantApplicationDetail(state.selectedSaApplicationId);
+            }
+            if (saStatus) saStatus.textContent = "";
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            if (saStatus) saStatus.textContent = error.message || "Failed to load Student Assistant workspace.";
+        }
+    };
+
+    const renderStudentAssistantApplications = (applications = []) => {
+        if (!saApplicationsList) return;
+        saApplicationsList.replaceChildren();
+
+        if (!applications.length) {
+            const empty = document.createElement("p");
+            empty.className = "empty-state";
+            empty.style.padding = "2rem 1rem";
+            empty.style.textAlign = "center";
+            empty.textContent = state.studentAssistantFilter === "ENCODED"
+                ? "No completed encoded applications found in your department."
+                : "No applications pending encoding in your assigned department.";
+            saApplicationsList.append(empty);
+            return;
+        }
+
+        applications.forEach((app) => {
+            const card = document.createElement("article");
+            card.className = "dashboard-item";
+            if (state.selectedSaApplicationId === app.id) {
+                card.classList.add("is-selected");
+            }
+            card.style.cursor = "pointer";
+
+            const isEncoded = app.encodingStatus === "COMPLETED";
+            const badgeClass = isEncoded ? "badge--success" : "badge--warning";
+            const badgeText = isEncoded ? "Encoded" : "Needs Encoding";
+
+            card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                    <div>
+                        <strong style="display: block; font-size: 0.95rem; color: var(--ink);">${escapeHtml(app.studentName)}</strong>
+                        <span style="font-size: 0.8rem; color: var(--muted);">${escapeHtml(app.studentNumber || app.applicationNumber)} · ${escapeHtml(app.program?.code || "—")} · Year ${app.yearLevel || 1}</span>
+                    </div>
+                    <span class="badge ${badgeClass}">${badgeText}</span>
+                </div>
+                <div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--muted); display: flex; justify-content: space-between;">
+                    <span>${app.subjectCount} subjects approved</span>
+                    <span>${formatDate(app.submittedAt)}</span>
+                </div>
+            `;
+
+            card.addEventListener("click", () => {
+                selectAll(".dashboard-item", saApplicationsList).forEach((el) => el.classList.remove("is-selected"));
+                card.classList.add("is-selected");
+                void loadStudentAssistantApplicationDetail(app.id);
+            });
+
+            saApplicationsList.append(card);
+        });
+    };
+
+    const loadStudentAssistantApplicationDetail = async (applicationId) => {
+        if (!applicationId) return;
+        state.selectedSaApplicationId = applicationId;
+        clearMessage(saEncodeError);
+
+        if (saEmptyState) saEmptyState.hidden = true;
+        if (saDetailContainer) saDetailContainer.hidden = false;
+        if (saSubjectsBody) {
+            saSubjectsBody.innerHTML = `<tr><td colspan="3" style="text-align: center; padding: 1.5rem;">Loading application subjects and sections…</td></tr>`;
+        }
+
+        try {
+            const detail = await auth.getStudentAssistantApplicationDetail(applicationId);
+            state.currentSaDetail = detail;
+
+            if (saStudentName) saStudentName.textContent = detail.studentName;
+            if (saStudentDetails) {
+                saStudentDetails.textContent = `${detail.studentNumber || detail.applicationNumber} · ${detail.program?.name || detail.program?.code} · Year ${detail.yearLevel} · ${detail.academicTerm?.name || "Term"}`;
+            }
+            if (saStudentStatus) {
+                const isEncoded = detail.encodingStatus === "COMPLETED";
+                saStudentStatus.textContent = isEncoded ? "Encoded by SA" : "Pending SA Encoding";
+                saStudentStatus.className = `badge ${isEncoded ? "badge--success" : "badge--warning"}`;
+            }
+
+            // Render Footprint Banner if already encoded
+            if (saFootprintBanner) {
+                if (detail.encoding?.encodedByDisplayName) {
+                    saFootprintBanner.hidden = false;
+                    if (saEncodedByText) {
+                        saEncodedByText.textContent = `${detail.encoding.encodedByDisplayName} (@${detail.encoding.encodedByUsername || "sa"})`;
+                    }
+                    if (saEncodedAtText) {
+                        saEncodedAtText.textContent = `on ${formatDate(detail.encoding.encodedAt)}`;
+                    }
+                } else {
+                    saFootprintBanner.hidden = true;
+                }
+            }
+
+            // Render subjects and offering dropdowns
+            renderStudentAssistantSubjects(detail);
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            if (saSubjectsBody) {
+                saSubjectsBody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--color-error, #dc2626); padding: 1.5rem;">${escapeHtml(error.message || "Failed to load application details.")}</td></tr>`;
+            }
+        }
+    };
+
+    const renderStudentAssistantSubjects = (detail) => {
+        if (!saSubjectsBody) return;
+        saSubjectsBody.replaceChildren();
+
+        const items = detail.items || [];
+        const choices = detail.offeringChoices || [];
+        const existingAssignments = detail.encoding?.assignments || [];
+
+        if (!items.length) {
+            saSubjectsBody.innerHTML = `<tr><td colspan="3" class="empty-state" style="text-align:center; padding: 1.5rem;">No evaluated subjects found for this application.</td></tr>`;
+            return;
+        }
+
+        items.forEach((item) => {
+            const tr = document.createElement("tr");
+
+            const subjChoices = choices.filter((c) => c.subjectId === item.subjectId);
+            const preSelected = existingAssignments.find((a) => a.curriculumSubjectId === item.id);
+
+            let optionsHtml = `<option value="">Choose section, instructor &amp; schedule</option>`;
+            subjChoices.forEach((choice) => {
+                const isSelected = preSelected && preSelected.courseOfferingId === choice.id;
+                const teacher = choice.instructor?.name ? choice.instructor.name : "TBA";
+                const schedule = choice.schedule?.summary ? choice.schedule.summary : "Schedule TBA";
+                const seats = choice.availableSeats != null ? ` · ${choice.availableSeats} seats available` : "";
+                const disabled = !choice.available && !isSelected ? "disabled" : "";
+                optionsHtml += `<option value="${escapeHtml(choice.id)}" ${isSelected ? "selected" : ""} ${disabled}>
+                    ${escapeHtml(choice.sectionCode)} · ${escapeHtml(teacher)} · ${escapeHtml(schedule)}${seats}
+                </option>`;
+            });
+
+            tr.innerHTML = `
+                <td>
+                    <div class="sa-subject-code">${escapeHtml(item.subject?.code || "SUBJ")}</div>
+                    <div class="sa-subject-title">${escapeHtml(item.subject?.title || "")}</div>
+                </td>
+                <td style="white-space: nowrap; font-weight: 600;">
+                    ${item.creditUnits || 3} units
+                </td>
+                <td>
+                    <select class="sa-offering-select" data-sa-curriculum-subject-id="${escapeHtml(item.id)}" required>
+                        ${optionsHtml}
+                    </select>
+                    ${subjChoices.length === 0 ? `<div style="font-size: 0.78rem; color: #dc2626; margin-top: 0.25rem;">No active section offerings created for this subject.</div>` : ""}
+                </td>
+            `;
+
+            saSubjectsBody.append(tr);
+        });
+    };
+
+    const submitStudentAssistantEncoding = async (event) => {
+        event.preventDefault();
+        clearMessage(saEncodeError);
+        const applicationId = state.selectedSaApplicationId;
+        if (!applicationId || !state.currentSaDetail) return;
+
+        const selectElements = selectAll("[data-sa-curriculum-subject-id]", saSubjectsBody);
+        const missing = selectElements.filter((sel) => !sel.value);
+        if (missing.length > 0) {
+            showError(saEncodeError, "Every approved subject must have an assigned section and schedule before saving. If any section is missed or omitted, it will NOT proceed to the Registrar.");
+            missing[0]?.focus();
+            return;
+        }
+
+        const assignments = selectElements.map((sel) => ({
+            curriculumSubjectId: sel.dataset.saCurriculumSubjectId,
+            courseOfferingId: sel.value,
+        }));
+
+        setBusy(saEncodeForm, true);
+        if (saSubmitEncode) {
+            saSubmitEncode.disabled = true;
+            saSubmitEncode.textContent = "Saving subject encoding…";
+        }
+
+        try {
+            await auth.encodeStudentAssistantSubjects(applicationId, assignments);
+            await loadStudentAssistantData();
+            await loadStudentAssistantApplicationDetail(applicationId);
+            if (saStatus) {
+                saStatus.textContent = "Encoding completed successfully. The application is now ready for Registrar verification.";
+                saStatus.classList.add("form-status--success");
+            }
+            saFootprintBanner?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            showError(saEncodeError, error.message || "Failed to save subject encoding.");
+        } finally {
+            setBusy(saEncodeForm, false);
+            if (saSubmitEncode) {
+                saSubmitEncode.disabled = false;
+                saSubmitEncode.textContent = "Save & Complete Subject Encoding";
+            }
+        }
+    };
+
+    saEncodeForm?.addEventListener("submit", submitStudentAssistantEncoding);
+    refreshStudentAssistantBtn?.addEventListener("click", () => void loadStudentAssistantData());
+
+    selectAll("[data-sa-filter]").forEach((chip) => {
+        chip.addEventListener("click", () => {
+            selectAll("[data-sa-filter]").forEach((c) => {
+                c.classList.remove("active");
+                c.setAttribute("aria-pressed", "false");
+            });
+            chip.classList.add("active");
+            chip.setAttribute("aria-pressed", "true");
+            state.studentAssistantFilter = chip.dataset.saFilter;
+            void loadStudentAssistantData();
+        });
+    });
+
+
+    // ==========================================================================
+    // STUDENT SERVICES CENTER (SSC) WORKSPACE LOGIC
+    // ==========================================================================
+
+    const loadSscData = async () => {
+        if (!isSsc() || needsPasswordChange()) return;
+        if (sscStatus) {
+            sscStatus.textContent = "Loading recognized organizations…";
+            sscStatus.className = "form-status";
+        }
+        try {
+            const response = await auth.getSscClubs("ALL");
+            const clubs = Array.isArray(response) ? response : response?.clubs;
+            state.sscClubs = Array.isArray(clubs) ? clubs : [];
+
+            // Compute counts
+            const total = state.sscClubs.length;
+            const active = state.sscClubs.filter((c) => c.status === "ACTIVE").length;
+            const inactive = state.sscClubs.filter((c) => c.status === "INACTIVE").length;
+            const expired = state.sscClubs.filter((c) => c.status === "EXPIRED").length;
+
+            if (sscTotalClubs) sscTotalClubs.textContent = total;
+            if (sscActiveClubs) sscActiveClubs.textContent = active;
+            if (sscInactiveClubs) sscInactiveClubs.textContent = inactive;
+            if (sscExpiredClubs) sscExpiredClubs.textContent = expired;
+
+            renderSscClubs();
+            if (sscStatus) sscStatus.textContent = `${total} recognized organization${total === 1 ? "" : "s"} loaded.`;
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            if (sscStatus) {
+                sscStatus.textContent = error.message || "The organization directory could not be loaded.";
+                sscStatus.className = "form-status form-status--error";
+            }
+            if (sscClubsBody) {
+                sscClubsBody.innerHTML = `<tr><td colspan="8" class="empty-cell">Unable to load recognized organizations. Use Refresh directory to try again.</td></tr>`;
+            }
+        }
+    };
+
+    const renderSscClubs = () => {
+        if (!sscClubsBody) return;
+        sscClubsBody.replaceChildren();
+
+        const filter = state.sscCurrentFilter;
+        const query = (sscSearch?.value || "").trim().toLowerCase();
+        let clubs = state.sscClubs;
+        if (filter !== "ALL") {
+            clubs = clubs.filter((c) => c.status === filter);
+        }
+        if (query) {
+            clubs = clubs.filter((club) => [
+                club.code,
+                club.name,
+                club.category,
+                club.accountUsername,
+                club.account?.username,
+            ].some((value) => String(value || "").toLowerCase().includes(query)));
+        }
+
+        if (!clubs.length) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td colspan="8" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">No ${filter === "ALL" ? "" : filter.toLowerCase() + " "}clubs found.</td>`;
+            sscClubsBody.append(tr);
+            return;
+        }
+
+        clubs.forEach((club) => {
+            const tr = document.createElement("tr");
+            const startFmt = club.effectivityStartDate ? new Date(club.effectivityStartDate).toLocaleDateString() : "—";
+            const endFmt = club.effectivityEndDate ? new Date(club.effectivityEndDate).toLocaleDateString() : "—";
+            const statusClass = club.status === "ACTIVE" ? "status-pill--active" : club.status === "EXPIRED" ? "status-pill--expired" : "status-pill--inactive";
+            const canToggle = club.status !== "EXPIRED";
+            const nextStatus = club.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+
+            tr.innerHTML = `
+                <td><strong>${escapeHtml(club.code)}</strong></td>
+                <td>${escapeHtml(club.name)}</td>
+                <td><span class="club-badge" style="background: var(--cream); border: 1px solid var(--line);">${escapeHtml(humanize(club.category))}</span></td>
+                <td>${escapeHtml(club.accountUsername || club.account?.username || "—")}</td>
+                <td>${escapeHtml(startFmt)}</td>
+                <td>${escapeHtml(endFmt)}</td>
+                <td><span class="status-pill ${statusClass}">${escapeHtml(club.status)}</span></td>
+                <td>
+                    <div style="display: flex; gap: 0.35rem; align-items: center;">
+                        <button class="button button--quiet button--compact" type="button" data-ssc-toggle-status="${escapeHtml(club.id)}" data-current-status="${escapeHtml(club.status)}" ${canToggle ? "" : "disabled"} title="${canToggle ? `Set organization ${nextStatus.toLowerCase()}` : "Update the effectivity dates before activating an expired organization"}">
+                            ${canToggle ? (club.status === "ACTIVE" ? "Deactivate" : "Activate") : "Update dates first"}
+                        </button>
+                        <button class="button button--outline button--compact" type="button" data-ssc-edit-dates="${escapeHtml(club.id)}">
+                            Edit Dates
+                        </button>
+                    </div>
+                </td>
+            `;
+            sscClubsBody.append(tr);
+        });
+
+        // Wire row buttons
+        selectAll("[data-ssc-toggle-status]", sscClubsBody).forEach((btn) => {
+            btn.addEventListener("click", async () => {
+                const clubId = btn.getAttribute("data-ssc-toggle-status");
+                const currentStatus = btn.getAttribute("data-current-status");
+                const newStatus = currentStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+                try {
+                    btn.disabled = true;
+                    await auth.updateSscClubStatus(clubId, newStatus);
+                    await loadSscData();
+                    if (sscStatus) {
+                        sscStatus.textContent = `Organization status updated to ${newStatus.toLowerCase()}.`;
+                        sscStatus.className = "form-status form-status--success";
+                    }
+                } catch (error) {
+                    if (sscStatus) {
+                        sscStatus.textContent = error.message || "Failed to update organization status.";
+                        sscStatus.className = "form-status form-status--error";
+                    }
+                    btn.disabled = false;
+                }
+            });
+        });
+
+        selectAll("[data-ssc-edit-dates]", sscClubsBody).forEach((btn) => {
+            btn.addEventListener("click", () => {
+                const clubId = btn.getAttribute("data-ssc-edit-dates");
+                const club = state.sscClubs.find((c) => c.id === clubId);
+                if (!club || !sscEditDatesDialog) return;
+
+                select("#edit-dates-club-id").value = club.id;
+                select("#edit-dates-start").value = club.effectivityStartDate ? club.effectivityStartDate.slice(0, 10) : "";
+                select("#edit-dates-end").value = club.effectivityEndDate ? club.effectivityEndDate.slice(0, 10) : "";
+                if (sscDatesError) sscDatesError.hidden = true;
+                if (typeof sscEditDatesDialog?.showModal === "function") {
+                    if (!sscEditDatesDialog.open) sscEditDatesDialog.showModal();
+                } else {
+                    sscEditDatesDialog?.setAttribute("open", "");
+                }
+            });
+        });
+    };
+
+    // SSC Filter buttons
+    selectAll("[data-ssc-filter]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            selectAll("[data-ssc-filter]").forEach((b) => b.classList.remove("is-active"));
+            btn.classList.add("is-active");
+            state.sscCurrentFilter = btn.getAttribute("data-ssc-filter") || "ALL";
+            renderSscClubs();
+        });
+    });
+    sscSearch?.addEventListener("input", () => renderSscClubs());
+    clearSscSearchBtn?.addEventListener("click", () => {
+        if (sscSearch) sscSearch.value = "";
+        renderSscClubs();
+        sscSearch?.focus();
+    });
+
+    // SSC Create Club Dialog
+    openCreateClubBtn?.addEventListener("click", () => {
+        if (!sscCreateClubDialog) return;
+        sscCreateClubForm?.reset();
+        if (sscCreateError) sscCreateError.hidden = true;
+        if (sscStatus) sscStatus.textContent = "";
+        if (typeof sscCreateClubDialog?.showModal === "function") {
+            if (!sscCreateClubDialog.open) sscCreateClubDialog.showModal();
+        } else {
+            sscCreateClubDialog?.setAttribute("open", "");
+        }
+    });
+
+    selectAll("[data-close-ssc-create]").forEach((btn) => {
+        btn.addEventListener("click", () => sscCreateClubDialog?.close());
+    });
+
+    selectAll("[data-close-ssc-dates]").forEach((btn) => {
+        btn.addEventListener("click", () => sscEditDatesDialog?.close());
+    });
+
+    refreshSscBtn?.addEventListener("click", () => void loadSscData());
+
+    sscCreateClubForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!sscCreateClubForm.checkValidity()) {
+            sscCreateClubForm.reportValidity();
+            return;
+        }
+        const formData = new FormData(sscCreateClubForm);
+        const clubData = {
+            code: String(formData.get("code") || "").trim().toUpperCase(),
+            name: String(formData.get("name") || "").trim(),
+            category: String(formData.get("category") || "ACADEMIC"),
+            description: String(formData.get("description") || "").trim() || undefined,
+            adviser: String(formData.get("adviser") || "").trim(),
+            username: String(formData.get("username") || "").trim(),
+            password: String(formData.get("password") || ""),
+            effectivityStartDate: String(formData.get("effectiveStartDate") || ""),
+            effectivityEndDate: String(formData.get("effectiveEndDate") || "")
+        };
+
+        const submitBtn = select("[data-ssc-submit-create]", sscCreateClubForm);
+        try {
+            if (submitBtn) submitBtn.disabled = true;
+            if (sscCreateError) sscCreateError.hidden = true;
+            await auth.createSscClub(clubData);
+            sscCreateClubDialog?.close();
+            await loadSscData();
+            if (sscStatus) {
+                sscStatus.textContent = `Club "${clubData.name}" (${clubData.code}) was chartered successfully.`;
+                sscStatus.className = "form-status form-status--success";
+            }
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            if (sscCreateError) {
+                const messages = {
+                    CLUB_ADVISER_REQUIRED: "Please enter the assigned club adviser.",
+                    CLUB_NAME_REQUIRED: "Please enter a club name.",
+                    CLUB_USERNAME_REQUIRED: "Please enter a club account username.",
+                    CLUB_PASSWORD_REQUIRED: "Please enter an initial password.",
+                    CLUB_USERNAME_TAKEN: "That club account username is already in use.",
+                    CLUB_NAME_TAKEN: "A club with that name already exists.",
+                    START_DATE_MUST_PRECEDE_END_DATE: "The start date must be before the expiration date.",
+                    INVALID_EFFECTIVITY_DATES: "Enter valid effectivity dates."
+                };
+                sscCreateError.textContent = messages[error.message] || error.message || "Failed to create club.";
+                sscCreateError.hidden = false;
+            }
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
+        }
+    });
+
+    sscEditDatesForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(sscEditDatesForm);
+        const clubId = String(formData.get("clubId") || "");
+        const startDate = String(formData.get("effectiveStartDate") || "");
+        const endDate = String(formData.get("effectiveEndDate") || "");
+
+        try {
+            if (sscDatesError) sscDatesError.hidden = true;
+            await auth.updateSscClubEffectivity(clubId, startDate, endDate);
+            sscEditDatesDialog?.close();
+            await loadSscData();
+            if (sscStatus) {
+                sscStatus.textContent = "Club effectivity dates updated successfully.";
+                sscStatus.className = "form-status form-status--success";
+            }
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            if (sscDatesError) {
+                sscDatesError.textContent = error.message || "Failed to update effectivity dates.";
+                sscDatesError.hidden = false;
+            }
+        }
+    });
+
+    // ==========================================================================
+    // CLUB ACCOUNT WORKSPACE LOGIC
+    // ==========================================================================
+
+    const loadClubData = async () => {
+        if (!isClub() || needsPasswordChange()) return;
+        try {
+            const dashboard = await auth.getClubDashboard();
+            state.clubDashboard = dashboard;
+
+            // Render Header
+            if (clubHeaderName) clubHeaderName.textContent = `${dashboard.club.name} (${dashboard.club.code})`;
+            if (clubHeaderCategory) clubHeaderCategory.textContent = `${humanize(dashboard.club.category)} Organization`;
+            const startFmt = dashboard.club.effectiveStartDate ? new Date(dashboard.club.effectiveStartDate).toLocaleDateString() : "—";
+            const endFmt = dashboard.club.effectiveEndDate ? new Date(dashboard.club.effectiveEndDate).toLocaleDateString() : "—";
+            if (clubHeaderLead) clubHeaderLead.textContent = `Effectivity: ${startFmt} to ${endFmt} | Description: ${dashboard.club.description || "Active student organization."}`;
+            if (clubHeaderStatus) {
+                clubHeaderStatus.textContent = dashboard.club.status;
+                clubHeaderStatus.className = `status-pill ${dashboard.club.status === "ACTIVE" ? "status-pill--active" : "status-pill--inactive"}`;
+            }
+
+            // Render Modules
+            renderClubOfficers(dashboard.officers || []);
+            renderClubMembers(dashboard.members || [], dashboard.clearanceSummary || { totalMembers: 0, clearedMembers: 0, pendingMembers: 0 });
+            renderClubAnnouncements(dashboard.announcements || []);
+            renderClubDocuments(dashboard.documents || []);
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            console.error("Failed to load club dashboard:", error);
+        }
+    };
+
+    const renderClubOfficers = (officers) => {
+        if (!clubOfficersBody) return;
+        clubOfficersBody.replaceChildren();
+
+        if (!officers.length) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = '<td colspan="5" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">No officers appointed yet. Use the form above to assign officers.</td>';
+            clubOfficersBody.append(tr);
+            return;
+        }
+
+        officers.forEach((officer) => {
+            const tr = document.createElement("tr");
+            const authBadge = officer.canClearClearance
+                ? '<span class="club-badge club-badge--authority">Clearance Officer (Authorized)</span>'
+                : '<span class="club-badge club-badge--none">Standard Officer</span>';
+
+            const idNumber = officer.studentNumber || officer.studentIdNumber || officer.student?.studentNumber || officer.student?.studentIdNumber || "—";
+            const officerName = officer.studentName || officer.name || officer.fullName || officer.student?.fullName || officer.student?.name || "—";
+
+            tr.innerHTML = `
+                <td><strong>${escapeHtml(idNumber)}</strong></td>
+                <td>${escapeHtml(officerName)}</td>
+                <td>${escapeHtml(officer.position || "—")}</td>
+                <td>${authBadge}</td>
+                <td>
+                    <div style="display: flex; gap: 0.35rem;">
+                        <button class="button button--quiet button--compact" type="button" data-toggle-officer-auth="${escapeHtml(officer.id)}" data-current-auth="${officer.canClearClearance}">
+                            ${officer.canClearClearance ? "Revoke Auth" : "Grant Auth"}
+                        </button>
+                        <button class="button button--outline button--compact" type="button" data-remove-officer="${escapeHtml(officer.id)}">
+                            Remove
+                        </button>
+                    </div>
+                </td>
+            `;
+            clubOfficersBody.append(tr);
+        });
+
+        // Wire officer action buttons
+        selectAll("[data-toggle-officer-auth]", clubOfficersBody).forEach((btn) => {
+            btn.addEventListener("click", async () => {
+                const id = btn.getAttribute("data-toggle-officer-auth");
+                const current = btn.getAttribute("data-current-auth") === "true";
+                try {
+                    btn.disabled = true;
+                    await auth.updateClubOfficer(id, { canClearClearance: !current });
+                    await loadClubData();
+                } catch (error) {
+                    alert(error.message || "Failed to update officer authority.");
+                    btn.disabled = false;
+                }
+            });
+        });
+
+        selectAll("[data-remove-officer]", clubOfficersBody).forEach((btn) => {
+            btn.addEventListener("click", async () => {
+                const id = btn.getAttribute("data-remove-officer");
+                if (!confirm("Are you sure you want to remove this officer?")) return;
+                try {
+                    btn.disabled = true;
+                    await auth.removeClubOfficer(id);
+                    await loadClubData();
+                } catch (error) {
+                    alert(error.message || "Failed to remove officer.");
+                    btn.disabled = false;
+                }
+            });
+        });
+    };
+
+    const renderClubMembers = (members, summary) => {
+        if (!clubMembersBody) return;
+        clubMembersBody.replaceChildren();
+
+        if (clubClearedCount) clubClearedCount.textContent = summary.clearedMembers || 0;
+        if (clubTotalMembersCount) clubTotalMembersCount.textContent = summary.totalMembers || 0;
+
+        if (!members.length) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = '<td colspan="8" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">No enrolled members yet.</td>';
+            clubMembersBody.append(tr);
+            return;
+        }
+
+        members.forEach((member) => {
+            const tr = document.createElement("tr");
+            const clearanceStatus = member.clearanceStatus || member.clearance?.status || "PENDING";
+            const pillClass = clearanceStatus === "CLEARED" ? "status-pill--active" : "status-pill--pending";
+            const clearedAt = member.clearedAt
+                ? new Date(member.clearedAt).toLocaleString()
+                : (member.clearance?.clearedAt ? new Date(member.clearance.clearedAt).toLocaleString() : "—");
+            const clearedBy = member.clearance?.clearedByOfficer?.fullName || member.clearedBy || "—";
+            const remarks = member.clearanceRemarks || member.clearance?.remarks || "—";
+            const idNumber = member.studentNumber || member.studentIdNumber || member.student?.studentNumber || member.student?.studentIdNumber || "—";
+            const memberName = member.studentName || member.name || member.fullName || member.student?.fullName || member.student?.name || "—";
+            const programCode = member.student?.program?.code || member.program || "—";
+            const yearLevel = member.currentYearLevel || member.student?.currentYearLevel || member.student?.yearLevel || "—";
+            const isOfficer = member.role === "OFFICER" || member.isOfficer;
+
+            tr.innerHTML = `
+                <td><strong>${escapeHtml(idNumber)}</strong></td>
+                <td>${escapeHtml(memberName)}</td>
+                <td>${escapeHtml(programCode)} - Yr ${escapeHtml(yearLevel)}</td>
+                <td>${isOfficer ? "<strong>Officer</strong>" : "Member"}</td>
+                <td><span class="status-pill ${pillClass}">${escapeHtml(clearanceStatus)}</span></td>
+                <td>${escapeHtml(clearedAt)}</td>
+                <td>${escapeHtml(clearedBy)}</td>
+                <td><small>${escapeHtml(remarks)}</small></td>
+            `;
+            clubMembersBody.append(tr);
+        });
+    };
+
+    const renderClubAnnouncements = (announcements) => {
+        if (!clubAnnouncementsList) return;
+        clubAnnouncementsList.replaceChildren();
+
+        if (!announcements.length) {
+            clubAnnouncementsList.innerHTML = '<div class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">No announcements published yet.</div>';
+            return;
+        }
+
+        announcements.forEach((item) => {
+            const card = document.createElement("div");
+            card.className = "announcement-card";
+            const dateFmt = (item.publishedAt || item.createdAt) ? new Date(item.publishedAt || item.createdAt).toLocaleDateString() : "—";
+            const author = item.authorName || item.postedBy?.displayName || item.postedBy || "Club";
+
+            card.innerHTML = `
+                <div class="announcement-card__meta">
+                    <span class="club-badge" style="background: var(--cream); border: 1px solid var(--line);">Announcement</span>
+                    <span>${escapeHtml(dateFmt)} • By ${escapeHtml(author)}</span>
+                </div>
+                <h4 class="announcement-card__title">${escapeHtml(item.title)}</h4>
+                <p class="announcement-card__content">${escapeHtml(item.content)}</p>
+                <div style="margin-top: 0.5rem; display: flex; justify-content: flex-end;">
+                    <button class="button button--quiet button--compact" type="button" data-delete-announcement="${escapeHtml(item.id)}" style="color: var(--danger);">
+                        Delete
+                    </button>
+                </div>
+            `;
+            clubAnnouncementsList.append(card);
+        });
+
+        selectAll("[data-delete-announcement]", clubAnnouncementsList).forEach((btn) => {
+            btn.addEventListener("click", async () => {
+                const id = btn.getAttribute("data-delete-announcement");
+                if (!confirm("Are you sure you want to delete this announcement?")) return;
+                try {
+                    await auth.deleteClubAnnouncement(id);
+                    await loadClubData();
+                } catch (error) {
+                    alert(error.message || "Failed to delete announcement.");
+                }
+            });
+        });
+    };
+
+    const renderClubDocuments = (documents) => {
+        if (!clubDocumentsBody) return;
+        clubDocumentsBody.replaceChildren();
+
+        if (!documents.length) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = '<td colspan="6" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">No documents archived yet.</td>';
+            clubDocumentsBody.append(tr);
+            return;
+        }
+
+        documents.forEach((doc) => {
+            const tr = document.createElement("tr");
+            const dateFmt = (doc.uploadedAt || doc.createdAt) ? new Date(doc.uploadedAt || doc.createdAt).toLocaleDateString() : "—";
+            const documentUrl = safeExternalUrl(doc.fileUrl);
+
+            tr.innerHTML = `
+                <td><span class="club-badge" style="background: var(--cream); border: 1px solid var(--line);">${escapeHtml(humanize(doc.category || "Document"))}</span></td>
+                <td><strong>${escapeHtml(doc.title)}</strong></td>
+                <td>${escapeHtml(doc.fileName || "—")}</td>
+                <td>${escapeHtml(doc.uploadedBy?.displayName || doc.uploadedBy || "Club Admin")}</td>
+                <td>${escapeHtml(dateFmt)}</td>
+                <td>
+                    <div style="display: flex; gap: 0.35rem;">
+                        ${documentUrl ? `<a class="button button--outline button--compact" href="${escapeHtml(documentUrl)}" target="_blank" rel="noopener noreferrer">View</a>` : '<span class="status-pill status-pill--quiet">Unavailable</span>'}
+                        <button class="button button--quiet button--compact" type="button" data-delete-document="${escapeHtml(doc.id)}" style="color: var(--danger);">Delete</button>
+                    </div>
+                </td>
+            `;
+            clubDocumentsBody.append(tr);
+        });
+
+        selectAll("[data-delete-document]", clubDocumentsBody).forEach((btn) => {
+            btn.addEventListener("click", async () => {
+                const id = btn.getAttribute("data-delete-document");
+                if (!confirm("Are you sure you want to delete this document record?")) return;
+                try {
+                    await auth.deleteClubDocument(id);
+                    await loadClubData();
+                } catch (error) {
+                    alert(error.message || "Failed to delete document.");
+                }
+            });
+        });
+    };
+
+    let lastVerifiedStudentId = null;
+
+    // Officer Student ID verification
+    verifyOfficerBtn?.addEventListener("click", async () => {
+        const input = select("#officer-student-id");
+        const studentNumber = input?.value.trim();
+        if (!studentNumber) {
+            if (officerVerifyResult) {
+                officerVerifyResult.textContent = "Please enter a Student ID number.";
+                officerVerifyResult.style.color = "var(--danger)";
+            }
+            return;
+        }
+
+        try {
+            verifyOfficerBtn.disabled = true;
+            if (officerVerifyResult) officerVerifyResult.textContent = "Verifying student…";
+            const response = await auth.validateClubStudent(studentNumber);
+            const student = response?.student || response;
+            if (student?.id) {
+                lastVerifiedStudentId = student.id;
+            }
+            if (officerVerifyResult) {
+                const name = student.studentName || student.fullName || "Student";
+                const program = student.program || student.programCode || "N/A";
+                const yr = student.currentYearLevel || student.yearLevel || "N/A";
+                officerVerifyResult.textContent = `Verified: ${name} (${program} - Yr ${yr})`;
+                officerVerifyResult.style.color = "var(--success)";
+            }
+        } catch (error) {
+            lastVerifiedStudentId = null;
+            if (officerVerifyResult) {
+                officerVerifyResult.textContent = error.message || "Student record not found.";
+                officerVerifyResult.style.color = "var(--danger)";
+            }
+        } finally {
+            verifyOfficerBtn.disabled = false;
+        }
+    });
+
+    // Officer Assignment Form Submit
+    assignOfficerForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(assignOfficerForm);
+        const inputStudentIdNumber = String(formData.get("studentIdNumber") || "").trim();
+        const data = {
+            studentId: lastVerifiedStudentId || inputStudentIdNumber,
+            studentIdNumber: inputStudentIdNumber,
+            studentNumber: inputStudentIdNumber,
+            position: String(formData.get("position") || "").trim(),
+            canClearClearance: formData.get("canClearClearance") === "on"
+        };
+
+        const submitBtn = select("[data-submit-officer-btn]", assignOfficerForm);
+        try {
+            if (submitBtn) submitBtn.disabled = true;
+            if (officerError) officerError.hidden = true;
+            await auth.assignClubOfficer(data);
+            assignOfficerForm.reset();
+            lastVerifiedStudentId = null;
+            if (officerVerifyResult) officerVerifyResult.textContent = "";
+            alert("Club officer appointed successfully!");
+            await loadClubData();
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            if (officerError) {
+                officerError.textContent = error.message || "Failed to assign officer.";
+                officerError.hidden = false;
+            }
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
+        }
+    });
+
+    // Announcement Create Form Submit
+    createAnnouncementForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(createAnnouncementForm);
+        const data = {
+            title: String(formData.get("title") || "").trim(),
+            content: String(formData.get("content") || "").trim()
+        };
+
+        try {
+            if (announcementError) announcementError.hidden = true;
+            await auth.createClubAnnouncement(data);
+            createAnnouncementForm.reset();
+            alert("Announcement published successfully!");
+            await loadClubData();
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            if (announcementError) {
+                announcementError.textContent = error.message || "Failed to publish announcement.";
+                announcementError.hidden = false;
+            }
+        }
+    });
+
+    // Document Create Form Submit
+    createDocumentForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(createDocumentForm);
+        const data = {
+            title: String(formData.get("title") || "").trim(),
+            category: String(formData.get("category") || "RESOLUTION"),
+            fileName: String(formData.get("fileName") || "").trim() || undefined,
+            fileUrl: String(formData.get("fileUrl") || "").trim()
+        };
+
+        try {
+            if (documentError) documentError.hidden = true;
+            await auth.createClubDocument(data);
+            createDocumentForm.reset();
+            alert("Classified document recorded successfully!");
+            await loadClubData();
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            if (documentError) {
+                documentError.textContent = error.message || "Failed to archive document.";
+                documentError.hidden = false;
+            }
+        }
+    });
+
+    refreshClubBtn?.addEventListener("click", () => void loadClubData());
+
+    // ==========================================================================
+    // STUDENT CLUBS EXPERIENCE LOGIC
+    // ==========================================================================
+
+    const loadStudentClubs = async () => {
+        if (!isStudentWorkspace() || needsPasswordChange()) return;
+        if (studentClubsStatus) {
+            studentClubsStatus.textContent = "Loading active clubs…";
+            studentClubsStatus.className = "form-status";
+        }
+        try {
+            const [available, myClubs] = await Promise.all([
+                auth.getStudentAvailableClubs(),
+                auth.getStudentMyClubs()
+            ]);
+            const availableClubs = Array.isArray(available)
+                ? available
+                : available?.clubs || available?.data?.clubs || available?.data?.data?.clubs;
+            const enrolledClubs = Array.isArray(myClubs)
+                ? myClubs
+                : myClubs?.clubs || myClubs?.data?.clubs || myClubs?.data?.data?.clubs;
+            state.studentAvailableClubs = Array.isArray(availableClubs) ? availableClubs : [];
+            state.studentMyClubs = Array.isArray(enrolledClubs) ? enrolledClubs : [];
+
+            // Update active membership badge
+            const activeCount = state.studentMyClubs.filter((m) => (m.club?.status || m.status) === "ACTIVE").length;
+            if (studentActiveClubsCount) studentActiveClubsCount.textContent = activeCount;
+
+            renderStudentMyClubs();
+            renderStudentAvailableClubs(activeCount);
+            if (studentClubsStatus) {
+                studentClubsStatus.textContent = `${state.studentAvailableClubs.length} active club${state.studentAvailableClubs.length === 1 ? "" : "s"} available to join.`;
+            }
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            if (studentClubsStatus) {
+                studentClubsStatus.textContent = error.message || "The active club directory could not be loaded.";
+                studentClubsStatus.className = "form-status form-status--error";
+            }
+            console.error("Failed to load student clubs:", error);
+        }
+    };
+
+    const renderStudentMyClubs = () => {
+        if (!studentMyClubsBody) return;
+        studentMyClubsBody.replaceChildren();
+
+        if (!state.studentMyClubs.length) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = '<td colspan="7" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">You have not joined any clubs yet. Browse available clubs below to join!</td>';
+            studentMyClubsBody.append(tr);
+            return;
+        }
+
+        state.studentMyClubs.forEach((item) => {
+            const tr = document.createElement("tr");
+            const club = item.club || item;
+            const clubId = item.clubId || club.id;
+            const clubCode = club.code || item.clubCode || "—";
+            const clubName = club.name || item.clubName || "—";
+            const clubCategory = club.category || item.category || "—";
+            const clearanceStatus = item.clearance?.status || item.clearanceStatus || "PENDING";
+            const clrClass = clearanceStatus === "CLEARED" ? "status-pill--active" : "status-pill--pending";
+            const clubStatus = club.status || item.status;
+            const clubStatusClass = clubStatus === "ACTIVE" ? "status-pill--active" : clubStatus === "EXPIRED" ? "status-pill--expired" : "status-pill--inactive";
+            const roleLabel = (item.role === "OFFICER" || item.isOfficer) ? `<strong>Officer: ${escapeHtml(item.officer?.position || item.officerPosition || "Leader")}</strong>` : "Member";
+
+            tr.innerHTML = `
+                <td><strong>${escapeHtml(clubCode)}</strong></td>
+                <td>${escapeHtml(clubName)}</td>
+                <td><span class="club-badge" style="background: var(--cream); border: 1px solid var(--line);">${escapeHtml(humanize(clubCategory))}</span></td>
+                <td>${roleLabel}</td>
+                <td><span class="status-pill ${clrClass}">${escapeHtml(clearanceStatus)}</span></td>
+                <td><span class="status-pill ${clubStatusClass}">${escapeHtml(clubStatus)}</span></td>
+                <td>
+                    <button class="button button--primary button--compact" type="button" data-open-club-portal="${escapeHtml(clubId || "")}" ${clubId ? "" : "disabled"}>
+                        Open Portal
+                    </button>
+                </td>
+            `;
+            studentMyClubsBody.append(tr);
+        });
+
+        selectAll("[data-open-club-portal]", studentMyClubsBody).forEach((btn) => {
+            btn.addEventListener("click", () => {
+                const clubId = btn.getAttribute("data-open-club-portal");
+                if (clubId) void openStudentClubPortal(clubId);
+            });
+        });
+    };
+
+    const renderStudentAvailableClubs = (activeCount) => {
+        if (!studentAvailableClubsGrid) return;
+        studentAvailableClubsGrid.replaceChildren();
+
+        const maxReached = activeCount >= 3;
+        const joinedClubIds = new Set(state.studentMyClubs.map((m) => m.clubId || m.club?.id).filter(Boolean));
+
+        if (!state.studentAvailableClubs.length) {
+            studentAvailableClubsGrid.innerHTML = '<div class="empty-cell" style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--muted);">No clubs are currently open for enrollment.</div>';
+            return;
+        }
+
+        state.studentAvailableClubs.forEach((club) => {
+            const card = document.createElement("div");
+            card.className = "club-card";
+            const isJoined = joinedClubIds.has(club.id);
+            const startFmt = (club.effectivityStartDate || club.effectiveStartDate)
+                ? new Date(club.effectivityStartDate || club.effectiveStartDate).toLocaleDateString() : "";
+            const endFmt = (club.effectivityEndDate || club.effectiveEndDate)
+                ? new Date(club.effectivityEndDate || club.effectiveEndDate).toLocaleDateString() : "";
+
+            let actionHtml = "";
+            if (isJoined) {
+                actionHtml = '<span class="status-pill status-pill--active">Enrolled Member</span>';
+            } else if (maxReached) {
+                actionHtml = '<button class="button button--outline button--compact" type="button" disabled title="Maximum 3 active clubs reached">Limit Reached (3/3)</button>';
+            } else {
+                actionHtml = `<button class="button button--primary button--compact" type="button" data-student-join-club="${escapeHtml(club.id)}">Join Club</button>`;
+            }
+
+            card.innerHTML = `
+                <div>
+                    <div class="club-card__header">
+                        <span class="club-card__category">${escapeHtml(humanize(club.category))}</span>
+                        <span class="status-pill status-pill--active">ACTIVE</span>
+                    </div>
+                    <div style="font-weight: 700; font-size: 0.88rem; color: var(--red-900);">${escapeHtml(club.code)}</div>
+                    <h4 class="club-card__title">${escapeHtml(club.name)}</h4>
+                    <p class="club-card__description">${escapeHtml(club.description || "Active student organization and community.")}</p>
+                </div>
+                <div class="club-card__footer">
+                    <div class="club-card__effectivity">Term: ${escapeHtml(startFmt)} – ${escapeHtml(endFmt)}</div>
+                    ${actionHtml}
+                </div>
+            `;
+            studentAvailableClubsGrid.append(card);
+        });
+
+        selectAll("[data-student-join-club]", studentAvailableClubsGrid).forEach((btn) => {
+            btn.addEventListener("click", async () => {
+                const clubId = btn.getAttribute("data-student-join-club");
+                try {
+                    btn.disabled = true;
+                    await auth.joinStudentClub(clubId);
+                    alert("Congratulations! You have successfully joined the club.");
+                    await loadStudentClubs();
+                    await loadStudentDashboard();
+                } catch (error) {
+                    alert(error.message || "Failed to join club.");
+                    btn.disabled = false;
+                }
+            });
+        });
+    };
+
+    refreshStudentClubsBtn?.addEventListener("click", () => void loadStudentClubs());
+    const refreshClearanceFormBtn = select("[data-refresh-clearance-form]");
+    refreshClearanceFormBtn?.addEventListener("click", () => void loadStudentDashboard());
+
+    // Dynamic Student Club Portal Modal
+    const openStudentClubPortal = async (clubId) => {
+        try {
+            const portal = await auth.getStudentClubPortal(clubId);
+            state.studentActiveClubPortal = portal;
+
+            // Render Header
+            if (portalClubName) portalClubName.textContent = `${portal.club.name} (${portal.club.code})`;
+            if (portalCategoryLabel) portalCategoryLabel.textContent = `${humanize(portal.club.category)} Organization`;
+            const startFmt = portal.club.effectivityStartDate
+                ? new Date(portal.club.effectivityStartDate).toLocaleDateString() : "";
+            const endFmt = portal.club.effectivityEndDate
+                ? new Date(portal.club.effectivityEndDate).toLocaleDateString() : "";
+            if (portalClubLead) portalClubLead.textContent = `Term: ${startFmt} – ${endFmt} • ${portal.club.description || ""}`;
+            if (portalClubStatus) {
+                portalClubStatus.textContent = portal.club.status;
+                portalClubStatus.className = `status-pill ${portal.club.status === "ACTIVE" ? "status-pill--active" : "status-pill--expired"}`;
+            }
+            if (portalRolePill) {
+                portalRolePill.textContent = portal.dashboardType === "OFFICER_WITH_CLEARANCE"
+                    ? "Officer: Clearance authority"
+                    : portal.dashboardType === "OFFICER_WITHOUT_CLEARANCE"
+                        ? "Officer"
+                        : "Member";
+            }
+            if (portalExpiredBanner) {
+                portalExpiredBanner.hidden = !portal.isExpired;
+            }
+
+            // Render My Clearance Card
+            const clr = portal.myClearance || {};
+            if (portalMyClearancePill) {
+                const clrStat = clr.status || "PENDING";
+                portalMyClearancePill.textContent = clrStat;
+                portalMyClearancePill.className = `status-pill ${clrStat === "CLEARED" ? "status-pill--active" : "status-pill--pending"}`;
+            }
+            if (portalMyClearanceDate) {
+                portalMyClearanceDate.textContent = clr.clearedAt ? new Date(clr.clearedAt).toLocaleString() : "Not evaluated yet";
+            }
+            if (portalMyClearanceBy) {
+                portalMyClearanceBy.textContent = clr.clearedByOfficer ? `${clr.clearedByOfficer.fullName} (${clr.clearedByOfficer.position || "Clearance Officer"})` : (clr.clearedBy || "Pending Sign-off");
+            }
+            if (portalMyClearanceRemarks) {
+                portalMyClearanceRemarks.textContent = clr.remarks || "No remarks entered.";
+            }
+
+            // Render Announcements Feed
+            renderPortalAnnouncements(portal.announcements || []);
+
+            // Render Documents Table
+            if (portalDocFilter) portalDocFilter.value = "ALL";
+            renderPortalDocuments(portal.documents || []);
+
+            // Render Officers Roster
+            renderPortalOfficers(portal.officers || []);
+
+            // DYNAMIC CLEARANCE EVALUATION PANEL (TYPE 1 ONLY)
+            if (portal.dashboardType === "OFFICER_WITH_CLEARANCE") {
+                if (portalEvalTab) portalEvalTab.hidden = false;
+                renderPortalClearanceEvaluation(portal.members || [], portal.club.id);
+            } else {
+                if (portalEvalTab) portalEvalTab.hidden = true;
+            }
+
+            // Reset tab to feed
+            switchStudentPortalTab("feed");
+            if (typeof studentClubPortalDialog?.showModal === "function") {
+                if (!studentClubPortalDialog.open) studentClubPortalDialog.showModal();
+            } else {
+                studentClubPortalDialog?.setAttribute("open", "");
+            }
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            alert(error.message || "Failed to open club portal.");
+        }
+    };
+
+    const renderPortalAnnouncements = (announcements) => {
+        if (!portalAnnouncementsFeed) return;
+        portalAnnouncementsFeed.replaceChildren();
+
+        if (!announcements.length) {
+            portalAnnouncementsFeed.innerHTML = '<div class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">No announcements published for this club.</div>';
+            return;
+        }
+
+        announcements.forEach((item) => {
+            const card = document.createElement("div");
+            card.className = "announcement-card";
+            const dateFmt = (item.publishedAt || item.createdAt) ? new Date(item.publishedAt || item.createdAt).toLocaleDateString() : "—";
+            const author = item.authorName || item.postedBy?.displayName || item.postedBy || "Club";
+
+            card.innerHTML = `
+                <div class="announcement-card__meta">
+                    <span class="club-badge" style="background: var(--cream); border: 1px solid var(--line);">Announcement</span>
+                    <span>${escapeHtml(dateFmt)} • ${escapeHtml(author)}</span>
+                </div>
+                <h4 class="announcement-card__title">${escapeHtml(item.title)}</h4>
+                <p class="announcement-card__content">${escapeHtml(item.content)}</p>
+            `;
+            portalAnnouncementsFeed.append(card);
+        });
+    };
+
+    const renderPortalDocuments = (documents) => {
+        if (!portalDocsBody) return;
+        portalDocsBody.replaceChildren();
+
+        const selectedCategory = portalDocFilter?.value || "ALL";
+        const visibleDocuments = selectedCategory === "ALL"
+            ? documents
+            : documents.filter((documentRecord) => documentRecord.category === selectedCategory);
+
+        if (!visibleDocuments.length) {
+            portalDocsBody.innerHTML = `<tr><td colspan="5" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">${selectedCategory === "ALL" ? "No official documents available." : "No documents match this classification."}</td></tr>`;
+            return;
+        }
+
+        visibleDocuments.forEach((doc) => {
+            const tr = document.createElement("tr");
+            const dateFmt = (doc.uploadedAt || doc.createdAt) ? new Date(doc.uploadedAt || doc.createdAt).toLocaleDateString() : "—";
+            const documentUrl = safeExternalUrl(doc.fileUrl);
+
+            tr.innerHTML = `
+                <td><span class="club-badge" style="background: var(--cream); border: 1px solid var(--line);">${escapeHtml(humanize(doc.category || "Document"))}</span></td>
+                <td><strong>${escapeHtml(doc.title)}</strong></td>
+                <td>${escapeHtml(doc.fileName || "—")}</td>
+                <td>${escapeHtml(dateFmt)}</td>
+                <td>
+                    ${documentUrl ? `<a class="button button--outline button--compact" href="${escapeHtml(documentUrl)}" target="_blank" rel="noopener noreferrer">View Document</a>` : '<span class="status-pill status-pill--quiet">Unavailable</span>'}
+                </td>
+            `;
+            portalDocsBody.append(tr);
+        });
+    };
+
+    portalDocFilter?.addEventListener("change", () => {
+        renderPortalDocuments(state.studentActiveClubPortal?.documents || []);
+    });
+
+    const renderPortalOfficers = (officers) => {
+        if (!portalOfficersBody) return;
+        portalOfficersBody.replaceChildren();
+
+        if (!officers.length) {
+            portalOfficersBody.innerHTML = '<tr><td colspan="3" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">No officers listed.</td></tr>';
+            return;
+        }
+
+        officers.forEach((officer) => {
+            const tr = document.createElement("tr");
+            const clrBadge = officer.canClearClearance
+                ? '<span class="club-badge club-badge--authority">Clearance Sign-off Authority</span>'
+                : '<span class="club-badge club-badge--none">Officer</span>';
+            const officerName = officer.studentName || officer.name || officer.fullName || officer.student?.fullName || officer.student?.name || "—";
+
+            tr.innerHTML = `
+                <td><strong>${escapeHtml(officer.position || "—")}</strong></td>
+                <td>${escapeHtml(officerName)}</td>
+                <td>${clrBadge}</td>
+            `;
+            portalOfficersBody.append(tr);
+        });
+    };
+
+    const renderPortalClearanceEvaluation = (members, clubId) => {
+        if (!portalEvalBody) return;
+        portalEvalBody.replaceChildren();
+
+        if (!members.length) {
+            portalEvalBody.innerHTML = '<tr><td colspan="7" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">No members to evaluate.</td></tr>';
+            return;
+        }
+
+        members.forEach((m) => {
+            const tr = document.createElement("tr");
+            const clrStatus = m.clearanceStatus || m.clearance?.status || "PENDING";
+            const pillClass = clrStatus === "CLEARED" ? "status-pill--active" : "status-pill--pending";
+            const evaluatedBy = m.clearance?.clearedByOfficer ? `${m.clearance.clearedByOfficer.fullName} (${m.clearance.clearedByOfficer.position || "Officer"})` : (m.clearedBy || "—");
+            const remarks = m.clearanceRemarks || m.clearance?.remarks || "—";
+            const studentId = m.studentId || m.student?.id || m.id;
+            const studentIdNumber = m.studentNumber || m.studentIdNumber || m.student?.studentNumber || m.student?.studentIdNumber || "—";
+            const studentName = m.studentName || m.name || m.fullName || m.student?.fullName || m.student?.name || "—";
+            const isOfficer = m.role === "OFFICER" || m.isOfficer;
+
+            tr.innerHTML = `
+                <td><strong>${escapeHtml(studentIdNumber)}</strong></td>
+                <td>${escapeHtml(studentName)}</td>
+                <td>${isOfficer ? "Officer" : "Member"}</td>
+                <td><span class="status-pill ${pillClass}">${escapeHtml(clrStatus)}</span></td>
+                <td><small>${escapeHtml(evaluatedBy)}</small></td>
+                <td><small>${escapeHtml(remarks)}</small></td>
+                <td>
+                    <button class="button button--primary button--compact" type="button" data-eval-member-btn="${escapeHtml(studentId)}" data-target-name="${escapeHtml(studentName)}" data-current-status="${escapeHtml(clrStatus)}" data-current-remarks="${escapeHtml(remarks)}">
+                        Evaluate
+                    </button>
+                </td>
+            `;
+            portalEvalBody.append(tr);
+        });
+
+        // Wire "Evaluate" button for each member
+        selectAll("[data-eval-member-btn]", portalEvalBody).forEach((btn) => {
+            btn.addEventListener("click", () => {
+                const targetStudentId = btn.getAttribute("data-eval-member-btn");
+                const targetName = btn.getAttribute("data-target-name");
+                const currentStatus = btn.getAttribute("data-current-status");
+                const currentRemarks = btn.getAttribute("data-current-remarks");
+
+                if (!evalActionDialog) return;
+                if (evalFormClubId) evalFormClubId.value = clubId;
+                if (evalFormTargetId) evalFormTargetId.value = targetStudentId;
+                if (evalFormTargetName) evalFormTargetName.textContent = targetName;
+                if (evalFormStatus) evalFormStatus.value = currentStatus === "CLEARED" ? "CLEARED" : "PENDING";
+                if (evalFormRemarks) evalFormRemarks.value = currentRemarks !== "—" ? currentRemarks : "";
+                if (evalActionError) evalActionError.hidden = true;
+                if (typeof evalActionDialog?.showModal === "function") {
+                    if (!evalActionDialog.open) evalActionDialog.showModal();
+                } else {
+                    evalActionDialog?.setAttribute("open", "");
+                }
+            });
+        });
+    };
+
+    // Close Dialog Buttons
+    selectAll("[data-close-student-portal]").forEach((btn) => {
+        btn.addEventListener("click", () => studentClubPortalDialog?.close());
+    });
+
+    selectAll("[data-close-eval-action]").forEach((btn) => {
+        btn.addEventListener("click", () => evalActionDialog?.close());
+    });
+
+    // Evaluate Clearance Action Submit
+    evalActionForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const clubId = evalFormClubId?.value;
+        const targetStudentId = evalFormTargetId?.value;
+        const status = evalFormStatus?.value;
+        const remarks = evalFormRemarks?.value?.trim();
+
+        try {
+            if (evalActionError) evalActionError.hidden = true;
+            await auth.evaluateStudentClubClearance(clubId, { targetStudentId, status, remarks });
+            evalActionDialog?.close();
+            alert("Clearance evaluation saved and stamped in audit trail successfully!");
+            // Refresh the portal modal, student clubs, and clearance form
+            await openStudentClubPortal(clubId);
+            await loadStudentClubs();
+            await loadStudentDashboard();
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            if (evalActionError) {
+                evalActionError.textContent = error.message || "Failed to save clearance evaluation.";
+                evalActionError.hidden = false;
+            }
+        }
+    });
+
+    // ==========================================
+    // DEAN WORKSPACE MODULE
+    // ==========================================
+
+    const renderDeanOverview = (overview) => {
+        state.deanOverview = overview;
+        if (deanCollegeContext) {
+            deanCollegeContext.textContent = overview?.college
+                ? `${overview.college.code} · ${overview.college.name}`
+                : "Assigned College";
+        }
+        if (deanStudentsCount) deanStudentsCount.textContent = overview?.counts?.officialStudents ?? 0;
+        if (deanFacultyCount) deanFacultyCount.textContent = overview?.counts?.facultyMembers ?? 0;
+        if (deanProgramsCount) deanProgramsCount.textContent = overview?.counts?.programs ?? 0;
+        if (deanGradesPendingCount) deanGradesPendingCount.textContent = overview?.counts?.pendingGradeApprovals ?? 0;
+    };
+
+    const loadDeanOverview = async () => {
+        if (!isDean() || needsPasswordChange()) return;
+        try {
+            const data = await auth.getDeanDashboard();
+            renderDeanOverview(data.overview);
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            console.error("Failed to load Dean dashboard overview:", error);
+        }
+    };
+
+    // Tab 1: Grade Approvals
+    const renderDeanGrades = (submissions = []) => {
+        if (!deanGradesTbody) return;
+        deanGradesTbody.innerHTML = "";
+        if (!submissions || submissions.length === 0) {
+            deanGradesTbody.innerHTML = '<tr><td colspan="9" class="empty-state" style="text-align:center; padding:1.5rem;">No grade submissions currently pending Dean review.</td></tr>';
+            return;
+        }
+
+        submissions.forEach((s) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><strong>${escapeHtml(s.offeringCode)}</strong></td>
+                <td>${escapeHtml(s.subjectCode)} · ${escapeHtml(s.subjectTitle)}</td>
+                <td>${escapeHtml(s.section || "—")}</td>
+                <td>${escapeHtml(s.programCode || "—")}</td>
+                <td>${escapeHtml(s.academicTerm)}</td>
+                <td>${escapeHtml(s.instructor)}</td>
+                <td>${s.enrolledCount}</td>
+                <td><span class="status-pill status-submitted">${s.submittedGradeCount} / ${s.totalGradeCount}</span></td>
+                <td>
+                    <button class="button button--primary button--small" type="button" data-dean-review-grades="${s.offeringId}">
+                        Review Grades
+                    </button>
+                </td>
+            `;
+            deanGradesTbody.appendChild(tr);
+        });
+    };
+
+    const loadDeanGrades = async () => {
+        if (!isDean() || needsPasswordChange()) return;
+        try {
+            const res = await auth.getDeanPendingGrades();
+            state.deanGrades = res?.submissions || [];
+            renderDeanGrades(state.deanGrades);
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            console.error("Failed to load Dean pending grades:", error);
+            if (deanGradesTbody) {
+                deanGradesTbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:1.5rem; color:var(--color-error)">Failed to load grade submissions: ${escapeHtml(error.message)}</td></tr>`;
+            }
+        }
+    };
+
+    const openDeanGradeSheet = async (offeringId) => {
+        if (!deanGradeDialog) return;
+        if (deanGradeSheetTbody) {
+            deanGradeSheetTbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:1.5rem;">Loading collegiate grade sheet…</td></tr>`;
+        }
+        if (deanGradeRemarks) deanGradeRemarks.value = "";
+        if (deanGradeError) deanGradeError.hidden = true;
+        if (deanApproveGradesBtn) deanApproveGradesBtn.disabled = true;
+        if (deanReturnGradesBtn) deanReturnGradesBtn.disabled = true;
+
+        if (typeof deanGradeDialog?.showModal === "function") {
+            if (!deanGradeDialog.open) deanGradeDialog.showModal();
+        } else {
+            deanGradeDialog?.setAttribute("open", "");
+        }
+
+        try {
+            const res = await auth.getDeanGradeSheet(offeringId);
+            const data = res?.offering ? res : (res?.data || {});
+            state.activeDeanGradeSheet = data;
+
+            if (deanGradeDialogTitle && data.offering) {
+                deanGradeDialogTitle.textContent = `Grade Sheet · ${data.offering.subjectCode} · ${data.offering.subjectTitle}`;
+            }
+            if (deanGradeDialogMeta && data.offering) {
+                deanGradeDialogMeta.textContent = `Offering: ${data.offering.offeringCode} · Section: ${data.offering.section || "—"} · Instructor: ${data.instructor || "Unassigned"}`;
+            }
+
+            renderDeanGradeSheetStudents();
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            console.error("Failed to load Dean grade sheet:", error);
+            if (deanGradeSheetTbody) {
+                deanGradeSheetTbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:1.5rem; color:var(--color-error)">Failed to load grade sheet: ${escapeHtml(error.message)}</td></tr>`;
+            }
+        }
+    };
+
+    const renderDeanGradeSheetStudents = () => {
+        if (!deanGradeSheetTbody || !state.activeDeanGradeSheet) return;
+        deanGradeSheetTbody.innerHTML = "";
+
+        const students = state.activeDeanGradeSheet.students || [];
+        if (students.length === 0) {
+            deanGradeSheetTbody.innerHTML = `<tr><td colspan="7" class="empty-state" style="text-align:center; padding:1.5rem;">No student grades found for this offering.</td></tr>`;
+            if (deanApproveGradesBtn) deanApproveGradesBtn.disabled = true;
+            if (deanReturnGradesBtn) deanReturnGradesBtn.disabled = true;
+            return;
+        }
+
+        const hasSubmitted = students.some((s) => s.grades?.some((g) => g.status === "SUBMITTED"));
+        if (deanApproveGradesBtn) {
+            deanApproveGradesBtn.disabled = !hasSubmitted;
+            deanApproveGradesBtn.textContent = hasSubmitted ? "Approve & Forward to Registrar" : "No Pending Submissions";
+        }
+        if (deanReturnGradesBtn) {
+            deanReturnGradesBtn.disabled = !hasSubmitted;
+        }
+
+        students.forEach((s, idx) => {
+            const tr = document.createElement("tr");
+            const grade = s.grades?.[0];
+
+            let statusBadge = `<span class="status-pill">Not Graded</span>`;
+            if (grade?.status === "DRAFT") {
+                statusBadge = `<span class="status-pill status-draft">Draft</span>`;
+            } else if (grade?.status === "SUBMITTED") {
+                statusBadge = `<span class="status-pill status-submitted">Submitted</span>`;
+            } else if (grade?.status === "APPROVED") {
+                statusBadge = `<span class="status-pill status-pill--success">Dean Approved</span>`;
+            } else if (grade?.status === "POSTED") {
+                statusBadge = `<span class="status-pill status-posted">Posted</span>`;
+            }
+
+            const programText = typeof s.program === "object" ? s.program?.code : s.program;
+
+            tr.innerHTML = `
+                <td>${idx + 1}</td>
+                <td><strong>${escapeHtml(s.studentNumber)}</strong></td>
+                <td>${escapeHtml(s.fullName)}</td>
+                <td>${escapeHtml(programText || "—")} · Year ${s.yearLevel || "—"}</td>
+                <td><strong style="font-size:1.05rem;">${grade?.numericGrade != null ? grade.numericGrade : "—"}</strong></td>
+                <td>${statusBadge}</td>
+                <td><small style="color:var(--muted);">${escapeHtml(grade?.remarks || "—")}</small></td>
+            `;
+            deanGradeSheetTbody.appendChild(tr);
+        });
+    };
+
+    deanApproveGradesBtn?.addEventListener("click", async () => {
+        if (!state.activeDeanGradeSheet?.offering?.id) return;
+        if (!confirm("Approve this grade sheet and forward to the Registrar for final posting?")) return;
+
+        deanApproveGradesBtn.disabled = true;
+        if (deanGradeError) deanGradeError.hidden = true;
+
+        try {
+            const remarks = deanGradeRemarks?.value?.trim() || "";
+            await auth.approveDeanGrades(state.activeDeanGradeSheet.offering.id, { remarks });
+            deanGradeDialog?.close();
+            alert("Grade sheet approved and forwarded to the Registrar successfully.");
+            await Promise.allSettled([loadDeanGrades(), loadDeanOverview()]);
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            if (deanGradeError) {
+                deanGradeError.textContent = error.message || "Failed to approve grade sheet.";
+                deanGradeError.hidden = false;
+            }
+        } finally {
+            deanApproveGradesBtn.disabled = false;
+        }
+    });
+
+    deanReturnGradesBtn?.addEventListener("click", async () => {
+        if (!state.activeDeanGradeSheet?.offering?.id) return;
+        const remarks = deanGradeRemarks?.value?.trim() || "";
+        if (!remarks || remarks.length < 5) {
+            if (deanGradeError) {
+                deanGradeError.textContent = "Dean remarks (at least 5 characters) are required to explain why grades are being returned for correction.";
+                deanGradeError.hidden = false;
+            }
+            deanGradeRemarks?.focus();
+            return;
+        }
+
+        if (!confirm("Return this grade sheet to the instructor for correction? Grades will revert to DRAFT so the instructor can modify and resubmit.")) return;
+
+        deanReturnGradesBtn.disabled = true;
+        if (deanGradeError) deanGradeError.hidden = true;
+
+        try {
+            await auth.returnDeanGrades(state.activeDeanGradeSheet.offering.id, { remarks });
+            deanGradeDialog?.close();
+            alert("Grade sheet returned to instructor with your remarks.");
+            await Promise.allSettled([loadDeanGrades(), loadDeanOverview()]);
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            if (deanGradeError) {
+                deanGradeError.textContent = error.message || "Failed to return grade sheet.";
+                deanGradeError.hidden = false;
+            }
+        } finally {
+            deanReturnGradesBtn.disabled = false;
+        }
+    });
+
+    deanGradesTbody?.addEventListener("click", async (e) => {
+        const btn = e.target.closest("[data-dean-review-grades]");
+        if (!btn) return;
+        const offeringId = btn.getAttribute("data-dean-review-grades");
+        if (offeringId) await openDeanGradeSheet(offeringId);
+    });
+
+    closeDeanGradeDialogBtns.forEach((btn) => {
+        btn.addEventListener("click", () => deanGradeDialog?.close());
+    });
+
+    refreshDeanGradesBtn?.addEventListener("click", () => void loadDeanGrades());
+
+    // Tab 2: Official Students
+    const renderDeanStudents = () => {
+        if (!deanStudentsTbody) return;
+        deanStudentsTbody.innerHTML = "";
+
+        const query = deanStudentSearch?.value?.trim().toLowerCase() || "";
+        const sortBy = deanStudentSort?.value || "name";
+
+        let list = [...(state.deanStudents || [])];
+        if (query) {
+            list = list.filter((s) => {
+                const num = (s.studentNumber || "").toLowerCase();
+                const name = (s.fullName || "").toLowerCase();
+                const pCode = (s.program?.code || "").toLowerCase();
+                const pName = (s.program?.name || "").toLowerCase();
+                return num.includes(query) || name.includes(query) || pCode.includes(query) || pName.includes(query);
+            });
+        }
+
+        list.sort((a, b) => {
+            if (sortBy === "name") return (a.fullName || "").localeCompare(b.fullName || "");
+            if (sortBy === "program") return (a.program?.code || "").localeCompare(b.program?.code || "");
+            if (sortBy === "yearLevel") return (a.yearLevel || 0) - (b.yearLevel || 0);
+            return 0;
+        });
+
+        if (list.length === 0) {
+            deanStudentsTbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="text-align:center; padding:1.5rem;">${query ? "No official students match your search." : "No official students currently enrolled under your college."}</td></tr>`;
+            return;
+        }
+
+        list.forEach((s, idx) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${idx + 1}</td>
+                <td><strong>${escapeHtml(s.studentNumber)}</strong></td>
+                <td>${escapeHtml(s.fullName)}</td>
+                <td>${escapeHtml(s.program?.code || "—")} · <small style="color:var(--muted);">${escapeHtml(s.program?.name || "")}</small></td>
+                <td>Year ${s.yearLevel || "—"}</td>
+                <td>${escapeHtml(s.academicTerm || "—")}</td>
+            `;
+            deanStudentsTbody.appendChild(tr);
+        });
+    };
+
+    const loadDeanStudents = async () => {
+        if (!isDean() || needsPasswordChange()) return;
+        try {
+            const res = await auth.getDeanStudents();
+            state.deanStudents = res?.students || [];
+            renderDeanStudents();
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            console.error("Failed to load Dean students:", error);
+            if (deanStudentsTbody) {
+                deanStudentsTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:1.5rem; color:var(--color-error)">Failed to load official students: ${escapeHtml(error.message)}</td></tr>`;
+            }
+        }
+    };
+
+    deanStudentSearch?.addEventListener("input", renderDeanStudents);
+    deanStudentSort?.addEventListener("change", renderDeanStudents);
+
+    // Tab 3: Faculty
+    const renderDeanFaculty = () => {
+        if (!deanFacultyTbody) return;
+        deanFacultyTbody.innerHTML = "";
+
+        const list = state.deanFaculty || [];
+        if (list.length === 0) {
+            deanFacultyTbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="text-align:center; padding:1.5rem;">No faculty members currently assigned to departments in your college.</td></tr>`;
+            return;
+        }
+
+        list.forEach((f, idx) => {
+            const tr = document.createElement("tr");
+            const statusClass = f.status === "ACTIVE" ? "status-pill--success" : "status-pill--warning";
+            tr.innerHTML = `
+                <td>${idx + 1}</td>
+                <td><strong>${escapeHtml(f.employeeNumber)}</strong></td>
+                <td>${escapeHtml(f.fullName)}</td>
+                <td>${escapeHtml(f.department?.name || "—")} <small style="color:var(--muted);">[${escapeHtml(f.department?.code || "")}]</small></td>
+                <td>${escapeHtml(f.institutionalEmail || "—")}</td>
+                <td><span class="status-pill ${statusClass}">${escapeHtml(f.status || "ACTIVE")}</span></td>
+            `;
+            deanFacultyTbody.appendChild(tr);
+        });
+    };
+
+    const loadDeanFaculty = async () => {
+        if (!isDean() || needsPasswordChange()) return;
+        try {
+            const res = await auth.getDeanFaculty();
+            state.deanFaculty = res?.faculty || [];
+            renderDeanFaculty();
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            console.error("Failed to load Dean faculty:", error);
+            if (deanFacultyTbody) {
+                deanFacultyTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:1.5rem; color:var(--color-error)">Failed to load faculty: ${escapeHtml(error.message)}</td></tr>`;
+            }
+        }
+    };
+
+    // Tab 4: Program Evaluation
+    const renderDeanEvaluations = (evaluations = []) => {
+        if (!deanEvaluationsTbody) return;
+        deanEvaluationsTbody.innerHTML = "";
+
+        if (!evaluations || evaluations.length === 0) {
+            deanEvaluationsTbody.innerHTML = `<tr><td colspan="8" class="empty-state" style="text-align:center; padding:1.5rem;">No student enrollments pending collegiate evaluation.</td></tr>`;
+            return;
+        }
+
+        evaluations.forEach((e) => {
+            const tr = document.createElement("tr");
+            const submittedStr = e.submittedAt ? formatDate(e.submittedAt) : "—";
+            tr.innerHTML = `
+                <td><strong>${escapeHtml(e.student?.name || "")}</strong><br><small style="color:var(--muted);">${escapeHtml(e.student?.studentNumber || "")}</small></td>
+                <td>${escapeHtml(e.program?.code || "—")}</td>
+                <td>Year ${e.yearLevel || "—"}</td>
+                <td>${escapeHtml(e.academicTerm?.name || "—")}</td>
+                <td>${e.subjectCount || 0}</td>
+                <td><span class="status-pill status-submitted">${escapeHtml(e.status || "SUBMITTED")}</span></td>
+                <td><small>${escapeHtml(submittedStr)}</small></td>
+                <td>
+                    <button class="button button--primary button--small" type="button" data-dean-eval-open="${e.id}">
+                        Evaluate
+                    </button>
+                </td>
+            `;
+            deanEvaluationsTbody.appendChild(tr);
+        });
+    };
+
+    const loadDeanEvaluations = async () => {
+        if (!isDean() || needsPasswordChange()) return;
+        try {
+            const res = await auth.getDeanPendingEvaluations();
+            state.deanEvaluations = res?.evaluations || [];
+            renderDeanEvaluations(state.deanEvaluations);
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            console.error("Failed to load Dean evaluations:", error);
+            if (deanEvaluationsTbody) {
+                deanEvaluationsTbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:1.5rem; color:var(--color-error)">Failed to load evaluations: ${escapeHtml(error.message)}</td></tr>`;
+            }
+        }
+    };
+
+    refreshDeanEvaluationsBtn?.addEventListener("click", () => void loadDeanEvaluations());
+
+    const openDeanEvaluation = async (enrollmentId) => {
+        if (!deanEvaluationDialog) return;
+        if (deanEvalIssuesContainer) deanEvalIssuesContainer.innerHTML = "";
+        if (deanEvalSubjectsTbody) {
+            deanEvalSubjectsTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:1.5rem;">Loading academic evaluation…</td></tr>`;
+        }
+        if (deanEvalOverrideReasonField) deanEvalOverrideReasonField.hidden = true;
+        if (deanEvalOverrideReason) deanEvalOverrideReason.value = "";
+        if (deanEvalRemarks) deanEvalRemarks.value = "";
+        if (deanEvalError) deanEvalError.hidden = true;
+        if (deanSubmitEvaluationBtn) deanSubmitEvaluationBtn.disabled = false;
+
+        if (typeof deanEvaluationDialog?.showModal === "function") {
+            if (!deanEvaluationDialog.open) deanEvaluationDialog.showModal();
+        } else {
+            deanEvaluationDialog?.setAttribute("open", "");
+        }
+
+        try {
+            const evaluation = await auth.getDeanEnrollmentEvaluation(enrollmentId);
+            renderDeanEvaluation(evaluation);
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            console.error("Failed to load enrollment evaluation:", error);
+            if (deanEvalSubjectsTbody) {
+                deanEvalSubjectsTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:1.5rem; color:var(--color-error)">Failed to load evaluation: ${escapeHtml(error.message)}</td></tr>`;
+            }
+        }
+    };
+
+    const renderDeanEvaluation = (evaluation) => {
+        state.activeDeanEvaluation = evaluation;
+        const student = evaluation.enrollment?.student;
+        const term = evaluation.enrollment?.academicTerm;
+        const program = evaluation.enrollment?.program;
+
+        if (deanEvalTitle) {
+            deanEvalTitle.textContent = `${student?.studentNumber || "Student"} · ${student?.name || "Student Evaluation"}`;
+        }
+        if (deanEvalMeta) {
+            deanEvalMeta.textContent = `${program?.code || "—"} (${program?.name || ""}) · Year ${evaluation.enrollment?.yearLevel || "—"} · ${term?.name || ""}`;
+        }
+
+        if (deanEvalIssuesContainer) {
+            deanEvalIssuesContainer.innerHTML = "";
+            const summary = document.createElement("div");
+            const hasBlockers = evaluation.blockingIssues && evaluation.blockingIssues.length > 0;
+            summary.className = `program-head-evaluation-summary ${hasBlockers ? "has-blockers" : "is-clear"}`;
+            summary.style.marginBottom = "1rem";
+            summary.textContent = `${evaluation.totalUnits} of ${evaluation.maximumUnits} maximum units · ${evaluation.blockingIssues?.length || 0} blocking issue(s)`;
+            deanEvalIssuesContainer.appendChild(summary);
+        }
+
+        if (deanEvalSubjectsTbody) {
+            deanEvalSubjectsTbody.innerHTML = "";
+            const items = evaluation.items || [];
+            items.forEach((item) => {
+                const tr = document.createElement("tr");
+                const issues = item.issues || [];
+                const missingPrereq = issues.some((iss) => iss.code === "MISSING_PREREQUISITE" && iss.blocking);
+
+                let issueHtml = "";
+                if (issues.length === 0) {
+                    issueHtml = `<span style="color:var(--color-success, #16a34a); font-size:0.85rem;">Academic checks passed</span>`;
+                } else {
+                    issueHtml = issues.map((iss) => {
+                        const color = iss.blocking ? "var(--color-error, #dc2626)" : "var(--color-warning, #d97706)";
+                        return `<div style="color:${color}; font-size:0.85rem; margin-bottom:0.25rem;">• ${escapeHtml(iss.message)}</div>`;
+                    }).join("");
+                }
+
+                let overrideHtml = "—";
+                if (missingPrereq) {
+                    overrideHtml = `<label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.85rem; cursor:pointer;">
+                        <input type="checkbox" data-dean-override-item="${item.id}" /> Override Prerequisite
+                    </label>`;
+                }
+
+                const placement = item.curriculumPlacement
+                    ? `Year ${item.curriculumPlacement.yearLevel}, Term ${item.curriculumPlacement.termNumber}`
+                    : "Out-of-sequence / Elective";
+
+                tr.innerHTML = `
+                    <td><strong>${escapeHtml(item.subject?.code || "")}</strong><br><small style="color:var(--muted);">${escapeHtml(item.subject?.title || "")}</small></td>
+                    <td>${escapeHtml(item.offering?.section?.code || "—")}</td>
+                    <td>${item.creditUnits || item.subject?.units || 0}</td>
+                    <td><small>${escapeHtml(placement)}</small></td>
+                    <td>${issueHtml}</td>
+                    <td>${overrideHtml}</td>
+                `;
+                deanEvalSubjectsTbody.appendChild(tr);
+            });
+        }
+
+        syncDeanOverrideVisibility();
+    };
+
+    const syncDeanOverrideVisibility = () => {
+        const checkedOverrides = selectAll("input[data-dean-override-item]:checked", deanEvaluationDialog || document);
+        if (deanEvalOverrideReasonField) {
+            deanEvalOverrideReasonField.hidden = checkedOverrides.length === 0;
+        }
+        if (deanEvalOverrideReason) {
+            deanEvalOverrideReason.required = checkedOverrides.length > 0;
+        }
+    };
+
+    deanEvaluationDialog?.addEventListener("change", (e) => {
+        if (e.target.matches("input[data-dean-override-item]")) {
+            syncDeanOverrideVisibility();
+        }
+    });
+
+    deanSubmitEvaluationBtn?.addEventListener("click", async () => {
+        if (!state.activeDeanEvaluation?.enrollment?.id) return;
+        const enrollmentId = state.activeDeanEvaluation.enrollment.id;
+
+        const checkedBoxes = selectAll("input[data-dean-override-item]:checked", deanEvaluationDialog || document);
+        const overrideItemIds = checkedBoxes.map((cb) => cb.getAttribute("data-dean-override-item")).filter(Boolean);
+        const overrideReason = deanEvalOverrideReason?.value?.trim() || "";
+        const remarks = deanEvalRemarks?.value?.trim() || "";
+
+        if (overrideItemIds.length > 0 && (!overrideReason || overrideReason.length < 5)) {
+            if (deanEvalError) {
+                deanEvalError.textContent = "A justification of at least 5 characters is required when overriding prerequisite requirements.";
+                deanEvalError.hidden = false;
+            }
+            deanEvalOverrideReason?.focus();
+            return;
+        }
+
+        if (deanEvalError) deanEvalError.hidden = true;
+        deanSubmitEvaluationBtn.disabled = true;
+
+        try {
+            await auth.approveDeanEnrollmentEvaluation(enrollmentId, {
+                overrideItemIds,
+                overrideReason,
+                remarks
+            });
+            deanEvaluationDialog?.close();
+            alert("Collegiate evaluation approved. The enrollment assessment is now completed.");
+            await Promise.allSettled([loadDeanEvaluations(), loadDeanOverview()]);
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            if (deanEvalError) {
+                deanEvalError.textContent = error.message || "Failed to approve enrollment evaluation.";
+                deanEvalError.hidden = false;
+            }
+        } finally {
+            deanSubmitEvaluationBtn.disabled = false;
+        }
+    });
+
+    deanEvaluationsTbody?.addEventListener("click", async (e) => {
+        const btn = e.target.closest("[data-dean-eval-open]");
+        if (!btn) return;
+        const enrollmentId = btn.getAttribute("data-dean-eval-open");
+        if (enrollmentId) await openDeanEvaluation(enrollmentId);
+    });
+
+    closeDeanEvalDialogBtns.forEach((btn) => {
+        btn.addEventListener("click", () => deanEvaluationDialog?.close());
+    });
+
+    // Tab 5: Class Schedules
+    const renderDeanSchedules = () => {
+        if (!deanSchedulesTbody) return;
+        deanSchedulesTbody.innerHTML = "";
+
+        const list = state.deanSchedules || [];
+        if (list.length === 0) {
+            deanSchedulesTbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="text-align:center; padding:1.5rem;">No scheduled class offerings found under your college programs.</td></tr>`;
+            return;
+        }
+
+        list.forEach((s) => {
+            const tr = document.createElement("tr");
+            const schedStr = (s.schedules && s.schedules.length > 0)
+                ? s.schedules.map((sc) => `${sc.dayOfWeek} ${sc.startsAt || ""}–${sc.endsAt || ""} ${sc.room ? `(${sc.room.name || sc.room.code})` : ""}`).join("; ")
+                : "TBA";
+
+            tr.innerHTML = `
+                <td><strong>${escapeHtml(s.offeringCode)}</strong></td>
+                <td>${escapeHtml(s.subject?.code || "")} · ${escapeHtml(s.subject?.title || "")}</td>
+                <td>${escapeHtml(s.section?.code || "—")}</td>
+                <td>${escapeHtml(s.program?.code || "—")}</td>
+                <td>${escapeHtml(s.instructor?.name || "Unassigned")}</td>
+                <td>${escapeHtml(schedStr)}</td>
+            `;
+            deanSchedulesTbody.appendChild(tr);
+        });
+    };
+
+    const loadDeanSchedules = async () => {
+        if (!isDean() || needsPasswordChange()) return;
+        try {
+            const res = await auth.getDeanSchedules();
+            state.deanSchedules = res?.schedules || [];
+            renderDeanSchedules();
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            console.error("Failed to load Dean schedules:", error);
+            if (deanSchedulesTbody) {
+                deanSchedulesTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:1.5rem; color:var(--color-error)">Failed to load schedules: ${escapeHtml(error.message)}</td></tr>`;
+            }
+        }
+    };
+
+    // Dean Top Refresh
+    deanRefreshBtn?.addEventListener("click", () => void loadDeanData());
+
+    const loadDeanData = async () => {
+        if (!isDean() || needsPasswordChange()) return;
+        await Promise.allSettled([
+            loadDeanOverview(),
+            loadDeanGrades(),
+            loadDeanStudents(),
+            loadDeanFaculty(),
+            loadDeanEvaluations(),
+            loadDeanSchedules()
+        ]);
+    };
+
+    // =========================================================================
+    // AI-ASSISTED ACADEMIC RECORD IMPORT & CREDITING MODULE
+    // =========================================================================
+
+    // Student DOM Elements
+    const studentImportDialog = select("[data-student-import-dialog]");
+    const studentImportForm = select("[data-student-import-form]");
+    const openStudentImportBtn = select("[data-open-student-import-modal]");
+    const closeStudentImportBtns = selectAll("[data-close-student-import-dialog]");
+    const studentImportTargetProgram = select("#import-target-program");
+    const studentImportError = select("[data-student-import-error]");
+    const studentImportStatus = select("[data-student-import-status]");
+    const studentImportRequestsList = select("[data-student-import-requests-list]");
+    const refreshStudentImportRequestsBtn = select("[data-refresh-student-import-requests]");
+
+    // Registrar DOM Elements
+    const registrarImportsNavBadge = select("[data-registrar-imports-badge]");
+    const refreshRegistrarImportsBtn = select("[data-refresh-registrar-imports]");
+    const registrarImportSearch = select("[data-registrar-import-search]");
+    const registrarImportStatusFilter = select("[data-registrar-import-status-filter]");
+    const registrarImportsTbody = select("[data-registrar-imports-tbody]");
+    const registrarImportDialog = select("[data-registrar-import-dialog]");
+    const closeRegistrarImportDialogBtns = selectAll("[data-close-registrar-import-dialog]");
+    const registrarImportDialogTitle = select("[data-registrar-import-dialog-title]");
+    const registrarImportMeta = select("[data-registrar-import-meta]");
+    const importDocName = select("[data-import-doc-name]");
+    const importViewDocLink = select("[data-import-view-doc-link]");
+    const importRejectBtn = select("[data-import-reject-btn]");
+    const importProcessAiBtn = select("[data-import-process-ai-btn]");
+    const importVerifyActions = select("[data-import-verify-actions]");
+    const importRejectionField = select("[data-import-rejection-field]");
+    const importRejectionReason = select("#import-rejection-reason");
+    const importConfirmRejectBtn = select("[data-import-confirm-reject-btn]");
+    const importCancelRejectBtn = select("[data-import-cancel-reject-btn]");
+    const registrarImportPreviewContainer = select("[data-registrar-import-preview-container]");
+    const importMetricsSummary = select("[data-import-metrics-summary]");
+    const registrarImportItemsTbody = select("[data-registrar-import-items-tbody]");
+    const importCommitRemarks = select("#import-commit-remarks");
+    const importCommitBtn = select("[data-import-commit-btn]");
+    const registrarImportDialogError = select("[data-registrar-import-dialog-error]");
+    const registrarImportDialogStatus = select("[data-registrar-import-dialog-status]");
+
+    // Status pill style helper
+    const getImportStatusClass = (status) => {
+        switch (status) {
+            case "IMPORTED": return "status-pill--success";
+            case "APPROVED":
+            case "MATCHED": return "status-pill--primary";
+            case "AI_PROCESSING":
+            case "UNDER_REVIEW": return "status-pill--info";
+            case "REJECTED": return "status-pill--danger";
+            case "SUBMITTED":
+            default: return "status-pill--warning";
+        }
+    };
+
+    // ── Student Academic Record Import Logic ─────────────────────────────
+
+    const renderStudentImportRequests = (requests = []) => {
+        if (!studentImportRequestsList) return;
+        studentImportRequestsList.innerHTML = "";
+
+        if (!requests || requests.length === 0) {
+            studentImportRequestsList.innerHTML = `<p class="dashboard-list__empty">You have not submitted any academic record import requests yet.</p>`;
+            return;
+        }
+
+        requests.forEach((req) => {
+            const item = document.createElement("div");
+            item.className = "dashboard-list__item";
+            item.style.display = "flex";
+            item.style.justifyContent = "space-between";
+            item.style.alignItems = "center";
+            item.style.padding = "0.75rem 1rem";
+            item.style.borderBottom = "1px solid var(--border, #e2e8f0)";
+
+            const meta = document.createElement("div");
+            const title = document.createElement("strong");
+            title.textContent = `${req.requestNumber || "REQ"} · ${req.targetProgram?.code || "Program"} (${req.targetProgram?.name || ""})`;
+
+            const sub = document.createElement("small");
+            sub.style.display = "block";
+            sub.style.color = "var(--muted, #64748b)";
+            const schoolInfo = req.previousSchool ? `School: ${escapeHtml(req.previousSchool)} · ` : "";
+            const dateVal = req.submittedAt || req.createdAt || req.document?.uploadedAt;
+            const submittedDate = dateVal ? formatDate(dateVal) : "Recently";
+            sub.innerHTML = `${schoolInfo}Submitted: ${submittedDate} · File: <em>${escapeHtml(req.originalFilename || "Document")}</em>`;
+
+            if (req.status === "REJECTED" && req.rejectionReason) {
+                const rejMsg = document.createElement("div");
+                rejMsg.style.color = "var(--danger, #dc2626)";
+                rejMsg.style.fontSize = "0.8rem";
+                rejMsg.style.marginTop = "0.25rem";
+                rejMsg.innerHTML = `<strong>Rejection reason:</strong> ${escapeHtml(req.rejectionReason)}`;
+                sub.appendChild(rejMsg);
+            }
+
+            if (req.status === "IMPORTED" && req.remarks) {
+                const impMsg = document.createElement("div");
+                impMsg.style.color = "var(--color-success, #16a34a)";
+                impMsg.style.fontSize = "0.8rem";
+                impMsg.style.marginTop = "0.25rem";
+                impMsg.innerHTML = `<strong>Registrar:</strong> ${escapeHtml(req.remarks)}`;
+                sub.appendChild(impMsg);
+            }
+
+            meta.appendChild(title);
+            meta.appendChild(sub);
+
+            const actions = document.createElement("div");
+            actions.style.display = "flex";
+            actions.style.alignItems = "center";
+            actions.style.gap = "0.75rem";
+
+            const pill = document.createElement("span");
+            pill.className = `status-pill ${getImportStatusClass(req.status)}`;
+            pill.textContent = humanize(req.status);
+
+            const docLink = document.createElement("a");
+            docLink.href = auth.getAcademicRecordImportDocumentUrl(req.id);
+            docLink.target = "_blank";
+            docLink.rel = "noopener noreferrer";
+            docLink.className = "button button--quiet button--compact";
+            docLink.textContent = "View File ↗";
+
+            actions.appendChild(pill);
+            actions.appendChild(docLink);
+
+            item.appendChild(meta);
+            item.appendChild(actions);
+            studentImportRequestsList.appendChild(item);
+        });
+    };
+
+    const loadStudentImportRequests = async () => {
+        if (!isStudentWorkspace() || needsPasswordChange()) return;
+        try {
+            const res = await auth.getAcademicRecordImportRequests();
+            state.studentImportRequests = res?.requests || [];
+            renderStudentImportRequests(state.studentImportRequests);
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            console.error("Failed to load student import requests:", error);
+            if (studentImportRequestsList) {
+                studentImportRequestsList.innerHTML = `<p class="dashboard-list__empty" style="color: var(--danger, #dc2626);">Unable to load import requests: ${escapeHtml(error.message)}</p>`;
+            }
+        }
+    };
+
+    const loadTargetProgramsForStudent = async () => {
+        if (state.academicPrograms?.length) return state.academicPrograms;
+        try {
+            const res = await auth.getAdmissionPrograms().catch(() => null);
+            if (res?.programs?.length) {
+                state.academicPrograms = res.programs;
+                return state.academicPrograms;
+            }
+        } catch (e) {
+            console.warn("Could not load admission programs:", e);
+        }
+
+        try {
+            const res = await auth.getEnrollmentOptions().catch(() => null);
+            if (res?.programs?.length) {
+                state.academicPrograms = res.programs;
+                return state.academicPrograms;
+            }
+        } catch (e) {
+            console.warn("Could not load enrollment options programs:", e);
+        }
+
+        if (state.registrarOfferingOptions?.programs?.length) {
+            state.academicPrograms = state.registrarOfferingOptions.programs;
+            return state.academicPrograms;
+        }
+
+        return state.academicPrograms || [];
+    };
+
+    const openStudentImportModal = async () => {
+        if (!studentImportDialog) return;
+        if (studentImportError) studentImportError.hidden = true;
+        if (studentImportStatus) studentImportStatus.textContent = "";
+        studentImportForm?.reset();
+
+        // Populate programs
+        if (studentImportTargetProgram) {
+            studentImportTargetProgram.innerHTML = `<option value="">Loading active programs…</option>`;
+            let programs = await loadTargetProgramsForStudent();
+            if (!programs.length && state.registrarOfferingOptions?.programs) {
+                programs = state.registrarOfferingOptions.programs;
+            }
+            if (!programs.length) {
+                try {
+                    const data = await auth.getRegistrarOfferingOptions().catch(() => null);
+                    if (data?.programs) {
+                        programs = data.programs;
+                        state.academicPrograms = programs;
+                    }
+                } catch {}
+            }
+            if (!programs.length) {
+                try {
+                    const data = await auth.getAdminPrograms().catch(() => null);
+                    if (data?.programs) {
+                        programs = data.programs;
+                        state.academicPrograms = programs;
+                    }
+                } catch {}
+            }
+
+            studentImportTargetProgram.innerHTML = `<option value="">Select target academic program…</option>`;
+            if (programs.length === 0) {
+                studentImportTargetProgram.innerHTML = `<option value="">No academic programs available</option>`;
+            } else {
+                programs.forEach((prog) => {
+                    const opt = document.createElement("option");
+                    opt.value = prog.id;
+                    opt.textContent = `${prog.code} — ${prog.name}`;
+                    studentImportTargetProgram.appendChild(opt);
+                });
+            }
+
+            // Default to student's currently assigned program if any
+            const currentProgId = state.studentDashboard?.student?.program?.id ||
+                                  state.studentDashboard?.student?.programId ||
+                                  state.studentDashboard?.student?.program_id;
+            if (currentProgId && studentImportTargetProgram.querySelector(`option[value="${currentProgId}"]`)) {
+                studentImportTargetProgram.value = currentProgId;
+            }
+        }
+
+        if (typeof studentImportDialog.showModal === "function") {
+            if (!studentImportDialog.open) studentImportDialog.showModal();
+        } else {
+            studentImportDialog.setAttribute("open", "");
+        }
+    };
+
+    openStudentImportBtn?.addEventListener("click", () => void openStudentImportModal());
+    refreshStudentImportRequestsBtn?.addEventListener("click", () => void loadStudentImportRequests());
+    closeStudentImportBtns.forEach((btn) => btn.addEventListener("click", () => studentImportDialog?.close()));
+
+    studentImportForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!studentImportForm.checkValidity()) {
+            studentImportForm.reportValidity();
+            return;
+        }
+
+        const formData = new FormData(studentImportForm);
+        const targetProgramId = formData.get("targetProgramId");
+        const docFile = formData.get("document");
+
+        if (!targetProgramId) {
+            if (studentImportError) {
+                studentImportError.textContent = "Please select a target academic program.";
+                studentImportError.hidden = false;
+            }
+            return;
+        }
+
+        if (!docFile || !(docFile instanceof File) || docFile.size === 0) {
+            if (studentImportError) {
+                studentImportError.textContent = "Please select a valid academic record document (PDF, PNG, or JPG/JPEG).";
+                studentImportError.hidden = false;
+            }
+            return;
+        }
+
+        if (docFile.size > 50 * 1024 * 1024) {
+            if (studentImportError) {
+                studentImportError.textContent = "Uploaded file size exceeds the 50MB limit.";
+                studentImportError.hidden = false;
+            }
+            return;
+        }
+
+        if (studentImportError) studentImportError.hidden = true;
+        setBusy(studentImportDialog, true);
+        if (studentImportStatus) studentImportStatus.textContent = "Uploading academic records securely...";
+
+        try {
+            await auth.submitAcademicRecordImportRequest(formData);
+            if (studentImportStatus) studentImportStatus.textContent = "Academic record submitted successfully for evaluation!";
+            setTimeout(() => {
+                studentImportDialog?.close();
+                void loadStudentImportRequests();
+            }, 1000);
+        } catch (err) {
+            if (handleExpiredSession(err)) return;
+            if (studentImportError) {
+                studentImportError.textContent = err.message || "Failed to submit academic record request.";
+                studentImportError.hidden = false;
+            }
+            if (studentImportStatus) studentImportStatus.textContent = "";
+        } finally {
+            setBusy(studentImportDialog, false);
+        }
+    });
+
+    // ── Registrar Academic Record Import Review & AI Processing Logic ────
+
+    const renderRegistrarImportsQueue = (requests = []) => {
+        if (!registrarImportsTbody) return;
+        registrarImportsTbody.innerHTML = "";
+
+        // Update badge with pending count
+        const pendingCount = requests.filter(r => r.status === "SUBMITTED" || r.status === "UNDER_REVIEW").length;
+        if (registrarImportsNavBadge) {
+            registrarImportsNavBadge.textContent = String(pendingCount);
+            registrarImportsNavBadge.hidden = pendingCount === 0;
+        }
+
+        if (!requests || requests.length === 0) {
+            registrarImportsTbody.innerHTML = `<tr><td colspan="7" class="empty-state" style="text-align: center; padding: 1.5rem;">No academic record import requests found matching your filter.</td></tr>`;
+            return;
+        }
+
+        requests.forEach((req) => {
+            const tr = document.createElement("tr");
+
+            // Program mismatch detection indicator
+            let mismatchBadge = "";
+            if (req.student?.program?.code && req.targetProgram?.code && req.student.program.code !== req.targetProgram.code) {
+                mismatchBadge = `<br><span class="status-pill status-pill--warning" style="font-size: 0.72rem; padding: 2px 6px;">Target ≠ Active (${escapeHtml(req.student.program.code)})</span>`;
+            }
+
+            const studentCell = `<strong>${escapeHtml(req.student?.name || "Student")}</strong><br><small style="color:var(--muted);">${escapeHtml(req.student?.studentNumber || "")}</small>`;
+            const programCell = `<strong>${escapeHtml(req.targetProgram?.code || "—")}</strong> <small style="color:var(--muted);">${escapeHtml(req.targetProgram?.name || "")}</small>${mismatchBadge}`;
+            const schoolCell = escapeHtml(req.previousSchool || "—");
+            const statusCell = `<span class="status-pill ${getImportStatusClass(req.status)}">${escapeHtml(humanize(req.status))}</span>`;
+            const dateVal = req.submittedAt || req.createdAt || req.document?.uploadedAt;
+            const dateCell = `<small>${dateVal ? formatDate(dateVal) : "—"}</small>`;
+
+            let actionBtnText = "Review & Process";
+            if (req.status === "MATCHED") actionBtnText = "Resolve & Commit";
+            else if (req.status === "IMPORTED") actionBtnText = "View Details";
+
+            tr.innerHTML = `
+                <td><strong>${escapeHtml(req.requestNumber || "REQ")}</strong></td>
+                <td>${studentCell}</td>
+                <td>${programCell}</td>
+                <td>${schoolCell}</td>
+                <td>${statusCell}</td>
+                <td>${dateCell}</td>
+                <td>
+                    <button class="button button--primary button--small" type="button" data-registrar-review-import="${req.id}">
+                        ${actionBtnText}
+                    </button>
+                </td>
+            `;
+
+            registrarImportsTbody.appendChild(tr);
+        });
+    };
+
+    const loadRegistrarImportRequests = async () => {
+        if (!isRegistrar() || needsPasswordChange()) return;
+        const search = registrarImportSearch?.value?.trim() || "";
+        const status = registrarImportStatusFilter?.value || "";
+
+        try {
+            const res = await auth.getAcademicRecordImportRequests({ search, status });
+            state.registrarImportRequests = res?.requests || [];
+            renderRegistrarImportsQueue(state.registrarImportRequests);
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            console.error("Failed to load registrar import requests:", error);
+            if (registrarImportsTbody) {
+                registrarImportsTbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 1.5rem; color: var(--danger, #dc2626);">Failed to load import requests: ${escapeHtml(error.message)}</td></tr>`;
+            }
+        }
+    };
+
+    registrarImportSearch?.addEventListener("input", () => void loadRegistrarImportRequests());
+    registrarImportStatusFilter?.addEventListener("change", () => void loadRegistrarImportRequests());
+    refreshRegistrarImportsBtn?.addEventListener("click", () => void loadRegistrarImportRequests());
+
+    // Open Registrar Review Dialog
+    const openRegistrarImportReview = async (requestId) => {
+        if (!registrarImportDialog) return;
+        state.activeRegistrarImport = null;
+        state.activeRegistrarImportPreview = null;
+
+        if (registrarImportDialogError) registrarImportDialogError.hidden = true;
+        if (registrarImportDialogStatus) registrarImportDialogStatus.textContent = "";
+        if (importRejectionField) importRejectionField.hidden = true;
+        if (importRejectionReason) importRejectionReason.value = "";
+        if (importCommitRemarks) importCommitRemarks.value = "";
+        if (registrarImportPreviewContainer) registrarImportPreviewContainer.hidden = true;
+
+        if (typeof registrarImportDialog.showModal === "function") {
+            if (!registrarImportDialog.open) registrarImportDialog.showModal();
+        } else {
+            registrarImportDialog.setAttribute("open", "");
+        }
+
+        try {
+            const res = await auth.getAcademicRecordImportRequest(requestId);
+            const req = res?.request;
+            state.activeRegistrarImport = req;
+
+            if (registrarImportDialogTitle) {
+                registrarImportDialogTitle.textContent = `${req.requestNumber || "REQ"} · ${req.student?.name || "Student"}`;
+            }
+
+            // Mismatch notice
+            let mismatchNotice = "";
+            if (req.student?.program?.code && req.targetProgram?.code && req.student.program.code !== req.targetProgram.code) {
+                mismatchNotice = `
+                    <div style="background: rgba(217, 119, 6, 0.1); border-left: 3px solid var(--color-warning, #d97706); padding: 0.5rem 0.75rem; border-radius: 4px; margin-top: 0.5rem; font-size: 0.85rem; color: var(--ink);">
+                        <strong>Program Mismatch Notice:</strong> Student's active enrolled program is <strong>${escapeHtml(req.student.program.code)}</strong>, but evaluation target is <strong>${escapeHtml(req.targetProgram.code)}</strong>. AI matching will strictly scope against the target program curriculum. Importing will NOT alter the student's official degree program.
+                    </div>
+                `;
+            }
+
+            if (registrarImportMeta) {
+                const reqSubmittedDate = req.submittedAt || req.createdAt || req.document?.uploadedAt;
+                registrarImportMeta.innerHTML = `
+                    <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; background: var(--surface-2, #f8fafc); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.9rem;">
+                        <div><strong style="color:var(--muted);">Student:</strong> ${escapeHtml(req.student?.name || "")} (${escapeHtml(req.student?.studentNumber || "")})</div>
+                        <div><strong style="color:var(--muted);">Target Program:</strong> ${escapeHtml(req.targetProgram?.code || "")} — ${escapeHtml(req.targetProgram?.name || "")}</div>
+                        <div><strong style="color:var(--muted);">Previous School:</strong> ${escapeHtml(req.previousSchool || "Not specified")}</div>
+                        <div><strong style="color:var(--muted);">Submitted:</strong> ${reqSubmittedDate ? formatDate(reqSubmittedDate) : "—"}</div>
+                        <div><strong style="color:var(--muted);">Status:</strong> <span class="status-pill ${getImportStatusClass(req.status)}">${escapeHtml(humanize(req.status))}</span></div>
+                    </div>
+                    ${mismatchNotice}
+                    ${req.remarks ? `<p style="font-size:0.85rem; margin-top:0.5rem; color:var(--muted);"><strong>Student Notes:</strong> ${escapeHtml(req.remarks)}</p>` : ""}
+                    ${req.rejectionReason ? `<p style="font-size:0.85rem; margin-top:0.5rem; color:var(--danger, #dc2626);"><strong>Rejection Reason:</strong> ${escapeHtml(req.rejectionReason)}</p>` : ""}
+                `;
+            }
+
+            // Document info
+            if (importDocName) {
+                importDocName.textContent = `Document: ${req.originalFilename || "Academic Record File"}`;
+            }
+            if (importViewDocLink) {
+                importViewDocLink.href = auth.getAcademicRecordImportDocumentUrl(req.id);
+            }
+
+            // Step 1 controls
+            if (importVerifyActions) {
+                const canVerify = req.status === "SUBMITTED" || req.status === "UNDER_REVIEW" || req.status === "APPROVED_FOR_AI";
+                importVerifyActions.hidden = !canVerify;
+            }
+
+            if (importProcessAiBtn) {
+                if (req.status === "UNDER_REVIEW") {
+                    importProcessAiBtn.innerHTML = `✨ Re-run AI Matching`;
+                } else if (req.status === "SUBMITTED") {
+                    importProcessAiBtn.innerHTML = `✨ Approve & Run AI Matching`;
+                } else {
+                    importProcessAiBtn.innerHTML = `✨ Run AI Matching`;
+                }
+            }
+
+            // If already MATCHED, APPROVED, IMPORTED, or UNDER_REVIEW, load preview automatically
+            if (["MATCHED", "APPROVED", "IMPORTED", "UNDER_REVIEW"].includes(req.status)) {
+                await loadRegistrarImportPreview(req.id);
+            }
+        } catch (error) {
+            if (handleExpiredSession(error)) return;
+            console.error("Failed to load import request review:", error);
+            if (registrarImportDialogError) {
+                registrarImportDialogError.textContent = error.message || "Failed to load request.";
+                registrarImportDialogError.hidden = false;
+            }
+        }
+    };
+
+    // Load AI Matching Preview & Conflicts Table
+    const loadRegistrarImportPreview = async (requestId) => {
+        try {
+            const preview = await auth.getAcademicRecordImportPreview(requestId);
+            state.activeRegistrarImportPreview = preview;
+            renderRegistrarImportPreview(preview);
+        } catch (error) {
+            console.error("Failed to load import preview:", error);
+            if (registrarImportDialogError) {
+                registrarImportDialogError.textContent = error.message || "Failed to load match preview.";
+                registrarImportDialogError.hidden = false;
+            }
+        }
+    };
+
+    const renderRegistrarImportPreview = (previewData) => {
+        if (!registrarImportPreviewContainer || !previewData) return;
+        registrarImportPreviewContainer.hidden = false;
+
+        const preview = previewData?.preview || previewData || {};
+        const isImported = Boolean(preview.isImported || preview.status === "IMPORTED");
+        const isRejected = Boolean(preview.isRejected || preview.status === "REJECTED");
+
+        const metrics = preview.metrics || preview.summary || {};
+        const totalExtracted = metrics.totalExtracted ?? metrics.totalDetected ?? 0;
+        const highMatch = metrics.highMatch ?? metrics.highMatches ?? 0;
+        const needsReview = metrics.needsReview ?? 0;
+        const conflictCount = metrics.conflictCount ?? metrics.conflicts ?? 0;
+
+        // Metrics Summary
+        if (importMetricsSummary) {
+            const methodLabel = preview.extractionMethod === "GEMINI" ? "Gemini AI" : "Deterministic";
+            importMetricsSummary.innerHTML = `
+                <article class="metric-card" style="padding: 0.4rem 0.75rem;"><small>Method</small><strong>${escapeHtml(methodLabel)}</strong></article>
+                <article class="metric-card" style="padding: 0.4rem 0.75rem;"><small>Extracted</small><strong>${totalExtracted}</strong></article>
+                <article class="metric-card" style="padding: 0.4rem 0.75rem;"><small>High Match</small><strong style="color:var(--color-success, #16a34a);">${highMatch}</strong></article>
+                <article class="metric-card" style="padding: 0.4rem 0.75rem;"><small>Needs Review</small><strong style="color:var(--color-warning, #d97706);">${needsReview}</strong></article>
+                <article class="metric-card" style="padding: 0.4rem 0.75rem;"><small>Conflicts</small><strong style="color:${conflictCount > 0 ? 'var(--danger, #dc2626)' : 'inherit'};">${conflictCount}</strong></article>
+            `;
+        }
+
+        const rawItems = preview.items || preview.records || [];
+        const items = rawItems.map((item, idx) => {
+            const code = item.sourceSubjectCode || item.extractedCode || "—";
+            const title = item.sourceSubjectTitle || item.extractedTitle || "";
+            const units = item.sourceUnits ?? item.extractedUnits ?? "—";
+            const grade = item.sourceGrade || item.extractedGrade || "—";
+            const status = item.status || item.matchStatus || "NO_MATCH";
+            const score = item.confidenceScore ?? item.matchScore ?? 0;
+            const hasConflict = Boolean(item.hasConflict || item.conflict?.hasConflict);
+            const existingGrade = item.existingGrade || item.conflict?.existingGrade || "POSTED";
+            const matchedCode = item.matchedSubject?.code || item.matchedSubjectCode;
+            const matchedTitle = item.matchedSubject?.title || item.matchedSubjectTitle;
+            const matchedUnits = item.matchedSubject?.units ?? item.matchedSubjectUnits;
+            const matchedId = item.matchedSubject?.id || item.matchedSubjectId;
+            const recordIndex = item.recordIndex ?? item.id ?? idx;
+
+            return {
+                ...item,
+                recordIndex,
+                id: recordIndex,
+                sourceSubjectCode: code,
+                sourceSubjectTitle: title,
+                sourceUnits: units,
+                sourceGrade: grade,
+                status,
+                confidenceScore: score,
+                hasConflict,
+                existingGrade,
+                matchedSubjectId: matchedId,
+                matchedSubject: matchedCode ? {
+                    id: matchedId,
+                    code: matchedCode,
+                    title: matchedTitle,
+                    units: matchedUnits
+                } : null
+            };
+        });
+
+        // Items Table
+        if (registrarImportItemsTbody) {
+            registrarImportItemsTbody.innerHTML = "";
+            if (!items || items.length === 0) {
+                registrarImportItemsTbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 1rem;">No subjects were extracted or matched.</td></tr>`;
+                return;
+            }
+
+            items.forEach((item) => {
+                const tr = document.createElement("tr");
+
+                // Extracted info
+                const extractedSubject = `<strong>${escapeHtml(item.sourceSubjectCode || "—")}</strong><br><small style="color:var(--muted);">${escapeHtml(item.sourceSubjectTitle || "")} (${item.sourceUnits ?? "—"}u)</small>`;
+                const extractedGrade = `<strong style="font-size: 1.05rem;">${escapeHtml(item.sourceGrade || "—")}</strong>`;
+
+                // Matched curriculum subject
+                let matchDisplay = `<span style="color:var(--muted);">No catalog match</span>`;
+                if (item.matchedSubject) {
+                    const matchPlacement = item.curriculumPlacement ? ` · Y${item.curriculumPlacement.yearLevel}T${item.curriculumPlacement.termNumber}` : "";
+                    matchDisplay = `<strong>${escapeHtml(item.matchedSubject.code)}</strong> · ${escapeHtml(item.matchedSubject.title)} (${item.matchedSubject.units}u)${matchPlacement}`;
+                }
+
+                // Confidence pill
+                let confPillClass = "status-pill--warning";
+                if (item.status === "HIGH_MATCH") confPillClass = "status-pill--success";
+                else if (item.status === "CONFLICT") confPillClass = "status-pill--danger";
+                else if (item.status === "NO_MATCH") confPillClass = "status-pill--secondary";
+
+                const confDisplay = `<span class="status-pill ${confPillClass}" style="font-size: 0.75rem;">${escapeHtml(humanize(item.status))}</span><br><small style="color:var(--muted); font-size:0.7rem;">${Math.round((item.confidenceScore || 0) * 100)}% match</small>`;
+
+                // Resolution / Action Control
+                let actionControl = "";
+                if (isImported) {
+                    actionControl = `<span class="status-pill status-pill--success" style="font-size: 0.8rem;">Imported (${escapeHtml(item.resolutionAction || "COMMITTED")})</span>`;
+                } else if (item.hasConflict) {
+                    actionControl = `
+                        <div style="background: rgba(220, 38, 38, 0.08); padding: 0.4rem; border-radius: 4px; font-size: 0.8rem;">
+                            <span style="color: var(--danger, #dc2626); font-weight: 600;">Existing Grade: ${escapeHtml(item.existingGrade || "POSTED")}</span>
+                            <select data-resolution-item="${item.id}" style="font-size: 0.8rem; margin-top: 0.25rem; width: 100%;">
+                                <option value="KEEP_EXISTING" ${item.resolutionAction === "KEEP_EXISTING" ? "selected" : ""}>Keep Existing Grade</option>
+                                <option value="USE_UPLOADED" ${item.resolutionAction === "USE_UPLOADED" ? "selected" : ""}>Use Uploaded Grade (${escapeHtml(item.sourceGrade || "")})</option>
+                                <option value="SKIP" ${item.resolutionAction === "SKIP" ? "selected" : ""}>Skip (Do not import)</option>
+                            </select>
+                        </div>
+                    `;
+                } else if (!item.matchedSubjectId) {
+                    actionControl = `<span style="color: var(--muted); font-size: 0.8rem;">No match to import</span>`;
+                } else {
+                    actionControl = `
+                        <select data-resolution-item="${item.id}" style="font-size: 0.8rem; width: 100%;">
+                            <option value="USE_UPLOADED" selected>Import Credited Subject</option>
+                            <option value="SKIP">Skip (Do not import)</option>
+                        </select>
+                    `;
+                }
+
+                tr.innerHTML = `
+                    <td>${extractedSubject}</td>
+                    <td>${extractedGrade}</td>
+                    <td>${matchDisplay}</td>
+                    <td>${confDisplay}</td>
+                    <td>${actionControl}</td>
+                `;
+
+                registrarImportItemsTbody.appendChild(tr);
+            });
+        }
+
+        // Hide commit button if already imported or rejected
+        if (importCommitBtn) {
+            importCommitBtn.hidden = Boolean(isImported || isRejected);
+        }
+    };
+
+    // Rejection UI handlers
+    importRejectBtn?.addEventListener("click", () => {
+        if (importRejectionField) importRejectionField.hidden = false;
+        importRejectionReason?.focus();
+    });
+
+    importCancelRejectBtn?.addEventListener("click", () => {
+        if (importRejectionField) importRejectionField.hidden = true;
+        if (importRejectionReason) importRejectionReason.value = "";
+    });
+
+    importConfirmRejectBtn?.addEventListener("click", async () => {
+        const requestId = state.activeRegistrarImport?.id;
+        const reason = importRejectionReason?.value?.trim() || "";
+        if (!requestId) return;
+
+        if (!reason || reason.length < 3) {
+            alert("Please provide a valid rejection reason.");
+            importRejectionReason?.focus();
+            return;
+        }
+
+        if (!confirm("Reject this academic record import request?")) return;
+
+        setBusy(registrarImportDialog, true);
+        try {
+            await auth.verifyAcademicRecordImportRequest(requestId, {
+                action: "REJECT",
+                remarks: reason,
+                rejectionReason: reason
+            });
+            alert("Request has been marked as rejected.");
+            registrarImportDialog?.close();
+            await loadRegistrarImportRequests();
+        } catch (err) {
+            if (handleExpiredSession(err)) return;
+            alert(err.message || "Failed to reject request.");
+        } finally {
+            setBusy(registrarImportDialog, false);
+        }
+    });
+
+    // Run AI Matching Handler
+    importProcessAiBtn?.addEventListener("click", async () => {
+        const requestId = state.activeRegistrarImport?.id;
+        if (!requestId) return;
+
+        setBusy(registrarImportDialog, true);
+        if (registrarImportDialogStatus) {
+            registrarImportDialogStatus.textContent = "✨ Running Gemini AI OCR and matching subjects against target program curriculum. Please wait...";
+        }
+        if (registrarImportDialogError) registrarImportDialogError.hidden = true;
+
+        try {
+            // 1. Verify if still in SUBMITTED state
+            if (state.activeRegistrarImport?.status === "SUBMITTED") {
+                await auth.verifyAcademicRecordImportRequest(requestId, { action: "APPROVE" });
+            }
+            // 2. Trigger AI Matching
+            const res = await auth.processAcademicRecordImportAI(requestId);
+            const req = res?.data?.request || res?.request || res;
+            const extractedCount = req?.matchedData?.records?.length || 0;
+
+            if (extractedCount > 0) {
+                if (registrarImportDialogStatus) {
+                    registrarImportDialogStatus.textContent = `✨ AI matching complete! Extracted ${extractedCount} subject(s). Review subjects and conflict resolutions below.`;
+                }
+            } else {
+                throw new Error("No academic records could be extracted. AI/OCR processing failed or the document is unreadable.");
+            }
+
+            // 3. Reload preview
+            await loadRegistrarImportPreview(requestId);
+            await loadRegistrarImportRequests();
+        } catch (err) {
+            if (handleExpiredSession(err)) return;
+            if (registrarImportDialogError) {
+                registrarImportDialogError.textContent = err.message || "AI Matching failed.";
+                registrarImportDialogError.hidden = false;
+            }
+            if (registrarImportDialogStatus) registrarImportDialogStatus.textContent = "";
+        } finally {
+            setBusy(registrarImportDialog, false);
+        }
+    });
+
+    // Commit Credited Grades Handler
+    importCommitBtn?.addEventListener("click", async () => {
+        const requestId = state.activeRegistrarImport?.id;
+        const preview = state.activeRegistrarImportPreview?.preview || state.activeRegistrarImportPreview;
+        const rawItems = preview?.items || preview?.records || [];
+        if (!requestId || !rawItems.length) return;
+
+        const resolutions = rawItems.map((item, idx) => {
+            const recordIndex = item.recordIndex ?? item.id ?? idx;
+            const selectEl = select(`select[data-resolution-item="${recordIndex}"]`, registrarImportDialog || document);
+            return {
+                recordIndex,
+                id: recordIndex,
+                resolutionAction: selectEl?.value || item.resolutionAction || "USE_UPLOADED",
+            };
+        });
+
+        const remarks = importCommitRemarks?.value?.trim() || "";
+
+        if (!confirm("Confirm and import credited subjects into official student history? Posted grades will immediately integrate into student records and prerequisite evaluation.")) return;
+
+        setBusy(registrarImportDialog, true);
+        if (registrarImportDialogStatus) registrarImportDialogStatus.textContent = "Importing credited subjects and posting grades...";
+        if (registrarImportDialogError) registrarImportDialogError.hidden = true;
+
+        try {
+            const result = await auth.commitAcademicRecordImport(requestId, { resolutions, remarks });
+            alert(`Success! Imported ${result?.importedCount || 0} subject(s) with posted grades into student record.`);
+            registrarImportDialog?.close();
+            await loadRegistrarImportRequests();
+        } catch (err) {
+            if (handleExpiredSession(err)) return;
+            if (registrarImportDialogError) {
+                registrarImportDialogError.textContent = err.message || "Failed to commit academic import.";
+                registrarImportDialogError.hidden = false;
+            }
+            if (registrarImportDialogStatus) registrarImportDialogStatus.textContent = "";
+        } finally {
+            setBusy(registrarImportDialog, false);
+        }
+    });
+
+    registrarImportsTbody?.addEventListener("click", async (e) => {
+        const btn = e.target.closest("[data-registrar-review-import]");
+        if (!btn) return;
+        const requestId = btn.getAttribute("data-registrar-review-import");
+        if (requestId) await openRegistrarImportReview(requestId);
+    });
+
+    closeRegistrarImportDialogBtns.forEach((btn) => btn.addEventListener("click", () => registrarImportDialog?.close()));
+
+    void bootstrap();
 })();

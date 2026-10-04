@@ -46,7 +46,7 @@ export async function buildApplicationReview(database, applicationId, programId)
       courseOffering: { academicTerm: { startsOn: { lt: application.academicTerm.startsOn } } },
       grades: { some: finalGrades }
     },
-    select: { courseOffering: { select: { subject: { select: { id: true, code: true } } } }, grades: { where: finalGrades, select: { status: true, isPassing: true, letterGrade: true, remarks: true, updatedAt: true } } }
+    select: { courseOffering: { select: { subject: { select: { id: true, code: true } } } }, grades: { where: finalGrades, select: { status: true, isPassing: true, numericGrade: true, letterGrade: true, remarks: true, updatedAt: true } } }
   });
   const records = buildAcademicRecordIndex(history);
   for (const [subjectId, state] of records) {
@@ -103,14 +103,42 @@ export async function applicationOfferingChoices(database, review) {
     orderBy: { offeringCode: "asc" },
     include: {
       classSection: { select: { id: true, code: true, capacity: true } },
+      faculty: {
+        select: {
+          role: true,
+          faculty: {
+            select: { id: true, firstName: true, middleName: true, lastName: true, suffix: true }
+          }
+        }
+      },
+      schedules: {
+        select: {
+          id: true, weekday: true, startsAt: true, endsAt: true,
+          room: { select: { id: true, code: true, building: true } }
+        }
+      },
       _count: { select: { enrollmentItems: { where: { status: { in: ["PENDING", "ENROLLED", "COMPLETED"] }, enrollment: { status: { notIn: ["CANCELLED", "WITHDRAWN"] } } } } } }
     }
   });
   return offerings.map((item) => {
-    const limits = [item.capacity, item.classSection.capacity].filter((value) => value != null);
+    const limits = [item.capacity, item.classSection?.capacity].filter((value) => value != null);
     const capacity = limits.length ? Math.min(...limits) : null;
-    return { id: item.id, subjectId: item.subjectId, offeringCode: item.offeringCode, sectionCode: item.classSection.code,
+    const instructorNames = (item.faculty || []).map((f) => fullName(f.faculty)).filter(Boolean);
+    const instructor = instructorNames.length ? instructorNames.join(", ") : "TBA";
+    const scheduleParts = (item.schedules || []).map((s) => {
+      const day = s.weekday;
+      const start = s.startsAt instanceof Date ? s.startsAt.toISOString().slice(11, 16) : String(s.startsAt || "").slice(0, 5);
+      const end = s.endsAt instanceof Date ? s.endsAt.toISOString().slice(11, 16) : String(s.endsAt || "").slice(0, 5);
+      const room = s.room?.code ? ` (${s.room.code})` : "";
+      return `${day} ${start}-${end}${room}`;
+    });
+    const schedule = scheduleParts.length ? scheduleParts.join("; ") : "TBA";
+    return {
+      id: item.id, subjectId: item.subjectId, offeringCode: item.offeringCode, sectionCode: item.classSection?.code || item.offeringCode,
+      instructor,
+      schedule,
       capacity, availableSeats: capacity == null ? null : Math.max(0, capacity - item._count.enrollmentItems),
-      available: capacity == null || item._count.enrollmentItems < capacity };
+      available: capacity == null || item._count.enrollmentItems < capacity
+    };
   });
 }

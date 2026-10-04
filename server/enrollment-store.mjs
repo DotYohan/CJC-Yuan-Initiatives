@@ -191,10 +191,10 @@ export class EnrollmentApplicationStore {
             select: {
               items: {
                 select: {
-                  courseOffering: { select: { subjectId: true } },
+                  courseOffering: { select: { subjectId: true, subject: { select: { id: true, code: true } } } },
                   grades: {
                     where: { status: { in: ["APPROVED", "POSTED"] }, OR: [{ gradingPeriod: { isFinal: true } }, { gradingPeriod: { type: "COMPLETION" } }] },
-                    select: { status: true, isPassing: true, letterGrade: true, remarks: true, updatedAt: true }
+                    select: { status: true, isPassing: true, numericGrade: true, letterGrade: true, remarks: true, updatedAt: true }
                   }
                 }
               }
@@ -305,8 +305,14 @@ export class EnrollmentApplicationStore {
         status: true, formData: true, submittedAt: true, reviewedAt: true, reviewRemarks: true
       }
     });
-    const admission = await this.prisma.admissionApplication.findFirst({
-      where: { convertedStudentId: student.id, ...(openPeriod ? { academicTermId: openPeriod.academicTermId } : application ? { academicTermId: application.academicTermId } : {}) },
+    let admission = await this.prisma.admissionApplication.findFirst({
+      where: {
+        OR: [
+          { convertedStudentId: student.id },
+          { applicantUserId: student.userId }
+        ],
+        ...(openPeriod ? { academicTermId: openPeriod.academicTermId } : application ? { academicTermId: application.academicTermId } : {})
+      },
       orderBy: { createdAt: "desc" },
       select: {
         id: true, applicationNumber: true, status: true, attemptNumber: true,
@@ -318,6 +324,64 @@ export class EnrollmentApplicationStore {
         }
       }
     });
+
+    if (!admission) {
+      admission = await this.prisma.admissionApplication.findFirst({
+        where: {
+          OR: [
+            { convertedStudentId: student.id },
+            { applicantUserId: student.userId }
+          ]
+        },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true, applicationNumber: true, status: true, attemptNumber: true,
+          decisionNotes: true, decidedAt: true, academicTermId: true,
+          history: {
+            where: { actionType: { in: ["RETURN_FOR_CORRECTION", "REJECT"] } },
+            orderBy: { changedAt: "desc" },
+            select: { actionType: true, remarks: true, changedAt: true }
+          }
+        }
+      });
+    }
+
+    if (!admission) {
+      const termId = openPeriod?.academicTermId || application?.academicTermId || (await this.prisma.academicTerm.findFirst({ where: { isCurrent: true } }))?.id || (await this.prisma.academicTerm.findFirst({ orderBy: { startDate: "desc" } }))?.id;
+      const fallbackProgram = (await this.prisma.program.findFirst({ where: { isActive: true } })) || (await this.prisma.program.findFirst());
+      if (termId && fallbackProgram) {
+        const applicationId = newId();
+        const applicationNumber = `APP-${student.admissionYear || new Date().getFullYear()}-${applicationId.slice(0, 8).toUpperCase()}`;
+        admission = await this.prisma.admissionApplication.create({
+          data: {
+            id: applicationId,
+            applicationNumber,
+            applicationNumberNormalized: normalizeIdentifier(applicationNumber),
+            applicantUserId: student.userId,
+            intendedProgramId: fallbackProgram.id,
+            academicTermId: termId,
+            convertedStudentId: student.id,
+            firstName: student.firstName,
+            middleName: student.middleName || null,
+            lastName: student.lastName,
+            suffix: student.suffix || null,
+            birthDate: student.dateOfBirth,
+            email: student.institutionalEmail,
+            status: "DRAFT",
+            attemptNumber: 1
+          },
+          select: {
+            id: true, applicationNumber: true, status: true, attemptNumber: true,
+            decisionNotes: true, decidedAt: true, academicTermId: true,
+            history: {
+              where: { actionType: { in: ["RETURN_FOR_CORRECTION", "REJECT"] } },
+              orderBy: { changedAt: "desc" },
+              select: { actionType: true, remarks: true, changedAt: true }
+            }
+          }
+        });
+      }
+    }
     return {
       profile: profileData(student),
       application,
@@ -374,7 +438,6 @@ export class EnrollmentApplicationStore {
     if (submit && term.enrollmentPeriods[0]?.status !== "OPEN") throw new Error("ENROLLMENT_CLOSED");
     const yearLevel = Number(input.yearLevel);
     if (!Number.isInteger(yearLevel) || yearLevel < 1 || yearLevel > (program.durationYears || 8)) throw new Error("YEAR_LEVEL_INVALID");
-    if (student.programId && yearLevel !== student.currentYearLevel) throw new Error("STUDENT_YEAR_LEVEL_MISMATCH");
     const selectedSubjectIds = [...new Set(Array.isArray(input.selectedSubjectIds) ? input.selectedSubjectIds.filter((id) => typeof id === "string" && id.trim()).map((id) => id.trim()) : [])];
     const formData = copyFormData(input.formData, selectedSubjectIds);
     let curriculumId = existing?.programId === program.id ? existing.curriculumId : null;
@@ -451,13 +514,19 @@ export class EnrollmentApplicationStore {
       submittedAt: submit ? new Date() : existing?.submittedAt ?? null,
       reviewRemarks: submit ? null : existing?.reviewRemarks ?? null
     };
-    const admission = await this.prisma.admissionApplication.findFirst({
-      where: { convertedStudentId: student.id, academicTermId: term.id },
+    let admission = await this.prisma.admissionApplication.findFirst({
+      where: {
+        OR: [
+          { convertedStudentId: student.id },
+          { applicantUserId: student.userId }
+        ],
+        academicTermId: term.id
+      },
       orderBy: { createdAt: "desc" },
       select: { id: true, status: true, attemptNumber: true, academicTermId: true }
     });
-    const admissionForTerm = admission?.academicTermId === term.id ? admission : null;
-    if (admissionForTerm?.status === "APPROVED") {
+
+    if (admission?.status === "APPROVED") {
       throw new Error("APPLICATION_LOCKED");
     }
 
@@ -468,68 +537,90 @@ export class EnrollmentApplicationStore {
         create: { id: newId(), studentId: student.id, ...values }
       });
 
-      if (submit && (!admissionForTerm || admissionForTerm.status === "REJECTED")) {
-        const applicationId = newId();
-        const applicationNumber = `APP-${student.admissionYear}-${applicationId.slice(0, 8).toUpperCase()}`;
-        await transaction.admissionApplication.create({
-          data: {
-            id: applicationId,
-            applicationNumber,
-            applicationNumberNormalized: normalizeIdentifier(applicationNumber),
-            applicantUserId: userId,
-            intendedProgramId: program.id,
-            academicTermId: term.id,
-            convertedStudentId: student.id,
-            firstName: student.firstName,
-            middleName: student.middleName,
-            lastName: student.lastName,
-            suffix: student.suffix,
-            birthDate: student.dateOfBirth,
-            email: formData.contact?.personalEmail || student.institutionalEmail,
-            phone: formData.contact?.mobileNumber || null,
-            status: "PENDING",
-            submittedAt: new Date(),
-            metadata: { formData },
-            attemptNumber: 1,
-            history: {
-              create: {
-                toStatus: "PENDING",
-                actionType: "STUDENT_SUBMIT",
-                changedByUserId: userId,
-                changedByRole: "student",
-                remarks: admissionForTerm ? "New application after a previous rejection" : "Submitted for Program Head review"
+      let targetApplicationId;
+      if (submit) {
+        if (admission && admission.status !== "REJECTED") {
+          targetApplicationId = admission.id;
+          const isResubmission = admission.status === "RETURNED_FOR_CORRECTION";
+          const attemptNumber = isResubmission ? (admission.attemptNumber + 1) : (admission.attemptNumber || 1);
+          await transaction.admissionApplication.update({
+            where: { id: admission.id },
+            data: {
+              status: "PENDING",
+              academicTermId: term.id,
+              intendedProgramId: program.id,
+              attemptNumber,
+              metadata: { formData },
+              submittedAt: new Date(),
+              decidedAt: null,
+              decisionByUserId: null,
+              decisionNotes: null
+            }
+          });
+          await transaction.admissionApplicationStatusHistory.create({
+            data: {
+              applicationId: admission.id,
+              fromStatus: admission.status,
+              toStatus: "PENDING",
+              actionType: isResubmission ? "STUDENT_RESUBMIT" : "STUDENT_SUBMIT",
+              changedByUserId: userId,
+              changedByRole: "student",
+              remarks: isResubmission ? `Resubmission attempt ${attemptNumber}` : "Submitted for Program Head review"
+            }
+          });
+        } else {
+          targetApplicationId = newId();
+          const applicationNumber = `APP-${student.admissionYear || new Date().getFullYear()}-${targetApplicationId.slice(0, 8).toUpperCase()}`;
+          const attemptNumber = admission ? (admission.attemptNumber || 1) + 1 : 1;
+          await transaction.admissionApplication.create({
+            data: {
+              id: targetApplicationId,
+              applicationNumber,
+              applicationNumberNormalized: normalizeIdentifier(applicationNumber),
+              applicantUserId: userId,
+              intendedProgramId: program.id,
+              academicTermId: term.id,
+              convertedStudentId: student.id,
+              firstName: student.firstName,
+              middleName: student.middleName || null,
+              lastName: student.lastName,
+              suffix: student.suffix || null,
+              birthDate: student.dateOfBirth,
+              email: formData.contact?.personalEmail || student.institutionalEmail,
+              phone: formData.contact?.mobileNumber || null,
+              status: "PENDING",
+              submittedAt: new Date(),
+              metadata: { formData },
+              attemptNumber,
+              history: {
+                create: {
+                  toStatus: "PENDING",
+                  actionType: admission ? "STUDENT_RESUBMIT" : "STUDENT_SUBMIT",
+                  changedByUserId: userId,
+                  changedByRole: "student",
+                  remarks: admission ? `Resubmission attempt ${attemptNumber}` : "Submitted for Program Head review"
+                }
               }
             }
-          }
+          });
+        }
+
+        // Re-link all uploaded student documents to targetApplicationId
+        await transaction.studentDocument.updateMany({
+          where: { studentId: student.id },
+          data: { admissionApplicationId: targetApplicationId }
         });
-      } else if (submit && admissionForTerm) {
-        const isResubmission = admissionForTerm.status === "RETURNED_FOR_CORRECTION";
-        const attemptNumber = isResubmission ? admissionForTerm.attemptNumber + 1 : admissionForTerm.attemptNumber;
+      } else if (admission && !["APPROVED", "REJECTED"].includes(admission.status)) {
         await transaction.admissionApplication.update({
-          where: { id: admissionForTerm.id },
+          where: { id: admission.id },
           data: {
-            status: "PENDING",
+            academicTermId: term.id,
             intendedProgramId: program.id,
-            attemptNumber,
-            metadata: { formData },
-            submittedAt: new Date(),
-            decidedAt: null,
-            decisionByUserId: null,
-            decisionNotes: null
-          }
-        });
-        await transaction.admissionApplicationStatusHistory.create({
-          data: {
-            applicationId: admissionForTerm.id,
-            fromStatus: admissionForTerm.status,
-            toStatus: "PENDING",
-            actionType: isResubmission ? "STUDENT_RESUBMIT" : "STUDENT_SUBMIT",
-            changedByUserId: userId,
-            changedByRole: "student",
-            remarks: isResubmission ? `Resubmission attempt ${attemptNumber}` : null
+            metadata: { formData }
           }
         });
       }
+
       return application;
     });
   }

@@ -1,6 +1,7 @@
 import { newId } from "./security.mjs";
 import { buildAcademicRecordIndex, prerequisiteState } from "./academic-eligibility.mjs";
 import { buildApplicationReview, reviewError } from "./enrollment-review.mjs";
+import { CourseOfferingService } from "./course-offering-service.mjs";
 
 const validStatuses = new Set(["DRAFT", "ACTIVE", "RETIRED"]);
 const validSubjectTypes = new Set(["REQUIRED", "ELECTIVE"]);
@@ -147,7 +148,12 @@ export class ProgramHeadStore {
         }
       }),
       this.prisma.student.findMany({
-        where: { programId: assignment.programId },
+        where: {
+          OR: [
+            { programId: assignment.programId },
+            { enrollments: { some: { programId: assignment.programId, status: { in: ["ENROLLED", "COMPLETED"] } } } }
+          ]
+        },
         orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
         select: {
           id: true, studentNumber: true, firstName: true, middleName: true,
@@ -527,103 +533,73 @@ export class ProgramHeadStore {
   async createOffering(userId, input) {
     const assignment = await this.getActiveAssignment(userId);
     if (!assignment) throw new Error("PROGRAM_HEAD_ASSIGNMENT_REQUIRED");
-    const academicTermId = typeof input?.academicTermId === "string" ? input.academicTermId.trim() : "";
-    const curriculumId = typeof input?.curriculumId === "string" ? input.curriculumId.trim() : "";
-    const subjectId = typeof input?.subjectId === "string" ? input.subjectId.trim() : "";
-    const sectionCode = typeof input?.sectionCode === "string" ? input.sectionCode.trim() : "";
-    const sectionName = typeof input?.sectionName === "string" ? input.sectionName.trim().slice(0, 150) : "";
-    const offeringCode = typeof input?.offeringCode === "string" ? input.offeringCode.trim() : "";
-    const facultyId = typeof input?.facultyId === "string" && input.facultyId ? input.facultyId : null;
-    const roomId = typeof input?.roomId === "string" && input.roomId ? input.roomId : null;
-    const weekday = typeof input?.weekday === "string" && input.weekday ? input.weekday.toUpperCase() : null;
-    const startsAt = input?.startsAt ? parseTime(input.startsAt) : null;
-    const endsAt = input?.endsAt ? parseTime(input.endsAt) : null;
-    const capacity = input?.capacity == null || input.capacity === "" ? null : Number(input.capacity);
-
-    if (!/^[A-Za-z0-9][A-Za-z0-9 ._-]{0,39}$/.test(sectionCode)) throw new Error("SECTION_CODE_INVALID");
-    if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,49}$/.test(offeringCode)) throw new Error("OFFERING_CODE_INVALID");
-    if (capacity !== null && (!Number.isInteger(capacity) || capacity <= 0 || capacity > 32767)) throw new Error("OFFERING_INVALID");
-    if (weekday && !validWeekdays.has(weekday)) throw new Error("SCHEDULE_INVALID");
-    if (Boolean(weekday) !== Boolean(startsAt && endsAt) || startsAt && startsAt >= endsAt) throw new Error("SCHEDULE_INVALID");
-
     return this.transaction(async (transaction) => {
-      const [term, curriculum, placement, faculty, room] = await Promise.all([
-        transaction.academicTerm.findFirst({
-          where: { id: academicTermId, status: { notIn: ["CLOSED", "ARCHIVED"] } },
-          select: { id: true, startsOn: true, endsOn: true }
-        }),
-        transaction.curriculum.findFirst({ where: { id: curriculumId, programId: assignment.programId }, select: { id: true } }),
-        transaction.curriculumSubject.findFirst({
-          where: { curriculumId, subjectId },
-          select: { subjectId: true, yearLevel: true, creditUnits: true, lectureHours: true, laboratoryHours: true }
-        }),
-        facultyId ? transaction.faculty.findFirst({
-          where: {
-            id: facultyId, status: "ACTIVE",
-            OR: [
-              { departmentId: assignment.program.departmentId },
-              { departmentAssignments: { some: { departmentId: assignment.program.departmentId } } }
-            ]
-          },
-          select: { id: true }
-        }) : Promise.resolve(null),
-        roomId ? transaction.room.findFirst({ where: { id: roomId, isActive: true }, select: { id: true } }) : Promise.resolve(null)
-      ]);
-      if (!term) throw new Error("ACADEMIC_TERM_INVALID");
-      if (!curriculum) throw new Error("CURRICULUM_NOT_FOUND");
-      if (!placement) throw new Error("CURRICULUM_SUBJECT_NOT_FOUND");
-      if (facultyId && !faculty) throw new Error("FACULTY_INVALID");
-      if (roomId && !room) throw new Error("ROOM_INVALID");
-
-      const existingSection = await transaction.classSection.findUnique({
-        where: { academicTermId_programId_code: { academicTermId, programId: assignment.programId, code: sectionCode } },
-        select: { id: true, curriculumId: true, yearLevel: true }
+      return CourseOfferingService.validateAndCreateCourseOffering(transaction, input, {
+        programScope: { programId: assignment.programId, departmentId: assignment.program.departmentId }
       });
-      if (existingSection && ((existingSection.curriculumId && existingSection.curriculumId !== curriculumId) || existingSection.yearLevel !== placement.yearLevel)) {
-        throw new Error("SECTION_CONFLICT");
-      }
+    });
+  }
 
-      if (weekday && (facultyId || roomId)) {
-        const alternatives = [];
-        if (roomId) alternatives.push({ roomId });
-        if (facultyId) alternatives.push({ courseOffering: { faculty: { some: { facultyId } } } });
-        const conflict = await transaction.classSchedule.findFirst({
-          where: {
-            weekday, startsAt: { lt: endsAt }, endsAt: { gt: startsAt },
-            courseOffering: { academicTermId }, OR: alternatives
-          },
-          select: { id: true }
-        });
-        if (conflict) throw new Error("SCHEDULE_CONFLICT");
-      }
+  async listOfferings(userId, filters = {}) {
+    const assignment = await this.getActiveAssignment(userId);
+    if (!assignment) throw new Error("PROGRAM_HEAD_ASSIGNMENT_REQUIRED");
+    return CourseOfferingService.listOfferings(this.prisma, filters, {
+      programScope: { programId: assignment.programId, departmentId: assignment.program.departmentId }
+    });
+  }
 
-      const section = existingSection ?? await transaction.classSection.create({
-        data: {
-          id: newId(), academicTermId, programId: assignment.programId, curriculumId,
-          code: sectionCode, name: sectionName || null, yearLevel: placement.yearLevel, capacity
-        },
-        select: { id: true }
+  async updateOffering(userId, offeringId, input) {
+    const assignment = await this.getActiveAssignment(userId);
+    if (!assignment) throw new Error("PROGRAM_HEAD_ASSIGNMENT_REQUIRED");
+    // Whitelist only editable fields for Program Head (locked fields like offeringCode are stripped)
+    const allowedInput = {
+      sectionCode: input.sectionCode,
+      sectionName: input.sectionName,
+      capacity: input.capacity,
+      facultyId: input.facultyId,
+      weekday: input.weekday,
+      startsAt: input.startsAt,
+      endsAt: input.endsAt,
+      roomId: input.roomId
+    };
+    if (input.status === "OPEN" || input.status === "CLOSED") {
+      allowedInput.status = input.status;
+    }
+    return this.transaction(async (transaction) => {
+      return CourseOfferingService.updateCourseOffering(transaction, offeringId, allowedInput, {
+        programScope: { programId: assignment.programId, departmentId: assignment.program.departmentId },
+        isProgramHead: true
       });
+    });
+  }
 
-      try {
-        return await transaction.courseOffering.create({
-          data: {
-            id: newId(), academicTermId, subjectId, classSectionId: section.id, offeringCode,
-            creditUnits: placement.creditUnits, lectureHours: placement.lectureHours,
-            laboratoryHours: placement.laboratoryHours, capacity, status: "OPEN",
-            faculty: facultyId ? { create: { id: newId(), facultyId, role: "PRIMARY_INSTRUCTOR" } } : undefined,
-            schedules: weekday ? { create: { id: newId(), roomId, weekday, startsAt, endsAt, effectiveFrom: term.startsOn, effectiveTo: term.endsOn } } : undefined
-          },
-          select: {
-            id: true, offeringCode: true, status: true,
-            subject: { select: { id: true, code: true, title: true } },
-            classSection: { select: { id: true, code: true, name: true, yearLevel: true, programId: true } }
-          }
-        });
-      } catch (caught) {
-        if (caught?.code === "P2002") throw new Error("OFFERING_DUPLICATE");
-        throw caught;
-      }
+  async closeOffering(userId, offeringId) {
+    const assignment = await this.getActiveAssignment(userId);
+    if (!assignment) throw new Error("PROGRAM_HEAD_ASSIGNMENT_REQUIRED");
+    return this.transaction(async (transaction) => {
+      return CourseOfferingService.closeCourseOffering(transaction, offeringId, {
+        programScope: { programId: assignment.programId }
+      });
+    });
+  }
+
+  async archiveOffering(userId, offeringId) {
+    const assignment = await this.getActiveAssignment(userId);
+    if (!assignment) throw new Error("PROGRAM_HEAD_ASSIGNMENT_REQUIRED");
+    return this.transaction(async (transaction) => {
+      return CourseOfferingService.archiveCourseOffering(transaction, offeringId, {
+        programScope: { programId: assignment.programId }
+      });
+    });
+  }
+
+  async unarchiveOffering(userId, offeringId) {
+    const assignment = await this.getActiveAssignment(userId);
+    if (!assignment) throw new Error("PROGRAM_HEAD_ASSIGNMENT_REQUIRED");
+    return this.transaction(async (transaction) => {
+      return CourseOfferingService.unarchiveCourseOffering(transaction, offeringId, {
+        programScope: { programId: assignment.programId }
+      });
     });
   }
 
@@ -676,7 +652,7 @@ export class ProgramHeadStore {
         grades: {
           where: { status: { in: finalGradeStatuses }, OR: [{ gradingPeriod: { isFinal: true } }, { gradingPeriod: { type: "COMPLETION" } }] },
           orderBy: { updatedAt: "asc" },
-          select: { isPassing: true, letterGrade: true, remarks: true, updatedAt: true }
+          select: { isPassing: true, numericGrade: true, letterGrade: true, remarks: true, updatedAt: true }
         }
       }
     });

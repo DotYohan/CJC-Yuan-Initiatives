@@ -15,10 +15,13 @@ async function loadAuthClient(responseByPath) {
     Headers,
     Response,
     URL,
+    URLSearchParams,
     console,
-    fetch: async (input) => {
-      const path = new URL(String(input), "http://portal.test").pathname;
-      const payload = responseByPath.get(path);
+    fetch: async (input, init = {}) => {
+      const url = new URL(String(input), "http://portal.test");
+      const key = `${init.method || "GET"} ${url.pathname}${url.search}`;
+      const pathKey = `${init.method || "GET"} ${url.pathname}`;
+      const payload = responseByPath.get(key) || responseByPath.get(pathKey) || responseByPath.get(url.pathname);
       if (!payload) return new Response(JSON.stringify({ error: { code: "NOT_FOUND", message: "Missing test response." } }), {
         status: 404,
         headers: { "Content-Type": "application/json" }
@@ -53,3 +56,60 @@ test("Program Head API client unwraps dashboard, student, and evaluation entitie
   assert.equal(evaluation.enrollment.id, "enrollment-1");
   assert.equal(evaluation.canApprove, true);
 });
+
+test("Admin system logs and monitoring client methods unwrap data and pass query filters", async () => {
+  const logId = "a1b2c3d4-0000-0000-0000-000000000001";
+  const client = await loadAuthClient(new Map([
+    ["GET /api/v1/auth/csrf", { data: { csrfToken: "mock-csrf" } }],
+    ["GET /api/v1/admin/system-logs", { data: { entries: [{ id: logId, severity: "LOW", status: "OPEN" }] } }],
+    ["GET /api/v1/admin/system-logs?severity=HIGH", { data: { entries: [{ id: logId, severity: "HIGH", status: "OPEN" }] } }],
+    [`PATCH /api/v1/admin/system-logs/${logId}/status`, { data: { log: { id: logId, status: "RESOLVED" } } }],
+    ["GET /api/v1/admin/monitoring/health", { data: { status: "healthy", database: { status: "available" } } }]
+  ]));
+
+  // Unfiltered system logs unwrap data.entries
+  const allLogs = await client.getSystemLogs();
+  assert.ok(Array.isArray(allLogs.entries));
+  assert.equal(allLogs.entries[0].severity, "LOW");
+
+  // Filtered system logs with query
+  const filtered = await client.getSystemLogs({ severity: "HIGH" });
+  assert.ok(Array.isArray(filtered.entries));
+  assert.equal(filtered.entries[0].severity, "HIGH");
+
+  // Status update
+  const updated = await client.updateSystemLogStatus(logId, "RESOLVED");
+  assert.equal(updated.log.status, "RESOLVED");
+
+  // Monitoring health unwrap
+  const health = await client.getMonitoringHealth();
+  assert.equal(health.status, "healthy");
+  assert.equal(health.database.status, "available");
+});
+
+test("Google Workspace client methods call appropriate endpoints and pass payloads", async () => {
+  const client = await loadAuthClient(new Map([
+    ["GET /api/v1/auth/csrf", { data: { csrfToken: "mock-csrf-google" } }],
+    ["GET /api/v1/auth/google/config", { data: { enabled: true, clientId: "test-id", allowedDomains: ["g.cjc.edu.ph", "cjc.edu.ph"] } }],
+    ["POST /api/v1/auth/google/verify", { data: { status: "LOGGED_IN", user: { id: "u-1", email: "student@g.cjc.edu.ph" } } }],
+    ["POST /api/v1/auth/google/register-student", { data: { status: "LOGGED_IN", studentNumber: "001-2026-00001" } }]
+  ]));
+
+  const config = await client.getGoogleAuthConfig();
+  assert.equal(config.enabled, true);
+  assert.equal(config.clientId, "test-id");
+  assert.deepEqual(config.allowedDomains, ["g.cjc.edu.ph", "cjc.edu.ph"]);
+
+  const verifyResult = await client.googleAuthVerify("mock-id-token");
+  assert.equal(verifyResult.status, "LOGGED_IN");
+  assert.equal(verifyResult.user.email, "student@g.cjc.edu.ph");
+
+  const regResult = await client.googleRegisterStudent({
+    registrationToken: "reg-token-abc",
+    birthDate: "2005-01-01",
+    mobileNumber: "09123456789"
+  });
+  assert.equal(regResult.status, "LOGGED_IN");
+  assert.equal(regResult.studentNumber, "001-2026-00001");
+});
+

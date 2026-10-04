@@ -42,7 +42,8 @@ export const ROLE_SEEDS = Object.freeze([
     description: "Cashier portal account.",
     landingPath: "/portal/cashier"
   },
-  { slug: "ssc", name: "SSC", description: "SSC portal account.", landingPath: "/portal/ssc" },
+  { slug: "ssc", name: "Student Services Center", description: "Student Services Center (SSC) portal account.", landingPath: "/portal/ssc" },
+  { slug: "club", name: "Club", description: "Club portal account.", landingPath: "/portal/club" },
   {
     slug: "lirc_director",
     name: "LiRC Director",
@@ -108,19 +109,36 @@ export const PERMISSION_SEEDS = Object.freeze([
   { slug: "financial.payments.view_all", description: "View all payment transactions (cashier/admin)." },
   { slug: "financial.payments.verify", description: "Verify and approve payments (cashier)." },
   { slug: "financial.payments.view_failed", description: "View failed payment transactions (cashier)." },
-  { slug: "financial.receipts.view", description: "View and download receipts." }
+  { slug: "financial.receipts.view", description: "View and download receipts." },
+  { slug: "teacher.view_classes", description: "View assigned subject offerings and classes." },
+  { slug: "teacher.view_students", description: "View students enrolled in assigned classes." },
+  { slug: "teacher.manage_grades", description: "Encode and draft student grades for assigned classes." },
+  { slug: "teacher.submit_grades", description: "Submit finalized grades to the registrar." },
+  { slug: "administrator.manage_faculty", description: "Create and manage faculty accounts and college assignments." },
+  { slug: "registrar.override_assignment", description: "Override cross-college faculty assignments with audit logging." },
+  { slug: "registrar.approve_grades", description: "Review, verify, approve, and post submitted grades." },
+  { slug: "ssc.manage_clubs", description: "Create and manage club accounts, effectivity dates, and availability." },
+  { slug: "club.manage_content", description: "Manage club officers, announcements, documents, and membership." }
 ]);
 
 export const ROLE_PERMISSION_SEEDS = Object.freeze([
   ...ROLE_SEEDS.map((role) => ({ roleSlug: role.slug, permissionSlug: `portal.access.${role.slug}` })),
+  { roleSlug: "ssc", permissionSlug: "ssc.manage_clubs" },
+  { roleSlug: "club", permissionSlug: "club.manage_content" },
   { roleSlug: "administrator", permissionSlug: "users.manage" },
   { roleSlug: "administrator", permissionSlug: "audit.read" },
+  { roleSlug: "administrator", permissionSlug: "administrator.manage_faculty" },
+  { roleSlug: "administrator", permissionSlug: "registrar.override_assignment" },
   ...[
     "VIEW_ENROLLMENT_PERIOD", "CREATE_ENROLLMENT_PERIOD", "UPDATE_ENROLLMENT_PERIOD",
     "MANAGE_ENROLLMENT_PERIODS", "OPEN_ENROLLMENT", "CLOSE_ENROLLMENT",
     "VIEW_STUDENT_APPLICATION", "APPROVE_STUDENT_APPLICATION", "REJECT_STUDENT_APPLICATION",
-    "VIEW_DOCUMENTS", "VERIFY_DOCUMENTS", "VIEW_ENROLLMENT", "APPROVE_ENROLLMENT"
+    "VIEW_DOCUMENTS", "VERIFY_DOCUMENTS", "VIEW_ENROLLMENT", "APPROVE_ENROLLMENT",
+    "registrar.override_assignment", "registrar.approve_grades"
   ].map((permissionSlug) => ({ roleSlug: "registrar", permissionSlug })),
+  ...[
+    "teacher.view_classes", "teacher.view_students", "teacher.manage_grades", "teacher.submit_grades"
+  ].map((permissionSlug) => ({ roleSlug: "faculty", permissionSlug })),
   ...[
     "MANAGE_ENROLLMENT_PERIODS"
   ].map((permissionSlug) => ({ roleSlug: "administrator", permissionSlug })),
@@ -167,3 +185,4 @@ export const ROLE_PERMISSION_SEEDS = Object.freeze([
     "financial.receipts.view"
   ].map((permissionSlug) => ({ roleSlug: "registrar", permissionSlug }))
 ]);
+
