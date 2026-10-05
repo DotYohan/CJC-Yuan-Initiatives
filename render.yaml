@@ -6,7 +6,7 @@ services:
     region: singapore
     branch: feature/student-program-workflow
     buildCommand: npm install && npm run build
-    startCommand: npx prisma migrate deploy && npm start
+    startCommand: npx prisma migrate deploy && npm run init:prod && npm start
     envVars:
       - key: NODE_ENV
         value: production

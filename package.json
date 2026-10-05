@@ -25,7 +25,8 @@
     "import:sqlite:dry": "node --env-file-if-exists=.env scripts/import-sqlite-auth.mjs",
     "import:sqlite:cutover": "node --env-file-if-exists=.env scripts/import-sqlite-auth.mjs --commit --merge-seeded-demos --invalidate-sessions",
     "test": "node --env-file-if-exists=.env scripts/run-isolated-tests.mjs",
-    "build": "prisma generate"
+    "build": "prisma generate",
+    "init:prod": "node scripts/production-init.mjs"
   },
   "prisma": {
     "seed": "node --env-file-if-exists=.env prisma/seed.mjs"
