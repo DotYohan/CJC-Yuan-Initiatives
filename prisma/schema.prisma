@@ -136,6 +136,8 @@ model User {
   collegeAssignments             UserCollegeAssignment[]
   collegeAssignmentsCreated      UserCollegeAssignment[]             @relation("UserCollegeAssignmentCreatedBy")
   academicRecordImportsReviewed AcademicRecordImportRequest[]       @relation("AcademicRecordImportReviewedBy")
+  systemReportsCreated           SystemReport[]                      @relation("SystemReportCreatedBy")
+  systemReportsResolved          SystemReport[]                      @relation("SystemReportResolvedBy")
 
   @@index([deletedAt])
   @@map("users")
@@ -2230,5 +2232,47 @@ model AcademicRecordImportRequest {
   @@index([status, createdAt])
   @@index([reviewedByUserId])
   @@map("academic_record_import_requests")
+}
+
+enum SystemReportStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  CLOSED
+
+  @@map("system_report_status")
+}
+
+enum SystemReportCategory {
+  BUG
+  SUGGESTION
+  UI_ISSUE
+  OTHER
+
+  @@map("system_report_category")
+}
+
+model SystemReport {
+  id              String               @id @default(uuid()) @db.Uuid
+  category        SystemReportCategory @default(BUG)
+  description     String               @db.Text
+  screenshotData  String?              @map("screenshot_data") @db.Text
+  status          SystemReportStatus   @default(OPEN)
+  pageUrl         String               @map("page_url") @db.VarChar(512)
+  browserInfo     String?              @map("browser_info") @db.VarChar(512)
+  errorCode       String?              @map("error_code") @db.VarChar(100)
+  userId          String?              @map("user_id") @db.Uuid
+  userRole        String?              @map("user_role") @db.VarChar(64)
+  adminNotes      String?              @map("admin_notes") @db.Text
+  resolvedByUserId String?             @map("resolved_by_user_id") @db.Uuid
+  createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user       User? @relation("SystemReportCreatedBy", fields: [userId], references: [id], onDelete: SetNull)
+  resolvedBy User? @relation("SystemReportResolvedBy", fields: [resolvedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([userId])
+  @@map("system_reports")
 }
 

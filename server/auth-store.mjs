@@ -532,6 +532,55 @@ export class AuthenticationStore {
       return true;
     });
   }
+
+  async createSystemReport(data) {
+    const report = await this.prisma.systemReport.create({
+      data: {
+        category: data.category || "BUG",
+        description: data.description,
+        screenshotData: data.screenshotData || null,
+        status: "OPEN",
+        pageUrl: data.pageUrl || "/",
+        browserInfo: data.browserInfo || null,
+        errorCode: data.errorCode || null,
+        userId: data.userId || null,
+        userRole: data.userRole || null
+      }
+    });
+    return report;
+  }
+
+  async listSystemReports({ status, limit = 100 } = {}) {
+    const where = status && status !== "ALL" ? { status } : {};
+    const reports = await this.prisma.systemReport.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      include: {
+        user: { select: { id: true, username: true, displayName: true, email: true } },
+        resolvedBy: { select: { id: true, username: true, displayName: true } }
+      }
+    });
+    return reports;
+  }
+
+  async updateSystemReportStatus(id, { status, adminNotes, resolvedByUserId }) {
+    const updateData = {};
+    if (status) updateData.status = status;
+    if (adminNotes !== undefined) updateData.adminNotes = adminNotes;
+    if (resolvedByUserId) updateData.resolvedByUserId = resolvedByUserId;
+    updateData.updatedAt = new Date();
+
+    const report = await this.prisma.systemReport.update({
+      where: { id },
+      data: updateData,
+      include: {
+        user: { select: { id: true, username: true, displayName: true, email: true } },
+        resolvedBy: { select: { id: true, username: true, displayName: true } }
+      }
+    });
+    return report;
+  }
 }
 
 export function isUniqueConstraint(error) {

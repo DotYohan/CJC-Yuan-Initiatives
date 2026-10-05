@@ -209,56 +209,70 @@ export class EnrollmentApplicationStore {
       if (student?.programId) {
         const curriculum = curriculumForTerm(student ?? {}, curricula, term);
         if (!curriculum) return [];
-        return curriculum.subjects.map((item) => ({
-      id: item.id,
-      academicTermId: term.id,
-      curriculumId: curriculum.id,
-      programId: curriculum.programId,
-      curriculumCode: curriculum.code,
-      curriculumName: curriculum.name,
-      yearLevel: item.yearLevel,
-      termNumber: item.termNumber,
-      subjectId: item.subjectId,
-      subjectCode: item.subject.code,
-      subjectTitle: item.subject.title,
-      subjectDescription: item.subject.description,
-      creditUnits: Number(item.creditUnits),
-      lectureHours: Number(item.lectureHours),
-      laboratoryHours: Number(item.laboratoryHours),
-      type: item.type,
-      isRequired: item.isRequired,
-      sortOrder: item.sortOrder,
-      requirements: requirementEligibility(item.subject.requirements, academicRecords),
-      prerequisites: requirementEligibility(item.subject.requirements, academicRecords).filter((requirement) => requirement.type === "PREREQUISITE")
-      }));
-    }
-    return programs.flatMap((prog) => {
-      const progCurricula = curricula.filter((c) => c.programId === prog.id);
-      const curriculum = curriculumForTerm({ programId: prog.id }, progCurricula, term);
-      if (!curriculum) return [];
-      return curriculum.subjects.map((item) => ({
-        id: item.id,
-        academicTermId: term.id,
-        curriculumId: curriculum.id,
-        programId: curriculum.programId,
-        curriculumCode: curriculum.code,
-        curriculumName: curriculum.name,
-        yearLevel: item.yearLevel,
-        termNumber: item.termNumber,
-        subjectId: item.subjectId,
-        subjectCode: item.subject.code,
-        subjectTitle: item.subject.title,
-        subjectDescription: item.subject.description,
-        creditUnits: Number(item.creditUnits),
-        lectureHours: Number(item.lectureHours),
-        laboratoryHours: Number(item.laboratoryHours),
-        type: item.type,
-        isRequired: item.isRequired,
-        sortOrder: item.sortOrder,
-        requirements: requirementEligibility(item.subject.requirements, academicRecords),
-        prerequisites: requirementEligibility(item.subject.requirements, academicRecords).filter((requirement) => requirement.type === "PREREQUISITE")
-      }));
-    });
+        return curriculum.subjects.map((item) => {
+          const recStatus = academicRecords instanceof Map ? (academicRecords.get(item.subjectId) || null) : (academicRecords?.[item.subjectId] || null);
+          const isPassed = recStatus === "PASSED";
+          return {
+            id: item.id,
+            academicTermId: term.id,
+            curriculumId: curriculum.id,
+            programId: curriculum.programId,
+            curriculumCode: curriculum.code,
+            curriculumName: curriculum.name,
+            yearLevel: item.yearLevel,
+            termNumber: item.termNumber,
+            subjectId: item.subjectId,
+            subjectCode: item.subject.code,
+            subjectTitle: item.subject.title,
+            subjectDescription: item.subject.description,
+            creditUnits: Number(item.creditUnits),
+            lectureHours: Number(item.lectureHours),
+            laboratoryHours: Number(item.laboratoryHours),
+            type: item.type,
+            isRequired: item.isRequired,
+            sortOrder: item.sortOrder,
+            isPassed,
+            alreadyCompleted: isPassed,
+            recordStatus: recStatus,
+            requirements: requirementEligibility(item.subject.requirements, academicRecords),
+            prerequisites: requirementEligibility(item.subject.requirements, academicRecords).filter((requirement) => requirement.type === "PREREQUISITE")
+          };
+        });
+      }
+      return programs.flatMap((prog) => {
+        const progCurricula = curricula.filter((c) => c.programId === prog.id);
+        const curriculum = curriculumForTerm({ programId: prog.id }, progCurricula, term);
+        if (!curriculum) return [];
+        return curriculum.subjects.map((item) => {
+          const recStatus = academicRecords instanceof Map ? (academicRecords.get(item.subjectId) || null) : (academicRecords?.[item.subjectId] || null);
+          const isPassed = recStatus === "PASSED";
+          return {
+            id: item.id,
+            academicTermId: term.id,
+            curriculumId: curriculum.id,
+            programId: curriculum.programId,
+            curriculumCode: curriculum.code,
+            curriculumName: curriculum.name,
+            yearLevel: item.yearLevel,
+            termNumber: item.termNumber,
+            subjectId: item.subjectId,
+            subjectCode: item.subject.code,
+            subjectTitle: item.subject.title,
+            subjectDescription: item.subject.description,
+            creditUnits: Number(item.creditUnits),
+            lectureHours: Number(item.lectureHours),
+            laboratoryHours: Number(item.laboratoryHours),
+            type: item.type,
+            isRequired: item.isRequired,
+            sortOrder: item.sortOrder,
+            isPassed,
+            alreadyCompleted: isPassed,
+            recordStatus: recStatus,
+            requirements: requirementEligibility(item.subject.requirements, academicRecords),
+            prerequisites: requirementEligibility(item.subject.requirements, academicRecords).filter((requirement) => requirement.type === "PREREQUISITE")
+          };
+        });
+      });
   });
 
     return {

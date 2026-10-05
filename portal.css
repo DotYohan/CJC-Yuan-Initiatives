@@ -2429,6 +2429,25 @@ p {
     align-items: flex-start;
     justify-content: space-between;
     gap: 20px;
+    flex-wrap: wrap;
+}
+
+.admin-search-input {
+    flex: 0 1 280px;
+    min-width: 200px;
+    padding: 8px 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    font-size: 0.88rem;
+    background: var(--surface-bg, #fafafa);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-search-input:focus {
+    outline: none;
+    border-color: var(--red-800, #800000);
+    box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.1);
+    background: var(--white);
 }
 
 .panel h2,
@@ -3304,7 +3323,28 @@ th {
 }
 .system-logs-panel__header h3 { margin: 0 0 4px; font-size: 1.15rem; }
 .system-logs-panel__desc { margin: 0; color: var(--muted); font-size: 0.82rem; }
-.system-logs-panel__controls { flex: 0 0 auto; }
+.system-logs-panel__controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    flex: 0 0 auto;
+}
+.log-search-input {
+    min-width: 240px;
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 0.82rem;
+    background: var(--surface-bg, #fafafa);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.log-search-input:focus {
+    outline: none;
+    border-color: var(--red-800, #800000);
+    box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.1);
+    background: var(--white);
+}
 .log-filter-select {
     min-width: 150px;
     padding: 8px 12px;
@@ -4665,4 +4705,237 @@ body.student-mode .metric-card {
     color: #475569;
     border: 1px solid rgba(100, 116, 139, 0.25);
 }
+
+/* ── Scrollable Academic & Request Lists ── */
+.scrollable-record-list {
+    max-height: 520px;
+    overflow-y: auto;
+    overflow-x: auto;
+    padding-right: 6px;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(107, 30, 43, 0.25) transparent;
+}
+
+.table-wrap.scrollable-record-list table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--white, #ffffff);
+    z-index: 2;
+    box-shadow: 0 1px 0 var(--line);
+}
+
+.scrollable-record-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scrollable-record-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scrollable-record-list::-webkit-scrollbar-thumb {
+    background: rgba(107, 30, 43, 0.2);
+    border-radius: 4px;
+}
+
+.scrollable-record-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(107, 30, 43, 0.45);
+}
+
+/* ── Secondary Sub-Navigation Tabs inside Module Panels ── */
+.sub-workspace-tabs {
+    display: flex;
+    gap: 6px;
+    border-bottom: 2px solid rgba(57, 28, 35, 0.12);
+    margin-bottom: 1.25rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
+}
+
+.sub-workspace-tabs .workspace-tab {
+    min-height: 42px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border-radius: 8px 8px 0 0;
+    color: #665d60;
+}
+
+.sub-workspace-tabs .workspace-tab:hover {
+    color: var(--red-900);
+    background: rgba(107, 30, 43, 0.04);
+}
+
+.sub-workspace-tabs .workspace-tab.active {
+    color: var(--red-900);
+    border-bottom-color: var(--red-800);
+    background: rgba(116, 16, 35, 0.07);
+}
+
+/* ── Toolbar Controls Card (SA, Dean & SSC Workspaces) ── */
+.sa-controls-card,
+.dean-controls-card,
+.ssc-controls-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-block: 16px;
+    padding: 12px 16px;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+}
+
+.sa-controls-card .sa-filter-tabs,
+.ssc-controls-card .sa-filter-tabs {
+    display: inline-flex;
+    gap: 6px;
+    margin: 0;
+}
+
+.ssc-filter-btn.is-active {
+    background: var(--red-800, #800000) !important;
+    color: var(--white) !important;
+    border-color: var(--red-800, #800000) !important;
+}
+
+.sa-toolbar-inputs {
+    display: flex;
+    flex: 1 1 340px;
+    align-items: center;
+    gap: 10px;
+    max-width: 100%;
+}
+
+.sa-toolbar-inputs input[type="search"] {
+    flex: 1 1 auto;
+    min-width: 200px;
+    padding: 8px 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    font-size: 0.88rem;
+    background: var(--surface-bg, #fafafa);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sa-toolbar-inputs input[type="search"]:focus {
+    outline: none;
+    border-color: var(--red-800, #800000);
+    box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.1);
+    background: var(--white);
+}
+
+.sa-toolbar-inputs select {
+    flex: 0 0 auto;
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-heading, #1f2937);
+    background: var(--surface-bg, #fafafa);
+    cursor: pointer;
+}
+
+.count-badge,
+[data-history-term-count],
+[data-grade-count],
+[data-schedule-count],
+[data-payment-obligation-count],
+[data-request-count] {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.28rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--red-900, #550a18);
+    background-color: rgba(85, 10, 24, 0.06);
+    border: 1px solid rgba(85, 10, 24, 0.12);
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.count-badge:empty,
+[data-history-term-count]:empty,
+[data-grade-count]:empty,
+[data-schedule-count]:empty,
+[data-payment-obligation-count]:empty,
+[data-request-count]:empty {
+    display: none !important;
+}
+
+/* Floating Report Issue Button & Modal Dialog */
+.floating-report-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 999px;
+    background: var(--red-900, #550a18);
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.floating-report-btn:hover {
+    transform: translateY(-2px);
+    background: var(--red-800, #741023);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
+}
+
+.modal-dialog {
+    border: none;
+    border-radius: 16px;
+    padding: 0;
+    max-width: 580px;
+    width: calc(100% - 32px);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+    background: #ffffff;
+}
+
+.modal-dialog::backdrop {
+    background: rgba(15, 8, 10, 0.65);
+    backdrop-filter: blur(4px);
+}
+
+.modal-dialog__surface {
+    padding: 24px;
+}
+
+.modal-dialog__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line, rgba(0, 0, 0, 0.1));
+}
+
+.modal-dialog__close {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--muted, #666);
+    padding: 0 8px;
+    line-height: 1;
+}
+
+.modal-dialog__close:hover {
+    color: var(--ink, #111);
+}
+
+
 

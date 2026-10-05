@@ -126,6 +126,8 @@
 
     // Dean Grade Review
     const deanGradesTbody = select("[data-dean-grades-tbody]");
+    const deanGradesSearch = select("[data-dean-grades-search]");
+    const deanGradesSort = select("[data-dean-grades-sort]");
     const refreshDeanGradesBtn = select("[data-refresh-dean-grades]");
     const deanGradeDialog = select("[data-dean-grade-dialog]");
     const deanGradeDialogTitle = select("[data-dean-grade-dialog-title]");
@@ -144,9 +146,13 @@
 
     // Dean Faculty
     const deanFacultyTbody = select("[data-dean-faculty-tbody]");
+    const deanFacultySearch = select("[data-dean-faculty-search]");
+    const deanFacultySort = select("[data-dean-faculty-sort]");
 
     // Dean Evaluation
     const deanEvaluationsTbody = select("[data-dean-evaluations-tbody]");
+    const deanEvalSearch = select("[data-dean-eval-search]");
+    const deanEvalSort = select("[data-dean-eval-sort]");
     const refreshDeanEvaluationsBtn = select("[data-refresh-dean-evaluations]");
     const deanEvaluationDialog = select("[data-dean-evaluation-dialog]");
     const deanEvalTitle = select("[data-dean-eval-title]");
@@ -158,10 +164,12 @@
     const deanEvalRemarks = select("#dean-eval-remarks");
     const deanEvalError = select("[data-dean-eval-error]");
     const deanSubmitEvaluationBtn = select("[data-dean-submit-evaluation]");
-    const closeDeanEvalDialogBtns = selectAll("[data-close-dean-eval-dialog]");
+    const closeDeanEvalDialogBtns = selectAll("[data-close-dean-eval-dialog], [data-close-dean-evaluation-dialog]");
 
-    // Dean Schedules
+    // Dean Class Schedules
     const deanSchedulesTbody = select("[data-dean-schedules-tbody]");
+    const deanSchedulesSearch = select("[data-dean-schedules-search]");
+    const deanSchedulesSort = select("[data-dean-schedules-sort]");
 
     // SSC DOM Elements
     const sscPanel = select("[data-ssc-panel]");
@@ -239,6 +247,7 @@
     const usersStatus = select("[data-users-status]");
     const usersTable = select("[data-users-table]");
     const usersBody = select("[data-users-body]");
+    const userSearchInput = select("[data-user-search]");
     const retryUsers = select("[data-retry-users]");
     const globalError = select("[data-global-error]");
     const roleDialog = select("[data-role-dialog]");
@@ -700,13 +709,12 @@
         if (clearanceStatusEl) {
             const stat = clearance?.status || "NOT_STARTED";
             clearanceStatusEl.textContent = clearance ? humanize(clearance.status) : "Not started";
-            clearanceStatusEl.className = `status-pill ${
-                stat === "CLEARED" || stat === "APPROVED"
-                    ? "status-pill--active"
-                    : stat === "BLOCKED" || stat === "NOT_CLEARED"
+            clearanceStatusEl.className = `status-pill ${stat === "CLEARED" || stat === "APPROVED"
+                ? "status-pill--active"
+                : stat === "BLOCKED" || stat === "NOT_CLEARED"
                     ? "status-pill--expired"
                     : "status-pill--pending"
-            }`;
+                }`;
         }
         if (clearanceList) {
             const items = Array.isArray(clearance?.items) ? clearance.items : [];
@@ -749,12 +757,44 @@
         const grades = Array.isArray(dashboard.finalGrades) ? dashboard.finalGrades : [];
         const gradeList = clearDashboardList("[data-grade-list]", "No posted final grades are available for the current enrollment.");
         setText("[data-grade-count]", plural(grades.length, "grade"));
+        const gradesBadge = select("[data-student-grades-badge]");
+        if (gradesBadge) {
+            gradesBadge.textContent = String(grades.length);
+            gradesBadge.hidden = grades.length === 0;
+        }
         if (grades.length) {
             gradeList.replaceChildren(...grades.map((grade) => dashboardListItem(
                 `${grade.subjectCode} — ${grade.subjectTitle}`,
                 `${grade.period}${grade.remarks ? ` · ${grade.remarks}` : ""}`,
                 grade.letterGrade || grade.numericGrade || "Posted"
             )));
+        }
+
+        const academicHistory = Array.isArray(dashboard.academicHistory) ? dashboard.academicHistory : [];
+        const historyList = clearDashboardList("[data-academic-history-list]", "No historical or credited academic records found.");
+        setText("[data-history-term-count]", plural(academicHistory.length, "term"));
+        const historyBadge = select("[data-student-history-badge]");
+        if (historyBadge) {
+            historyBadge.textContent = String(academicHistory.length);
+            historyBadge.hidden = academicHistory.length === 0;
+        }
+        if (academicHistory.length) {
+            historyList.replaceChildren(...academicHistory.flatMap((termEntry) => {
+                const termHeader = document.createElement("div");
+                termHeader.className = "dashboard-list-item dashboard-list-item--header";
+                termHeader.style.fontWeight = "600";
+                termHeader.style.padding = "0.5rem 0.75rem";
+                termHeader.style.borderRadius = "var(--radius-sm, 4px)";
+                termHeader.style.background = "var(--surface-muted, rgba(0,0,0,0.04))";
+                termHeader.innerHTML = `<strong>${escapeHtml(termEntry.academicYear ? `${termEntry.academicYear} · ` : "")}${escapeHtml(termEntry.termName || termEntry.termCode)}</strong> <small style="margin-left:auto;">${plural(termEntry.grades.length, "subject")} · ${termEntry.totalUnits} units</small>`;
+
+                const subjectRows = termEntry.grades.map((grade) => dashboardListItem(
+                    `${grade.subjectCode} — ${grade.subjectTitle}`,
+                    `${grade.creditUnits} units · ${grade.period}${grade.remarks ? ` · ${grade.remarks}` : ""}`,
+                    grade.letterGrade || grade.numericGrade || (grade.isPassing ? "Passed" : "Posted")
+                ));
+                return [termHeader, ...subjectRows];
+            }));
         }
 
         const requests = Array.isArray(dashboard.requests) ? dashboard.requests : [];
@@ -870,6 +910,8 @@
         if (deanPanel) deanPanel.hidden = !canManageDean;
         if (registrarGradesPanel) registrarGradesPanel.hidden = !canManageRegistrar;
         if (adminFacultySection) adminFacultySection.hidden = !canManageAccounts;
+        const accountSection = select("[data-account-section]");
+        if (accountSection) accountSection.hidden = !studentWorkspace || required;
         studentDashboard.hidden = !studentWorkspace || required;
 
         if (required && !mandatoryPrompted) {
@@ -1371,13 +1413,33 @@
 
     const renderUsers = () => {
         usersBody?.replaceChildren();
-        setText("[data-user-count]", `${state.users.length} account${state.users.length === 1 ? "" : "s"}`);
-        if (!state.users.length) {
-            if (usersStatus) usersStatus.textContent = "No project accounts were returned.";
+
+        const query = (userSearchInput?.value || "").trim().toLowerCase();
+        let list = state.users || [];
+
+        if (query) {
+            list = list.filter((user) => {
+                const name = displayName(user).toLowerCase();
+                const username = (user.username || "").toLowerCase();
+                const email = (user.email || "").toLowerCase();
+                const roles = normalizeRoles(user.roles).map(roleName).join(" ").toLowerCase();
+                const status = (user.status || "").toLowerCase();
+                return name.includes(query) || username.includes(query) || email.includes(query) || roles.includes(query) || status.includes(query);
+            });
+        }
+
+        const countText = query
+            ? `${list.length} of ${state.users.length} account${state.users.length === 1 ? "" : "s"}`
+            : `${state.users.length} account${state.users.length === 1 ? "" : "s"}`;
+        setText("[data-user-count]", countText);
+
+        if (!list.length) {
+            if (usersStatus) usersStatus.textContent = query ? "No accounts match your search." : "No project accounts were returned.";
             usersTable.hidden = true;
             return;
         }
-        state.users.forEach((user) => {
+
+        list.forEach((user) => {
             const row = document.createElement("tr");
             const identity = document.createElement("span");
             const name = document.createElement("strong");
@@ -1433,6 +1495,8 @@
         usersTable.hidden = false;
     };
 
+    userSearchInput?.addEventListener("input", renderUsers);
+
     let loadUsers = async () => {
         if (!isAdministrator() || needsPasswordChange()) return;
         if (usersStatus) usersStatus.textContent = "Loading accounts…";
@@ -1461,7 +1525,8 @@
             loadUsers(),
             auth.getAdminPrograms().then((data) => renderProgramOptions(data.programs || [])),
             auth.getAdminDepartments().then((data) => renderDepartmentOptions(data.departments || [])),
-            auth.getAdminColleges().then((data) => renderCollegeOptions(data.colleges || []))
+            auth.getAdminColleges().then((data) => renderCollegeOptions(data.colleges || [])),
+            renderAdminReports()
         ]);
     };
 
@@ -1531,11 +1596,23 @@
         if (view === "clearance") void loadStudentDashboard();
         if (view === "grades") void loadStudentImportRequests();
     });
+    const switchStudentGradesTab = initWorkspaceTabs("data-student-grades-nav", "data-student-grades-view", (view) => {
+        if (view === "requests") void loadStudentImportRequests();
+    });
     const switchClubTab = initWorkspaceTabs("data-club-nav", "data-club-view");
     const switchStudentPortalTab = initWorkspaceTabs("data-portal-nav", "data-portal-view");
     const switchProgramHeadTab = initWorkspaceTabs("data-ph-nav", "data-ph-view");
     const switchFacultyTab = initWorkspaceTabs("data-faculty-nav", "data-faculty-view");
-    const switchAdminTab = initWorkspaceTabs("data-admin-nav", "data-admin-view");
+    const switchAdminTab = initWorkspaceTabs("data-admin-nav", "data-admin-view", (view) => {
+        if (view === "reports") {
+            void renderAdminReports();
+        } else if (view === "monitoring") {
+            if (typeof loadMonitoringHealth === "function") void loadMonitoringHealth();
+            if (typeof loadSystemLogs === "function") void loadSystemLogs();
+        } else if (view === "users") {
+            if (typeof loadUsers === "function") void loadUsers();
+        }
+    });
     const switchDeanTab = initWorkspaceTabs("data-dean-nav", "data-dean-view");
 
 
@@ -3000,7 +3077,7 @@
         if (!applications.length) {
             const empty = document.createElement("p");
             empty.className = "dashboard-list__empty";
-            empty.textContent = "No applications match this filter.";
+            empty.textContent = "No applications match your filter or search.";
             registrarApplicationList?.append(empty);
             return;
         }
@@ -3049,13 +3126,46 @@
         try {
             const data = await auth.getRegistrarApplications(state.registrarFilter);
             state.registrarApplications = Array.isArray(data.applications) ? data.applications : [];
-            renderRegistrarApplications(state.registrarApplications);
-            if (registrarApplicationsStatus) registrarApplicationsStatus.textContent = plural(state.registrarApplications.length, "application");
+            applyRegistrarApplicationSearch();
         } catch (error) {
             if (handleExpiredSession(error)) return;
             if (registrarApplicationsStatus) registrarApplicationsStatus.textContent = error.message || "Applications could not be loaded.";
         }
     };
+
+    // Client-side search over the already-loaded queue: every word must match
+    // the applicant name, application number, student number, email or program.
+    function applyRegistrarApplicationSearch() {
+        const searchInput = select("[data-registrar-application-search]");
+        const terms = String(searchInput?.value || "")
+            .trim().slice(0, 100).toLowerCase().split(/\s+/).filter(Boolean);
+        const all = state.registrarApplications || [];
+        const matches = terms.length
+            ? all.filter((application) => {
+                const haystack = [
+                    application.applicantName,
+                    application.applicationNumber,
+                    application.studentNumber,
+                    application.email,
+                    application.intendedProgram?.code,
+                    application.intendedProgram?.name
+                ].filter(Boolean).join(" ").toLowerCase();
+                return terms.every((term) => haystack.includes(term));
+            })
+            : all;
+        renderRegistrarApplications(matches);
+        if (registrarApplicationsStatus) {
+            registrarApplicationsStatus.textContent = terms.length
+                ? `${matches.length} of ${plural(all.length, "application")}`
+                : plural(all.length, "application");
+        }
+    }
+
+    let registrarApplicationSearchTimer = null;
+    select("[data-registrar-application-search]")?.addEventListener("input", () => {
+        clearTimeout(registrarApplicationSearchTimer);
+        registrarApplicationSearchTimer = setTimeout(applyRegistrarApplicationSearch, 200);
+    });
 
     const documentNeedsReview = (documentRecord) => Boolean(
         documentRecord?.id && !["VERIFIED", "REJECTED"].includes(documentRecord.status)
@@ -4044,14 +4154,22 @@
         catalog.forEach((item) => {
             const card = document.createElement("article");
             const selected = selectedIds.has(item.id || item.subjectId);
+            const isAlreadyCompleted = Boolean(item.isPassed || item.alreadyCompleted);
             const requirements = item.requirements || item.prerequisites || [];
             const blockedPrerequisites = requirements.filter((requirement) => requirement.type !== "COREQUISITE" && !requirement.eligible);
             const pendingCorequisites = requirements.filter((requirement) => requirement.type === "COREQUISITE" && !requirement.eligible);
-            card.className = `subject-card${selected ? " is-selected" : ""}`;
+            card.className = `subject-card${selected ? " is-selected" : ""}${isAlreadyCompleted ? " is-completed" : ""}`;
             const meta = document.createElement("div");
             meta.className = "subject-card__meta";
             meta.innerHTML = `<strong>${escapeHtml(item.subjectCode)} · ${escapeHtml(item.subjectTitle)}</strong><small>${Number(item.creditUnits || 0)} units · ${escapeHtml(item.type || "REQUIRED")} · ${escapeHtml(item.curriculumCode)}</small>`;
-            if (blockedPrerequisites.length) {
+            if (isAlreadyCompleted) {
+                const completedMessage = document.createElement("small");
+                completedMessage.textContent = "✓ Already Completed / Credited";
+                completedMessage.className = "subject-card__completed";
+                completedMessage.style.color = "var(--success-fg, #137333)";
+                completedMessage.style.fontWeight = "600";
+                meta.append(completedMessage);
+            } else if (blockedPrerequisites.length) {
                 const prerequisiteMessage = document.createElement("small");
                 prerequisiteMessage.textContent = blockedPrerequisites.map((requirement) => `${requirement.requiredSubject.code}: ${humanize(requirement.state)}`).join(" · ");
                 prerequisiteMessage.className = "subject-card__warning";
@@ -4069,15 +4187,23 @@
             badge.className = "subject-card__pill";
             badge.textContent = item.type || "REQUIRED";
             details.append(badge);
+            if (isAlreadyCompleted) {
+                const completedPill = document.createElement("span");
+                completedPill.className = "subject-card__pill";
+                completedPill.style.background = "var(--success-bg, #e6f4ea)";
+                completedPill.style.color = "var(--success-fg, #137333)";
+                completedPill.textContent = "Completed";
+                details.append(completedPill);
+            }
             meta.append(details);
             const button = document.createElement("button");
             button.type = "button";
             button.className = `subject-card__button${selected ? " subject-card__button--selected" : ""}`;
             button.dataset.subjectAction = selected ? "remove" : "add";
             button.dataset.subjectId = item.id || item.subjectId;
-            button.disabled = selectedSubjectState.locked || Boolean(blockedPrerequisites.length && !selected);
+            button.disabled = selectedSubjectState.locked || isAlreadyCompleted || Boolean(blockedPrerequisites.length && !selected);
             button.hidden = selectedSubjectState.locked;
-            button.textContent = selected ? "Remove" : blockedPrerequisites.length ? "Prerequisite required" : "Add to cart";
+            button.textContent = isAlreadyCompleted ? "Already completed" : selected ? "Remove" : blockedPrerequisites.length ? "Prerequisite required" : "Add to cart";
             card.append(meta, button);
             catalogContainer.append(card);
         });
@@ -4618,6 +4744,7 @@
     const systemLogsBody = select("[data-system-logs-body]");
     const systemLogsStatus = select("[data-system-logs-status]");
     const logSeverityFilter = select("[data-log-filter]");
+    const logSearchInput = select("[data-log-search]");
     const refreshLogsBtn = select("[data-refresh-system-logs]");
     const monitoringHealthStatus = select("[data-monitoring-health-status]");
 
@@ -4707,12 +4834,27 @@
         if (!systemLogsBody) return;
         systemLogsBody.innerHTML = "";
 
-        if (!state.systemLogs || state.systemLogs.length === 0) {
-            systemLogsBody.insertAdjacentHTML("beforeend", `<tr><td colspan="6" class="empty-state">No system logs found.</td></tr>`);
+        const query = (logSearchInput?.value || "").trim().toLowerCase();
+        let logs = state.systemLogs || [];
+
+        if (query) {
+            logs = logs.filter((log) => {
+                const msg = (log.message || "").toLowerCase();
+                const cat = (log.category || "").toLowerCase();
+                const errId = (log.errorId || log.id || "").toLowerCase();
+                const tech = (log.technicalDetail || "").toLowerCase();
+                const sev = (log.severity || "").toLowerCase();
+                const status = (log.status || "").toLowerCase();
+                return msg.includes(query) || cat.includes(query) || errId.includes(query) || tech.includes(query) || sev.includes(query) || status.includes(query);
+            });
+        }
+
+        if (!logs || logs.length === 0) {
+            systemLogsBody.insertAdjacentHTML("beforeend", `<tr><td colspan="6" class="empty-state">${query ? "No system logs match your search." : "No system logs found."}</td></tr>`);
             return;
         }
 
-        for (const log of state.systemLogs) {
+        for (const log of logs) {
             const tr = document.createElement("tr");
 
             const dateStr = new Date(log.createdAt).toLocaleString();
@@ -4769,6 +4911,7 @@
         }
     });
 
+    logSearchInput?.addEventListener("input", renderSystemLogs);
     logSeverityFilter?.addEventListener("change", loadSystemLogs);
     refreshLogsBtn?.addEventListener("click", () => {
         void Promise.allSettled([loadSystemLogs(), loadMonitoringHealth()]);
@@ -5383,13 +5526,13 @@
                 const programsStr = (dashboard.programs || []).map((p) => p.code).join(", ");
                 saDepartmentContext.textContent = `Assigned Department: ${dept.code} · ${dept.name} (${dept.college?.name || "College"}) [Programs: ${programsStr || "None"}]`;
             }
-            if (saPendingCount) saPendingCount.textContent = dashboard.metrics.pendingEncoding;
-            if (saEncodedCount) saEncodedCount.textContent = dashboard.metrics.encoded;
-            if (saProgramsCount) saProgramsCount.textContent = (dashboard.programs || []).length;
-            if (saFilterPendingCount) saFilterPendingCount.textContent = dashboard.metrics.pendingEncoding;
-            if (saFilterEncodedCount) saFilterEncodedCount.textContent = dashboard.metrics.encoded;
+            const pendingMetric = dashboard.metrics?.pendingCount ?? dashboard.metrics?.pendingEncoding ?? 0;
+            const encodedMetric = dashboard.metrics?.encodedCount ?? dashboard.metrics?.encoded ?? 0;
+            if (saPendingCount) saPendingCount.textContent = String(pendingMetric);
+            if (saEncodedCount) saEncodedCount.textContent = String(encodedMetric);
+            if (saProgramsCount) saProgramsCount.textContent = String((dashboard.programs || []).length);
 
-            renderStudentAssistantApplications(applications);
+            applyStudentAssistantView();
 
             if (state.selectedSaApplicationId) {
                 await loadStudentAssistantApplicationDetail(state.selectedSaApplicationId);
@@ -5401,6 +5544,48 @@
         }
     };
 
+    // Search + sort over the loaded list. Every search word must match the
+    // student name, student/application number, or program.
+    function applyStudentAssistantView() {
+        const all = state.studentAssistantApplications || [];
+        const terms = String(select("[data-sa-search]")?.value || "")
+            .trim().slice(0, 100).toLowerCase().split(/\s+/).filter(Boolean);
+        const sortKey = select("[data-sa-sort]")?.value || "oldest";
+
+        const matches = terms.length
+            ? all.filter((app) => {
+                const haystack = [
+                    app.studentName, app.studentNumber, app.applicationNumber,
+                    app.program?.code, app.program?.name
+                ].filter(Boolean).join(" ").toLowerCase();
+                return terms.every((term) => haystack.includes(term));
+            })
+            : [...all];
+
+        const time = (app) => new Date(app.submittedAt || 0).getTime();
+        const byName = (a, b) => String(a.studentName || "").localeCompare(String(b.studentName || ""), undefined, { sensitivity: "base" });
+        const comparators = {
+            oldest: (a, b) => time(a) - time(b),
+            newest: (a, b) => time(b) - time(a),
+            "name-asc": byName,
+            "name-desc": (a, b) => byName(b, a),
+            subjects: (a, b) => (b.subjectCount || 0) - (a.subjectCount || 0)
+        };
+        matches.sort(comparators[sortKey] || comparators.oldest);
+
+        renderStudentAssistantApplications(matches);
+        if (saStatus && terms.length) {
+            saStatus.textContent = `${matches.length} of ${all.length} applications`;
+        }
+    }
+
+    let saSearchTimer = null;
+    select("[data-sa-search]")?.addEventListener("input", () => {
+        clearTimeout(saSearchTimer);
+        saSearchTimer = setTimeout(applyStudentAssistantView, 200);
+    });
+    select("[data-sa-sort]")?.addEventListener("change", applyStudentAssistantView);
+
     const renderStudentAssistantApplications = (applications = []) => {
         if (!saApplicationsList) return;
         saApplicationsList.replaceChildren();
@@ -5410,9 +5595,12 @@
             empty.className = "empty-state";
             empty.style.padding = "2rem 1rem";
             empty.style.textAlign = "center";
-            empty.textContent = state.studentAssistantFilter === "ENCODED"
-                ? "No completed encoded applications found in your department."
-                : "No applications pending encoding in your assigned department.";
+            const searching = Boolean(String(select("[data-sa-search]")?.value || "").trim());
+            empty.textContent = searching
+                ? "No applications match your search."
+                : state.studentAssistantFilter === "ENCODED"
+                    ? "No completed encoded applications found in your department."
+                    : "No applications pending encoding in your assigned department.";
             saApplicationsList.append(empty);
             return;
         }
@@ -6684,15 +6872,49 @@
     };
 
     // Tab 1: Grade Approvals
-    const renderDeanGrades = (submissions = []) => {
+    const renderDeanGrades = (submissions) => {
         if (!deanGradesTbody) return;
         deanGradesTbody.innerHTML = "";
-        if (!submissions || submissions.length === 0) {
-            deanGradesTbody.innerHTML = '<tr><td colspan="9" class="empty-state" style="text-align:center; padding:1.5rem;">No grade submissions currently pending Dean review.</td></tr>';
+
+        const sourceList = submissions && Array.isArray(submissions) ? submissions : (state.deanGrades || []);
+        state.deanGrades = sourceList;
+
+        let list = [...sourceList];
+        const query = (deanGradesSearch?.value || "").trim().toLowerCase();
+        const sortBy = deanGradesSort?.value || "newest";
+
+        if (query) {
+            list = list.filter((s) => {
+                const code = (s.offeringCode || "").toLowerCase();
+                const subjCode = (s.subjectCode || "").toLowerCase();
+                const subjTitle = (s.subjectTitle || "").toLowerCase();
+                const section = (s.section || "").toLowerCase();
+                const prog = (s.programCode || "").toLowerCase();
+                const term = (s.academicTerm || "").toLowerCase();
+                const instructor = (s.instructor || "").toLowerCase();
+                return code.includes(query) || subjCode.includes(query) || subjTitle.includes(query) ||
+                    section.includes(query) || prog.includes(query) || term.includes(query) || instructor.includes(query);
+            });
+        }
+
+        if (sortBy === "newest") {
+            list.sort((a, b) => new Date(b.createdAt || b.submittedAt || 0) - new Date(a.createdAt || a.submittedAt || 0));
+        } else if (sortBy === "oldest") {
+            list.sort((a, b) => new Date(a.createdAt || a.submittedAt || 0) - new Date(b.createdAt || b.submittedAt || 0));
+        } else if (sortBy === "subject") {
+            list.sort((a, b) => (a.subjectCode || "").localeCompare(b.subjectCode || ""));
+        } else if (sortBy === "instructor") {
+            list.sort((a, b) => (a.instructor || "").localeCompare(b.instructor || ""));
+        } else if (sortBy === "students") {
+            list.sort((a, b) => (b.enrolledCount || 0) - (a.enrolledCount || 0));
+        }
+
+        if (list.length === 0) {
+            deanGradesTbody.innerHTML = `<tr><td colspan="9" class="empty-state" style="text-align:center; padding:1.5rem;">${query ? "No grade submissions match your search criteria." : "No grade submissions currently pending Dean review."}</td></tr>`;
             return;
         }
 
-        submissions.forEach((s) => {
+        list.forEach((s) => {
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td><strong>${escapeHtml(s.offeringCode)}</strong></td>
@@ -6712,6 +6934,9 @@
             deanGradesTbody.appendChild(tr);
         });
     };
+
+    deanGradesSearch?.addEventListener("input", () => renderDeanGrades());
+    deanGradesSort?.addEventListener("change", () => renderDeanGrades());
 
     const loadDeanGrades = async () => {
         if (!isDean() || needsPasswordChange()) return;
@@ -6893,7 +7118,7 @@
         deanStudentsTbody.innerHTML = "";
 
         const query = deanStudentSearch?.value?.trim().toLowerCase() || "";
-        const sortBy = deanStudentSort?.value || "name";
+        const sortBy = deanStudentSort?.value || "name-asc";
 
         let list = [...(state.deanStudents || [])];
         if (query) {
@@ -6902,12 +7127,15 @@
                 const name = (s.fullName || "").toLowerCase();
                 const pCode = (s.program?.code || "").toLowerCase();
                 const pName = (s.program?.name || "").toLowerCase();
-                return num.includes(query) || name.includes(query) || pCode.includes(query) || pName.includes(query);
+                const term = (s.academicTerm || "").toLowerCase();
+                return num.includes(query) || name.includes(query) || pCode.includes(query) || pName.includes(query) || term.includes(query);
             });
         }
 
         list.sort((a, b) => {
-            if (sortBy === "name") return (a.fullName || "").localeCompare(b.fullName || "");
+            if (sortBy === "name" || sortBy === "name-asc") return (a.fullName || "").localeCompare(b.fullName || "");
+            if (sortBy === "name-desc") return (b.fullName || "").localeCompare(a.fullName || "");
+            if (sortBy === "number") return (a.studentNumber || "").localeCompare(b.studentNumber || "");
             if (sortBy === "program") return (a.program?.code || "").localeCompare(b.program?.code || "");
             if (sortBy === "yearLevel") return (a.yearLevel || 0) - (b.yearLevel || 0);
             return 0;
@@ -6955,9 +7183,32 @@
         if (!deanFacultyTbody) return;
         deanFacultyTbody.innerHTML = "";
 
-        const list = state.deanFaculty || [];
+        const query = (deanFacultySearch?.value || "").trim().toLowerCase();
+        const sortBy = deanFacultySort?.value || "name-asc";
+
+        let list = [...(state.deanFaculty || [])];
+        if (query) {
+            list = list.filter((f) => {
+                const empNum = (f.employeeNumber || "").toLowerCase();
+                const name = (f.fullName || "").toLowerCase();
+                const deptName = (f.department?.name || "").toLowerCase();
+                const deptCode = (f.department?.code || "").toLowerCase();
+                const email = (f.institutionalEmail || "").toLowerCase();
+                const status = (f.status || "").toLowerCase();
+                return empNum.includes(query) || name.includes(query) || deptName.includes(query) || deptCode.includes(query) || email.includes(query) || status.includes(query);
+            });
+        }
+
+        list.sort((a, b) => {
+            if (sortBy === "name-asc") return (a.fullName || "").localeCompare(b.fullName || "");
+            if (sortBy === "name-desc") return (b.fullName || "").localeCompare(a.fullName || "");
+            if (sortBy === "employee") return (a.employeeNumber || "").localeCompare(b.employeeNumber || "");
+            if (sortBy === "department") return (a.department?.name || "").localeCompare(b.department?.name || "");
+            return 0;
+        });
+
         if (list.length === 0) {
-            deanFacultyTbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="text-align:center; padding:1.5rem;">No faculty members currently assigned to departments in your college.</td></tr>`;
+            deanFacultyTbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="text-align:center; padding:1.5rem;">${query ? "No faculty members match your search." : "No faculty members currently assigned to departments in your college."}</td></tr>`;
             return;
         }
 
@@ -6991,17 +7242,47 @@
         }
     };
 
+    deanFacultySearch?.addEventListener("input", renderDeanFaculty);
+    deanFacultySort?.addEventListener("change", renderDeanFaculty);
+
     // Tab 4: Program Evaluation
-    const renderDeanEvaluations = (evaluations = []) => {
+    const renderDeanEvaluations = (evaluations) => {
         if (!deanEvaluationsTbody) return;
         deanEvaluationsTbody.innerHTML = "";
 
-        if (!evaluations || evaluations.length === 0) {
-            deanEvaluationsTbody.innerHTML = `<tr><td colspan="8" class="empty-state" style="text-align:center; padding:1.5rem;">No student enrollments pending collegiate evaluation.</td></tr>`;
+        const sourceList = evaluations && Array.isArray(evaluations) ? evaluations : (state.deanEvaluations || []);
+        state.deanEvaluations = sourceList;
+
+        let list = [...sourceList];
+        const query = (deanEvalSearch?.value || "").trim().toLowerCase();
+        const sortBy = deanEvalSort?.value || "newest";
+
+        if (query) {
+            list = list.filter((e) => {
+                const name = (e.student?.name || "").toLowerCase();
+                const num = (e.student?.studentNumber || "").toLowerCase();
+                const prog = (e.program?.code || "").toLowerCase();
+                const term = (e.academicTerm?.name || "").toLowerCase();
+                return name.includes(query) || num.includes(query) || prog.includes(query) || term.includes(query);
+            });
+        }
+
+        if (sortBy === "newest") {
+            list.sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
+        } else if (sortBy === "oldest") {
+            list.sort((a, b) => new Date(a.submittedAt || 0) - new Date(b.submittedAt || 0));
+        } else if (sortBy === "name") {
+            list.sort((a, b) => (a.student?.name || "").localeCompare(b.student?.name || ""));
+        } else if (sortBy === "program") {
+            list.sort((a, b) => (a.program?.code || "").localeCompare(b.program?.code || ""));
+        }
+
+        if (list.length === 0) {
+            deanEvaluationsTbody.innerHTML = `<tr><td colspan="8" class="empty-state" style="text-align:center; padding:1.5rem;">${query ? "No student evaluations match your search." : "No student enrollments pending collegiate evaluation."}</td></tr>`;
             return;
         }
 
-        evaluations.forEach((e) => {
+        list.forEach((e) => {
             const tr = document.createElement("tr");
             const submittedStr = e.submittedAt ? formatDate(e.submittedAt) : "—";
             tr.innerHTML = `
@@ -7021,6 +7302,9 @@
             deanEvaluationsTbody.appendChild(tr);
         });
     };
+
+    deanEvalSearch?.addEventListener("input", () => renderDeanEvaluations());
+    deanEvalSort?.addEventListener("change", () => renderDeanEvaluations());
 
     const loadDeanEvaluations = async () => {
         if (!isDean() || needsPasswordChange()) return;
@@ -7209,9 +7493,34 @@
         if (!deanSchedulesTbody) return;
         deanSchedulesTbody.innerHTML = "";
 
-        const list = state.deanSchedules || [];
+        const query = (deanSchedulesSearch?.value || "").trim().toLowerCase();
+        const sortBy = deanSchedulesSort?.value || "offering";
+
+        let list = [...(state.deanSchedules || [])];
+        if (query) {
+            list = list.filter((s) => {
+                const offCode = (s.offeringCode || "").toLowerCase();
+                const subjCode = (s.subject?.code || "").toLowerCase();
+                const subjTitle = (s.subject?.title || "").toLowerCase();
+                const secCode = (s.section?.code || "").toLowerCase();
+                const progCode = (s.program?.code || "").toLowerCase();
+                const instructor = (s.instructor?.name || "").toLowerCase();
+                const schedStr = (s.schedules || []).map(sc => `${sc.dayOfWeek} ${sc.startsAt || ""}–${sc.endsAt || ""} ${sc.room ? sc.room.name : ""}`).join(" ").toLowerCase();
+                return offCode.includes(query) || subjCode.includes(query) || subjTitle.includes(query) ||
+                    secCode.includes(query) || progCode.includes(query) || instructor.includes(query) || schedStr.includes(query);
+            });
+        }
+
+        list.sort((a, b) => {
+            if (sortBy === "offering") return (a.offeringCode || "").localeCompare(b.offeringCode || "");
+            if (sortBy === "subject") return (a.subject?.code || "").localeCompare(b.subject?.code || "");
+            if (sortBy === "program") return (a.program?.code || "").localeCompare(b.program?.code || "");
+            if (sortBy === "instructor") return (a.instructor?.name || "").localeCompare(b.instructor?.name || "");
+            return 0;
+        });
+
         if (list.length === 0) {
-            deanSchedulesTbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="text-align:center; padding:1.5rem;">No scheduled class offerings found under your college programs.</td></tr>`;
+            deanSchedulesTbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="text-align:center; padding:1.5rem;">${query ? "No class offerings match your search." : "No scheduled class offerings found under your college programs."}</td></tr>`;
             return;
         }
 
@@ -7232,6 +7541,9 @@
             deanSchedulesTbody.appendChild(tr);
         });
     };
+
+    deanSchedulesSearch?.addEventListener("input", renderDeanSchedules);
+    deanSchedulesSort?.addEventListener("change", renderDeanSchedules);
 
     const loadDeanSchedules = async () => {
         if (!isDean() || needsPasswordChange()) return;
@@ -7270,7 +7582,7 @@
     // Student DOM Elements
     const studentImportDialog = select("[data-student-import-dialog]");
     const studentImportForm = select("[data-student-import-form]");
-    const openStudentImportBtn = select("[data-open-student-import-modal]");
+    const openStudentImportBtns = selectAll("[data-open-student-import-modal]");
     const closeStudentImportBtns = selectAll("[data-close-student-import-dialog]");
     const studentImportTargetProgram = select("#import-target-program");
     const studentImportError = select("[data-student-import-error]");
@@ -7324,6 +7636,12 @@
     const renderStudentImportRequests = (requests = []) => {
         if (!studentImportRequestsList) return;
         studentImportRequestsList.innerHTML = "";
+
+        const requestsBadge = select("[data-student-requests-badge]");
+        if (requestsBadge) {
+            requestsBadge.textContent = String(requests?.length || 0);
+            requestsBadge.hidden = !requests || requests.length === 0;
+        }
 
         if (!requests || requests.length === 0) {
             studentImportRequestsList.innerHTML = `<p class="dashboard-list__empty">You have not submitted any academic record import requests yet.</p>`;
@@ -7462,7 +7780,7 @@
                         programs = data.programs;
                         state.academicPrograms = programs;
                     }
-                } catch {}
+                } catch { }
             }
             if (!programs.length) {
                 try {
@@ -7471,7 +7789,7 @@
                         programs = data.programs;
                         state.academicPrograms = programs;
                     }
-                } catch {}
+                } catch { }
             }
 
             studentImportTargetProgram.innerHTML = `<option value="">Select target academic program…</option>`;
@@ -7488,8 +7806,8 @@
 
             // Default to student's currently assigned program if any
             const currentProgId = state.studentDashboard?.student?.program?.id ||
-                                  state.studentDashboard?.student?.programId ||
-                                  state.studentDashboard?.student?.program_id;
+                state.studentDashboard?.student?.programId ||
+                state.studentDashboard?.student?.program_id;
             if (currentProgId && studentImportTargetProgram.querySelector(`option[value="${currentProgId}"]`)) {
                 studentImportTargetProgram.value = currentProgId;
             }
@@ -7502,7 +7820,7 @@
         }
     };
 
-    openStudentImportBtn?.addEventListener("click", () => void openStudentImportModal());
+    openStudentImportBtns.forEach((btn) => btn.addEventListener("click", () => void openStudentImportModal()));
     refreshStudentImportRequestsBtn?.addEventListener("click", () => void loadStudentImportRequests());
     closeStudentImportBtns.forEach((btn) => btn.addEventListener("click", () => studentImportDialog?.close()));
 
@@ -7551,6 +7869,9 @@
             setTimeout(() => {
                 studentImportDialog?.close();
                 void loadStudentImportRequests();
+                if (typeof switchStudentGradesTab === "function") {
+                    switchStudentGradesTab("requests");
+                }
             }, 1000);
         } catch (err) {
             if (handleExpiredSession(err)) return;
@@ -7638,7 +7959,11 @@
         }
     };
 
-    registrarImportSearch?.addEventListener("input", () => void loadRegistrarImportRequests());
+    let registrarImportSearchTimer = null;
+    registrarImportSearch?.addEventListener("input", () => {
+        clearTimeout(registrarImportSearchTimer);
+        registrarImportSearchTimer = setTimeout(() => void loadRegistrarImportRequests(), 300);
+    });
     registrarImportStatusFilter?.addEventListener("change", () => void loadRegistrarImportRequests());
     refreshRegistrarImportsBtn?.addEventListener("click", () => void loadRegistrarImportRequests());
 
@@ -7828,6 +8153,46 @@
                 const extractedSubject = `<strong>${escapeHtml(item.sourceSubjectCode || "—")}</strong><br><small style="color:var(--muted);">${escapeHtml(item.sourceSubjectTitle || "")} (${item.sourceUnits ?? "—"}u)</small>`;
                 const extractedGrade = `<strong style="font-size: 1.05rem;">${escapeHtml(item.sourceGrade || "—")}</strong>`;
 
+                // Academic Year & Term cell with correction controls
+                const isPeriodUnclear = item.periodStatus === "UNCLEAR_OR_MISSING" || !item.academicYear || !item.term;
+                let periodDisplay = "";
+                if (isImported) {
+                    periodDisplay = `<strong>${escapeHtml(item.academicYear || "Legacy")}</strong><br><small style="color:var(--muted);">${escapeHtml(item.term || "Historical")}</small>`;
+                } else if (isPeriodUnclear) {
+                    periodDisplay = `
+                        <div style="min-width: 140px;">
+                            <span class="status-pill status-pill--warning" style="font-size: 0.72rem; padding: 2px 6px; margin-bottom: 3px; display: inline-block;">⚠️ AY/Term Unclear</span>
+                            <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 2px;">
+                                <input type="text" data-item-ay="${item.id}" value="${escapeHtml(item.academicYear || '')}" placeholder="AY (e.g. 2023-2024)" style="font-size: 0.78rem; padding: 2px 5px; width: 100%; border: 1px solid var(--line, #cbd5e1); border-radius: 3px;" title="Academic Year (e.g. 2023-2024 or leave blank for Legacy)" />
+                                <select data-item-term="${item.id}" style="font-size: 0.78rem; padding: 2px 4px; width: 100%; border: 1px solid var(--line, #cbd5e1); border-radius: 3px;">
+                                    <option value="1st Semester" ${item.term && /1st|first|1\b/i.test(item.term) ? "selected" : ""}>1st Semester</option>
+                                    <option value="2nd Semester" ${item.term && /2nd|second|2\b/i.test(item.term) ? "selected" : ""}>2nd Semester</option>
+                                    <option value="Summer" ${item.term && /summer|midyear|3\b/i.test(item.term) ? "selected" : ""}>Summer</option>
+                                    <option value="Legacy / Unknown Historical Term" ${!item.term || /legacy|unknown/i.test(item.term) ? "selected" : ""}>Legacy / Unknown Historical Term</option>
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    periodDisplay = `
+                        <div style="min-width: 130px;">
+                            <strong>${escapeHtml(item.academicYear)}</strong><br><small style="color:var(--muted);">${escapeHtml(item.term)}</small>
+                            <details style="margin-top: 3px; font-size: 0.75rem;">
+                                <summary style="cursor: pointer; color: var(--color-primary, #0284c7);">Edit AY/Term</summary>
+                                <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px;">
+                                    <input type="text" data-item-ay="${item.id}" value="${escapeHtml(item.academicYear)}" placeholder="AY (e.g. 2023-2024)" style="font-size: 0.75rem; padding: 2px 4px; width: 100%;" />
+                                    <select data-item-term="${item.id}" style="font-size: 0.75rem; padding: 2px 4px; width: 100%;">
+                                        <option value="1st Semester" ${item.term && /1st|first|1\b/i.test(item.term) ? "selected" : ""}>1st Semester</option>
+                                        <option value="2nd Semester" ${item.term && /2nd|second|2\b/i.test(item.term) ? "selected" : ""}>2nd Semester</option>
+                                        <option value="Summer" ${item.term && /summer|midyear|3\b/i.test(item.term) ? "selected" : ""}>Summer</option>
+                                        <option value="Legacy / Unknown Historical Term">Legacy / Unknown Historical Term</option>
+                                    </select>
+                                </div>
+                            </details>
+                        </div>
+                    `;
+                }
+
                 // Matched curriculum subject
                 let matchDisplay = `<span style="color:var(--muted);">No catalog match</span>`;
                 if (item.matchedSubject) {
@@ -7872,6 +8237,7 @@
                 tr.innerHTML = `
                     <td>${extractedSubject}</td>
                     <td>${extractedGrade}</td>
+                    <td>${periodDisplay}</td>
                     <td>${matchDisplay}</td>
                     <td>${confDisplay}</td>
                     <td>${actionControl}</td>
@@ -7983,10 +8349,18 @@
         const resolutions = rawItems.map((item, idx) => {
             const recordIndex = item.recordIndex ?? item.id ?? idx;
             const selectEl = select(`select[data-resolution-item="${recordIndex}"]`, registrarImportDialog || document);
+            const ayInput = select(`input[data-item-ay="${recordIndex}"]`, registrarImportDialog || document);
+            const termInput = select(`select[data-item-term="${recordIndex}"]`, registrarImportDialog || document);
+
+            const academicYear = ayInput?.value?.trim() || item.academicYear || undefined;
+            const term = termInput?.value?.trim() || item.term || undefined;
+
             return {
                 recordIndex,
                 id: recordIndex,
                 resolutionAction: selectEl?.value || item.resolutionAction || "USE_UPLOADED",
+                academicYear,
+                term
             };
         });
 
@@ -8023,6 +8397,248 @@
     });
 
     closeRegistrarImportDialogBtns.forEach((btn) => btn.addEventListener("click", () => registrarImportDialog?.close()));
+
+    // ── Floating Report Button & System Issue Reports Module ─────────────
+    const openReportBtn = select("[data-open-report-dialog]");
+    const closeReportBtns = selectAll("[data-close-report-dialog]");
+    const reportDialog = select("[data-report-dialog]");
+    const reportForm = select("[data-report-form]");
+    const reportError = select("[data-report-error]");
+    const reportStatus = select("[data-report-status]");
+
+    openReportBtn?.addEventListener("click", () => {
+        if (reportError) reportError.hidden = true;
+        if (reportStatus) reportStatus.textContent = "";
+        reportForm?.reset();
+        reportDialog?.showModal();
+    });
+
+    closeReportBtns.forEach((btn) => btn.addEventListener("click", () => reportDialog?.close()));
+
+    reportForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(reportForm);
+        const category = String(formData.get("category") || "BUG").trim();
+        const description = String(formData.get("description") || "").trim();
+        const fileInput = select("#report-screenshot");
+
+        if (description.length < 5) {
+            if (reportError) {
+                reportError.textContent = "Please provide a description of at least 5 characters.";
+                reportError.hidden = false;
+            }
+            return;
+        }
+
+        setBusy(reportForm, true);
+        if (reportStatus) reportStatus.textContent = "Submitting issue report…";
+        if (reportError) reportError.hidden = true;
+
+        let screenshotData = null;
+        if (fileInput?.files && fileInput.files[0]) {
+            const file = fileInput.files[0];
+            if (file.size <= 5 * 1024 * 1024) {
+                screenshotData = await new Promise((res) => {
+                    const reader = new FileReader();
+                    reader.onload = () => res(reader.result);
+                    reader.onerror = () => res(null);
+                    reader.readAsDataURL(file);
+                });
+            }
+        }
+
+        const globalAlertEl = select("[data-global-error]");
+        const errorCode = globalAlertEl && !globalAlertEl.hidden ? globalAlertEl.textContent?.slice(0, 100) : null;
+
+        try {
+            await auth.submitSystemReport({
+                category,
+                description,
+                screenshotData,
+                pageUrl: window.location.href,
+                browserInfo: navigator.userAgent,
+                errorCode
+            });
+            if (reportStatus) reportStatus.textContent = "Report submitted successfully! Thank you for helping improve the portal.";
+            setTimeout(() => {
+                reportDialog?.close();
+                reportForm?.reset();
+                if (typeof isAdministrator === "function" && isAdministrator()) {
+                    void renderAdminReports();
+                }
+            }, 1200);
+        } catch (err) {
+            if (reportError) {
+                reportError.textContent = err.message || "Failed to submit report. Please try again.";
+                reportError.hidden = false;
+            }
+            if (reportStatus) reportStatus.textContent = "";
+        } finally {
+            setBusy(reportForm, false);
+        }
+    });
+
+    // Admin System Reports Dashboard
+    const adminReportsTbody = select("[data-admin-reports-tbody]");
+    const adminReportFilterBtns = selectAll(".admin-report-filter-btn");
+    const refreshAdminReportsBtn = select("[data-refresh-admin-reports]");
+    let currentAdminReportFilter = "ALL";
+
+    const renderAdminReports = async () => {
+        if (!adminReportsTbody) return;
+        adminReportsTbody.innerHTML = `<tr><td colspan="6" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">Loading user reports…</td></tr>`;
+
+        try {
+            const res = await auth.getSystemReports({ status: currentAdminReportFilter });
+            const reports = res?.reports || res?.data?.reports || [];
+
+            const badgeCount = select("[data-admin-reports-badge]");
+            if (badgeCount) {
+                const openCount = reports.filter((r) => r.status === "OPEN" || r.status === "IN_REVIEW").length;
+                badgeCount.textContent = String(openCount);
+                badgeCount.hidden = openCount === 0;
+            }
+
+            if (reports.length === 0) {
+                adminReportsTbody.innerHTML = `<tr><td colspan="6" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">No system reports found for this filter.</td></tr>`;
+                return;
+            }
+
+            adminReportsTbody.innerHTML = "";
+            reports.forEach((rep) => {
+                const tr = document.createElement("tr");
+
+                const statusPillClass =
+                    rep.status === "RESOLVED" ? "status-pill--active" :
+                        rep.status === "IN_REVIEW" ? "status-pill--warning" :
+                            rep.status === "CLOSED" ? "status-pill--disabled" : "status-pill--pending";
+
+                const categoryBadge =
+                    rep.category === "BUG" ? "🔴 Bug" :
+                        rep.category === "UI_ISSUE" ? "🎨 UI Issue" :
+                            rep.category === "SUGGESTION" ? "💡 Suggestion" : "📌 Other";
+
+                const screenshotHtml = rep.screenshotData
+                    ? `<br><a href="${escapeHtml(rep.screenshotData)}" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-size: 0.8rem; font-weight: 600;">View Screenshot ↗</a>`
+                    : "";
+
+                tr.innerHTML = `
+                    <td style="font-size: 0.85rem; white-space: nowrap;">${formatDate(rep.createdAt)}</td>
+                    <td style="font-size: 0.85rem; font-weight: 600;">${categoryBadge}</td>
+                    <td style="font-size: 0.88rem; max-width: 280px; word-break: break-word;">
+                        ${escapeHtml(rep.description)}
+                        ${screenshotHtml}
+                    </td>
+                    <td style="font-size: 0.82rem; color: var(--muted);">
+                        <strong>User:</strong> ${escapeHtml(rep.user?.username || rep.userId || "Guest")}<br>
+                        <strong>Role:</strong> ${escapeHtml(rep.userRole || "GUEST")}<br>
+                        <small style="display: inline-block; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(rep.pageUrl || "/")}</small>
+                    </td>
+                    <td>
+                        <span class="status-pill ${statusPillClass}" style="font-size: 0.78rem; padding: 0.25rem 0.6rem;">${humanize(rep.status)}</span>
+                    </td>
+                    <td style="white-space: nowrap;">
+                        <select class="report-status-select" data-report-id="${rep.id}" style="font-size: 0.8rem; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--line);">
+                            <option value="OPEN" ${rep.status === "OPEN" ? "selected" : ""}>Open</option>
+                            <option value="IN_REVIEW" ${rep.status === "IN_REVIEW" ? "selected" : ""}>In Review</option>
+                            <option value="RESOLVED" ${rep.status === "RESOLVED" ? "selected" : ""}>Resolved</option>
+                            <option value="CLOSED" ${rep.status === "CLOSED" ? "selected" : ""}>Closed</option>
+                        </select>
+                    </td>
+                `;
+                adminReportsTbody.appendChild(tr);
+            });
+        } catch (err) {
+            if (handleExpiredSession(err)) return;
+            adminReportsTbody.innerHTML = `<tr><td colspan="6" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--danger);">Failed to load system reports: ${escapeHtml(err.message)}</td></tr>`;
+        }
+    };
+
+    adminReportFilterBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            adminReportFilterBtns.forEach((b) => b.classList.remove("is-active"));
+            btn.classList.add("is-active");
+            currentAdminReportFilter = btn.getAttribute("data-report-filter") || "ALL";
+            void renderAdminReports();
+        });
+    });
+
+    refreshAdminReportsBtn?.addEventListener("click", () => void renderAdminReports());
+
+    adminReportsTbody?.addEventListener("change", async (e) => {
+        const selectEl = e.target.closest(".report-status-select");
+        if (!selectEl) return;
+        const reportId = selectEl.getAttribute("data-report-id");
+        const newStatus = selectEl.value;
+        if (!reportId || !newStatus) return;
+
+        try {
+            await auth.updateSystemReportStatus(reportId, { status: newStatus });
+            void renderAdminReports();
+        } catch (err) {
+            if (handleExpiredSession(err)) return;
+            alert(err.message || "Failed to update report status.");
+        }
+    });
+
+
+
+    // ── Forgot Password Modal Module ─────────────────────────────────────
+    const openForgotBtns = selectAll("[data-open-forgot-password-dialog]");
+    const closeForgotBtns = selectAll("[data-close-forgot-password-dialog]");
+    const forgotDialog = select("[data-forgot-password-dialog]");
+    const forgotForm = select("[data-forgot-password-form]");
+    const forgotError = select("[data-forgot-password-error]");
+    const forgotStatus = select("[data-forgot-password-status]");
+
+    openForgotBtns.forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            if (forgotError) forgotError.hidden = true;
+            if (forgotStatus) forgotStatus.textContent = "";
+            forgotForm?.reset();
+            forgotDialog?.showModal();
+        });
+    });
+
+    closeForgotBtns.forEach((btn) => btn.addEventListener("click", () => forgotDialog?.close()));
+
+    forgotForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(forgotForm);
+        const identifier = String(formData.get("identifier") || "").trim();
+
+        if (!identifier) {
+            if (forgotError) {
+                forgotError.textContent = "Please enter your username or registered email.";
+                forgotError.hidden = false;
+            }
+            return;
+        }
+
+        setBusy(forgotForm, true);
+        if (forgotStatus) forgotStatus.textContent = "Processing request…";
+        if (forgotError) forgotError.hidden = true;
+
+        try {
+            const res = await auth.requestPasswordReset({ identifier });
+            if (forgotStatus) {
+                forgotStatus.textContent = res?.data?.message || "If an eligible account matches that identifier, password-reset instructions will be sent to your primary email.";
+            }
+            setTimeout(() => {
+                forgotDialog?.close();
+                forgotForm?.reset();
+            }, 3000);
+        } catch (err) {
+            if (forgotError) {
+                forgotError.textContent = err.message || "Unable to request password reset. Please try again later.";
+                forgotError.hidden = false;
+            }
+            if (forgotStatus) forgotStatus.textContent = "";
+        } finally {
+            setBusy(forgotForm, false);
+        }
+    });
 
     void bootstrap();
 })();

@@ -24,7 +24,7 @@
     "repair:program-head": "node --env-file-if-exists=.env prisma/seeds/scripts/repair-program-head-assignments.mjs --commit",
     "import:sqlite:dry": "node --env-file-if-exists=.env scripts/import-sqlite-auth.mjs",
     "import:sqlite:cutover": "node --env-file-if-exists=.env scripts/import-sqlite-auth.mjs --commit --merge-seeded-demos --invalidate-sessions",
-    "test": "node --env-file-if-exists=.env --test --test-concurrency=1 tests/auth-client.test.mjs tests/auth.test.mjs tests/admission.test.mjs tests/registrar.test.mjs tests/program-head.test.mjs tests/prerequisite.test.mjs tests/monitoring.test.mjs tests/student-program-workflow.test.mjs tests/registrar-subject-offering.test.mjs tests/student-assistant.test.mjs tests/club-environment.test.mjs tests/dean-workflow.test.mjs tests/academic-import.test.mjs"
+    "test": "node --env-file-if-exists=.env scripts/run-isolated-tests.mjs"
   },
   "prisma": {
     "seed": "node --env-file-if-exists=.env prisma/seed.mjs"

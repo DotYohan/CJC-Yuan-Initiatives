@@ -136,8 +136,16 @@ export class AcademicImportService {
     const originalFilename = request.document?.originalFileName || null;
     const requestNumber = request.requestNumber || `REQ-${request.id.slice(0, 8).toUpperCase()}`;
 
+    const student = request.student
+      ? {
+        ...request.student,
+        name: [request.student.firstName, request.student.lastName].filter(Boolean).join(" ") || undefined
+      }
+      : request.student;
+
     return {
       ...request,
+      student,
       requestNumber,
       previousSchool,
       submittedAt,
@@ -256,10 +264,21 @@ export class AcademicImportService {
   /**
    * List import requests with filters (for Registrar or Student)
    */
-  async listRequests({ studentId = null, status = null } = {}) {
+  async listRequests({ studentId = null, status = null, search = null } = {}) {
     const where = {};
     if (studentId) where.studentId = studentId;
     if (status) where.status = status;
+
+    // Every whitespace-separated term must match at least one searchable field.
+    // requestNumber/previousSchool are derived (not DB columns), so matching is done
+    // on the formatted rows. Input length and term count are capped.
+    const terms = String(search || "")
+      .trim()
+      .slice(0, 100)
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 5);
 
     const rows = await this.prisma.academicRecordImportRequest.findMany({
       where,
@@ -293,7 +312,20 @@ export class AcademicImportService {
       }
     });
 
-    return rows.map((r) => this.formatRequest(r));
+    const formatted = rows.map((r) => this.formatRequest(r));
+    if (!terms.length) return formatted;
+
+    return formatted.filter((r) => {
+      const haystack = [
+        r.requestNumber,
+        r.previousSchool,
+        r.student?.name,
+        r.student?.studentNumber,
+        r.targetProgram?.code,
+        r.targetProgram?.name
+      ].filter(Boolean).join(" ").toLowerCase();
+      return terms.every((term) => haystack.includes(term));
+    });
   }
 
   /**
@@ -864,16 +896,20 @@ Do not include markdown code fences or backticks. Return strictly the JSON objec
           const subjectUnits = Number(subject.defaultCreditUnits ?? subject.creditUnits ?? 3.0);
           const unitsMatch = Math.abs(subjectUnits - recordUnits) < 0.1;
 
+          const ayConfident = Boolean(record.academicYear && /\d{4}/.test(record.academicYear));
+          const termConfident = Boolean(record.term && /(?:1st|2nd|first|second|summer|midyear|1|2|3)/i.test(record.term));
+          const periodConfident = ayConfident && termConfident;
+
           if (codeExact) {
             bestMatch = subject;
-            matchType = unitsMatch ? "HIGH_MATCH" : "NEEDS_REVIEW";
+            matchType = (unitsMatch && periodConfident) ? "HIGH_MATCH" : "NEEDS_REVIEW";
             highestScore = 1.0;
             break;
           } else if (titleSim >= 0.85) {
             if (titleSim > highestScore) {
               highestScore = titleSim;
               bestMatch = subject;
-              matchType = unitsMatch ? "HIGH_MATCH" : "NEEDS_REVIEW";
+              matchType = (unitsMatch && periodConfident) ? "HIGH_MATCH" : "NEEDS_REVIEW";
             }
           } else if (titleSim >= 0.50 && highestScore < 0.85) {
             if (titleSim > highestScore) {
@@ -901,10 +937,16 @@ Do not include markdown code fences or backticks. Return strictly the JSON objec
         }
       }
 
+      const ayConfident = Boolean(record.academicYear && /\d{4}/.test(record.academicYear));
+      const termConfident = Boolean(record.term && /(?:1st|2nd|first|second|summer|midyear|1|2|3)/i.test(record.term));
+      const periodConfident = ayConfident && termConfident;
+
       return {
         recordIndex: index,
         academicYear: record.academicYear,
         term: record.term,
+        periodStatus: periodConfident ? "CONFIDENT" : "UNCLEAR_OR_MISSING",
+        periodNote: periodConfident ? null : "Academic Year or Term is unclear/missing; please review or select AY + Term before committing.",
         extractedCode: record.subjectCode,
         extractedTitle: record.subjectTitle,
         extractedUnits: recordUnits,
@@ -1096,6 +1138,8 @@ Do not include markdown code fences or backticks. Return strictly the JSON objec
         sourceUnits: r.extractedUnits,
         sourceGrade: r.extractedGrade,
         status: r.matchStatus,
+        periodStatus: r.periodStatus || "CONFIDENT",
+        periodNote: r.periodNote || null,
         confidenceScore: r.matchScore,
         hasConflict: Boolean(r.conflict?.hasConflict),
         existingGrade: r.conflict?.existingGrade || null,
@@ -1114,13 +1158,16 @@ Do not include markdown code fences or backticks. Return strictly the JSON objec
 
   /**
    * Resolves or creates historical AcademicYear, AcademicTerm, and GradingPeriod.
+   * If AY/Term is specified with confident years, maps to that historical term.
+   * If AY/Term is unclear or explicitly marked Legacy, defaults safely to baseline legacy term (AY 2000-2001, status: CLOSED).
    */
   async getOrCreateHistoricalTerm(tx, academicYearStr, termStr) {
     const rawAY = String(academicYearStr || "").trim();
-    const ayMatch = rawAY.match(/(\d{4})[-\s/](\d{4})/);
-    const startYear = ayMatch ? parseInt(ayMatch[1], 10) : 2024;
+    const isExplicitLegacy = /legacy/i.test(rawAY) || /legacy/i.test(String(termStr || ""));
+    const ayMatch = !isExplicitLegacy ? rawAY.match(/(\d{4})[-\s/](\d{4})/) : null;
+    const startYear = ayMatch ? parseInt(ayMatch[1], 10) : 2000;
     const endYear = ayMatch ? parseInt(ayMatch[2], 10) : startYear + 1;
-    const ayCode = `${startYear}-${endYear}`;
+    const ayCode = ayMatch ? `${startYear}-${endYear}` : "LEGACY-CREDIT";
 
     let ay = await tx.academicYear.findFirst({
       where: { code: ayCode }
@@ -1130,7 +1177,7 @@ Do not include markdown code fences or backticks. Return strictly the JSON objec
       ay = await tx.academicYear.create({
         data: {
           code: ayCode,
-          name: `Academic Year ${ayCode}`,
+          name: ayMatch ? `Academic Year ${ayCode}` : "Legacy Historical Records",
           startsOn: new Date(`${startYear}-08-01`),
           endsOn: new Date(`${endYear}-05-31`),
           status: "CLOSED"
@@ -1145,18 +1192,21 @@ Do not include markdown code fences or backticks. Return strictly the JSON objec
     let termStart = new Date(`${startYear}-08-01`);
     let termEnd = new Date(`${startYear}-12-31`);
 
-    if (rawTerm.includes("2nd") || rawTerm.includes("second")) {
+    if (rawTerm.includes("2nd") || rawTerm.includes("second") || rawTerm === "2") {
       termNumber = 2;
       termSuffix = "2S";
       termName = `2nd Semester ${ayCode}`;
       termStart = new Date(`${endYear}-01-10`);
       termEnd = new Date(`${endYear}-05-31`);
-    } else if (rawTerm.includes("summer") || rawTerm.includes("midyear")) {
+    } else if (rawTerm.includes("summer") || rawTerm.includes("midyear") || rawTerm === "3") {
       termNumber = 3;
       termSuffix = "SUM";
       termName = `Summer ${ayCode}`;
       termStart = new Date(`${endYear}-06-01`);
       termEnd = new Date(`${endYear}-07-31`);
+    } else if (!ayMatch || isExplicitLegacy) {
+      termSuffix = "LEGACY";
+      termName = "Historical Credited Records";
     }
 
     const termCode = `${startYear}-${termSuffix}`;
@@ -1271,11 +1321,15 @@ Do not include markdown code fences or backticks. Return strictly the JSON objec
           continue;
         }
 
-        // Resolve historical term and grading period for this record's extracted AY + Term
+        // Allow Registrar to specify or override AY and Term in resolution
+        const effectiveAY = res.academicYear || res.ay || record.academicYear;
+        const effectiveTerm = res.term || res.semester || record.term;
+
+        // Resolve historical term and grading period for this record's effective AY + Term
         const { academicTerm, gradingPeriod } = await this.getOrCreateHistoricalTerm(
           tx,
-          record.academicYear,
-          record.term
+          effectiveAY,
+          effectiveTerm
         );
 
         // Ensure a historical completed enrollment exists for the student in this historical term

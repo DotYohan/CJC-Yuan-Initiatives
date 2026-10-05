@@ -23,6 +23,7 @@ import { FinancialService } from "./modules/financial/services/financialService.
 import { PaymentService } from "./modules/financial/services/paymentService.mjs";
 import { VerificationService } from "./modules/financial/services/verificationService.mjs";
 import { AcademicImportService } from "./academic-import-service.mjs";
+import { sendPasswordResetEmail } from "./email.mjs";
 import {
   verifyGoogleCredential,
   exchangeGoogleAuthCode,
@@ -237,7 +238,24 @@ export async function createApp(options = {}) {
   const programHeadStore = options.programHeadStore ?? new ProgramHeadStore(database);
   const studentAssistantStore = options.studentAssistantStore ?? new StudentAssistantStore(database);
   const clubStore = options.clubStore ?? new ClubStore(database, { scrypt: config.scrypt });
-  const documentStorage = options.documentStorage ?? new DocumentStorageService(config.documentRoot);
+  let documentStorage;
+  if (process.env.CLOUDFLARE_R2_ACCOUNT_ID &&
+      process.env.CLOUDFLARE_R2_ACCESS_KEY_ID &&
+      process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY &&
+      process.env.CLOUDFLARE_R2_BUCKET_NAME) {
+    const { createR2Storage } = await import("./r2-storage-adapter.mjs");
+    documentStorage = createR2Storage(
+      process.env.CLOUDFLARE_R2_ACCOUNT_ID,
+      process.env.CLOUDFLARE_R2_ACCESS_KEY_ID,
+      process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY,
+      process.env.CLOUDFLARE_R2_BUCKET_NAME
+    );
+    if (!documentStorage) {
+      throw new Error("FAILED_TO_INIT_R2_STORAGE");
+    }
+  } else {
+    documentStorage = options.documentStorage ?? new DocumentStorageService(config.documentRoot);
+  }
   await documentStorage.initialize();
   const documentStore = options.documentStore ?? new DocumentStore(database, documentStorage);
   const financialService = new FinancialService(database);
@@ -252,10 +270,8 @@ export async function createApp(options = {}) {
   const dummyPasswordHash = await hashPassword(randomToken(24), config.scrypt);
   const onPasswordReset =
     options.onPasswordReset ??
-    (async ({ resetUrl }) => {
-      if (config.nodeEnv === "development") {
-        process.stderr.write(`Development password reset link: ${resetUrl}\n`);
-      }
+    (async ({ user, resetUrl }) => {
+      await sendPasswordResetEmail({ user, resetUrl, config });
     });
 
   function requestContext(request, pathname) {
@@ -1236,6 +1252,57 @@ export async function createApp(options = {}) {
       data: { status: body.status }
     });
     sendJson(response, 200, { data: { log } });
+  }
+
+  async function createSystemReport(request, response, context) {
+    const body = await readJson(request, config.bodyLimitBytes).catch(() => ({}));
+    if (!body || typeof body.description !== "string" || body.description.trim().length < 5) {
+      error(422, "DESCRIPTION_REQUIRED", "Please provide a description of at least 5 characters.");
+    }
+
+    let session = null;
+    try {
+      session = await loadSession(request, context);
+    } catch {
+      session = null;
+    }
+
+    const report = await store.createSystemReport({
+      category: ["BUG", "SUGGESTION", "UI_ISSUE", "OTHER"].includes(body.category) ? body.category : "BUG",
+      description: String(body.description).trim().slice(0, 5000),
+      screenshotData: typeof body.screenshotData === "string" ? body.screenshotData.slice(0, 500000) : null,
+      pageUrl: typeof body.pageUrl === "string" ? body.pageUrl.slice(0, 500) : "/",
+      browserInfo: typeof body.browserInfo === "string" ? body.browserInfo.slice(0, 500) : null,
+      errorCode: typeof body.errorCode === "string" ? body.errorCode.slice(0, 100) : null,
+      userId: session?.user?.id || null,
+      userRole: session?.user ? store.rolesForUser(session.user)[0]?.slug || "USER" : "GUEST"
+    });
+
+    sendJson(response, 201, { data: { report } });
+  }
+
+  async function listSystemReports(request, response, context, url) {
+    await requirePermission(request, context, "portal.access.administrator");
+    const status = url.searchParams.get("status") || "ALL";
+    const reports = await store.listSystemReports({ status });
+    sendJson(response, 200, { data: { reports } });
+  }
+
+  async function updateSystemReportStatus(request, response, context, reportId) {
+    const adminSession = await requireStatePermission(request, context, "portal.access.administrator");
+    const body = await readJson(request, config.bodyLimitBytes);
+    const validStatuses = ["OPEN", "IN_REVIEW", "RESOLVED", "CLOSED"];
+    if (!body || !validStatuses.includes(body.status)) {
+      error(422, "INVALID_STATUS", `Status must be one of: ${validStatuses.join(", ")}`);
+    }
+
+    const report = await store.updateSystemReportStatus(reportId, {
+      status: body.status,
+      adminNotes: typeof body.adminNotes === "string" ? body.adminNotes : undefined,
+      resolvedByUserId: adminSession.user.id
+    });
+
+    sendJson(response, 200, { data: { report } });
   }
 
   async function systemHealth(request, response, context) {
@@ -2664,9 +2731,11 @@ export async function createApp(options = {}) {
     }
 
     const statusParam = url.searchParams.get("status");
+    const searchParam = url.searchParams.get("search");
     const requests = await academicImportService.listRequests({
       studentId,
-      status: statusParam || null
+      status: statusParam || null,
+      search: searchParam || null
     });
 
     sendJson(response, 200, { data: { requests } });
@@ -3917,6 +3986,16 @@ export async function createApp(options = {}) {
       }
       if (method === "GET" && pathname === "/api/v1/admin/audit-logs") {
         return await listAudit(request, response, context, url);
+      }
+      if (method === "POST" && pathname === "/api/v1/system-reports") {
+        return await createSystemReport(request, response, context);
+      }
+      if (method === "GET" && pathname === "/api/v1/admin/system-reports") {
+        return await listSystemReports(request, response, context, url);
+      }
+      const systemReportMatch = pathname.match(/^\/api\/v1\/admin\/system-reports\/([0-9a-f-]{36})$/i);
+      if (method === "PATCH" && systemReportMatch) {
+        return await updateSystemReportStatus(request, response, context, systemReportMatch[1]);
       }
       if (method === "GET" && pathname === "/api/v1/admin/system-logs") {
         return await listSystemLogs(request, response, context, url);

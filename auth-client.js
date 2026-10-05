@@ -431,6 +431,19 @@
         getAcademicRecordImportDocumentUrl: (id) =>
             `${API_ROOT}/academic-import/requests/${encodeURIComponent(id)}/document`,
 
+        // System Reports & Password Reset Request
+        submitSystemReport: (data, options = {}) => mutate("/system-reports", "POST", data, options),
+        getSystemReports: (params = {}, options = {}) => {
+            const query = new URLSearchParams();
+            if (params.status) query.set("status", params.status);
+            const searchStr = query.toString() ? `?${query.toString()}` : "";
+            return request(`/admin/system-reports${searchStr}`, options);
+        },
+        updateSystemReportStatus: (id, data, options = {}) =>
+            mutate(`/admin/system-reports/${encodeURIComponent(id)}`, "PATCH", data, options),
+        requestPasswordReset: (data, options = {}) =>
+            mutate("/auth/forgot-password", "POST", typeof data === "string" ? { identifier: data } : data, options),
+
         safeLandingPath,
         clearCsrf: () => {
             csrfToken = "";

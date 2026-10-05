@@ -71,7 +71,7 @@ export class StudentDashboardStore {
 
     if (!student) return emptyDashboard();
 
-    const [enrollment, clearance, requests, openPeriod, clubClearances] = await Promise.all([
+    const [enrollment, clearance, requests, openPeriod, clubClearances, importRequests, allEnrollments] = await Promise.all([
       this.prisma.enrollment.findFirst({
         where: { studentId: student.id },
         orderBy: [{ academicTerm: { startsOn: "desc" } }, { createdAt: "desc" }],
@@ -187,6 +187,32 @@ export class StudentDashboardStore {
           clearedBy: { select: { displayName: true } }
         },
         orderBy: { createdAt: "asc" }
+      }),
+      this.prisma.academicRecordImportRequest.findMany({
+        where: { studentId: student.id, status: { not: "REJECTED" } }
+      }),
+      this.prisma.enrollment.findMany({
+        where: { studentId: student.id },
+        orderBy: [{ academicTerm: { startsOn: "desc" } }, { createdAt: "desc" }],
+        select: {
+          id: true,
+          academicTerm: {
+            select: {
+              code: true,
+              name: true,
+              academicYear: { select: { code: true, name: true } }
+            }
+          },
+          items: {
+            select: {
+              courseOffering: { select: { subject: { select: { code: true, title: true } } } },
+              grades: {
+                where: { status: { in: ["APPROVED", "POSTED"] } },
+                select: { numericGrade: true, letterGrade: true, isPassing: true, remarks: true }
+              }
+            }
+          }
+        }
       })
     ]);
 
@@ -438,6 +464,68 @@ export class StudentDashboardStore {
       } : null,
       schedule,
       finalGrades,
+      academicHistory: (() => {
+        const allHistoryMap = new Map();
+        (allEnrollments || []).forEach((env) => {
+          const envGrades = (env.items || []).flatMap((item) =>
+            (item.grades || []).map((g) => ({
+              subjectCode: item.courseOffering?.subject?.code || "SUBJ",
+              subjectTitle: item.courseOffering?.subject?.title || "Subject",
+              numericGrade: g.numericGrade?.toString() ?? "PASSED",
+              letterGrade: g.letterGrade || "P",
+              isPassing: Boolean(g.isPassing),
+              remarks: g.remarks || "Enrolled Grade"
+            }))
+          );
+          if (!envGrades.length) return;
+          const key = `${env.academicTerm?.academicYear?.name || "Historical"}:${env.academicTerm?.code || "Term"}`;
+          allHistoryMap.set(key, {
+            academicYear: env.academicTerm?.academicYear?.name || "Historical AY",
+            termCode: env.academicTerm?.code || "Term",
+            termName: env.academicTerm?.name || "Term",
+            grades: envGrades
+          });
+        });
+
+        (importRequests || []).forEach((req) => {
+          const records = req.matchedData?.records || req.parsedData?.records || req.extractedData?.records || [];
+          records.forEach((item) => {
+            const subjectCode = item.matchedSubjectCode || item.extractedCode || item.subjectCode || item.matchedSubject?.code;
+            const subjectTitle = item.matchedSubjectTitle || item.extractedTitle || item.subjectTitle || item.matchedSubject?.title;
+            if (!subjectCode || !subjectTitle) return;
+
+            const key = `${item.academicYear || "Historical"}:${item.term || "Term"}`;
+            if (!allHistoryMap.has(key)) {
+              allHistoryMap.set(key, {
+                academicYear: item.academicYear || "Historical AY",
+                termCode: item.term || "Historical Term",
+                termName: item.term || "Historical Term",
+                previousSchool: req.previousSchool,
+                grades: []
+              });
+            }
+
+            const targetTerm = allHistoryMap.get(key);
+            const existsInTerm = targetTerm.grades.some((g) => g.subjectCode === subjectCode);
+            if (!existsInTerm) {
+              const rawGrade = item.extractedGrade || item.grade || item.numericGrade || "PASSED";
+              const parsedNum = parseFloat(rawGrade);
+              const numericGrade = !isNaN(parsedNum) ? String(parsedNum) : (rawGrade || "PASSED");
+              const letterGrade = isNaN(parsedNum) ? rawGrade : (item.letterGrade || "P");
+              targetTerm.grades.push({
+                subjectCode,
+                subjectTitle,
+                numericGrade,
+                letterGrade,
+                isPassing: true,
+                remarks: req.status === "IMPORTED" ? "Credited / Passed" : `Credited (${req.status})`
+              });
+            }
+          });
+        });
+
+        return Array.from(allHistoryMap.values());
+      })(),
       clearance: (allClearanceItems.length > 0 || clearance) ? {
         cycle: clearance?.cycle || { code: "CAMPUS-CLEARANCE", name: "Campus Clearance", status: "OPEN" },
         status: overallClearanceStatus || "PENDING",

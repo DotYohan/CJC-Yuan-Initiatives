@@ -142,6 +142,8 @@ export function createConfig(overrides = {}) {
       15 * 60 * 1000,
       "googleTokenExpiryMs"
     ),
+    brevoApiKey: overrides.brevoApiKey ?? process.env.BREVO_API_KEY ?? "",
+    emailFrom: overrides.emailFrom ?? process.env.EMAIL_FROM ?? "CJC Portal <no-reply@cjc.edu.ph>",
     now: overrides.now ?? (() => Date.now())
   });
 }

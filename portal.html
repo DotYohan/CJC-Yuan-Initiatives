@@ -196,28 +196,75 @@
 
                         <!-- Student Tab: Grades & Records -->
                         <div data-student-view="grades" hidden>
-                            <section class="panel dashboard-module" aria-labelledby="grades-title">
-                                <div class="dashboard-module__heading">
-                                    <div><p class="eyebrow">Academic record</p><h3 id="grades-title">Posted final grades</h3></div>
-                                    <div style="display: flex; gap: 0.75rem; align-items: center;">
-                                        <button class="button button--primary button--compact" type="button" data-open-student-import-modal>+ Submit Academic Records / Credit Evaluation</button>
-                                        <span data-grade-count></span>
-                                    </div>
-                                </div>
-                                <div class="dashboard-list" data-grade-list></div>
-                            </section>
+                            <!-- Grades Sub-Navigation Tabs -->
+                            <nav class="workspace-tabs sub-workspace-tabs" role="tablist" aria-label="Grades &amp; Academic Records Navigation">
+                                <button class="workspace-tab active" type="button" role="tab" aria-selected="true" data-student-grades-nav="history">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                                    Cumulative Academic Record
+                                    <span class="workspace-tab__badge" data-student-history-badge hidden>0</span>
+                                </button>
+                                <button class="workspace-tab" type="button" role="tab" aria-selected="false" data-student-grades-nav="current">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                    Posted Final Grades
+                                    <span class="workspace-tab__badge" data-student-grades-badge hidden>0</span>
+                                </button>
+                                <button class="workspace-tab" type="button" role="tab" aria-selected="false" data-student-grades-nav="requests">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                    Credit Evaluation &amp; Requests
+                                    <span class="workspace-tab__badge" data-student-requests-badge hidden>0</span>
+                                </button>
+                            </nav>
 
-                            <section class="panel dashboard-module" aria-labelledby="student-import-requests-title" style="margin-top: 1.25rem;">
-                                <div class="dashboard-module__heading">
-                                    <div>
-                                        <p class="eyebrow">Credit Evaluation &amp; Transfer</p>
-                                        <h3 id="student-import-requests-title">Academic Record Import Requests</h3>
+                            <!-- Sub-view 1: Cumulative Academic Record (Default) -->
+                            <div data-student-grades-view="history">
+                                <section class="panel dashboard-module" aria-labelledby="academic-history-title">
+                                    <div class="dashboard-module__heading">
+                                        <div>
+                                            <p class="eyebrow">Academic History &amp; Credited Terms</p>
+                                            <h3 id="academic-history-title">Cumulative Academic Record</h3>
+                                        </div>
+                                        <div style="display: flex; gap: 0.75rem; align-items: center;">
+                                            <button class="button button--primary button--compact" type="button" data-open-student-import-modal>+ Submit Records for Crediting</button>
+                                            <span class="count-badge" data-history-term-count></span>
+                                        </div>
                                     </div>
-                                    <button class="button button--quiet button--compact" type="button" data-refresh-student-import-requests>Refresh</button>
-                                </div>
-                                <p class="form-intro">Track submitted academic records and evaluation status for credit transfer.</p>
-                                <div class="dashboard-list" data-student-import-requests-list></div>
-                            </section>
+                                    <p class="form-intro">All official posted grades and credited historical subjects across academic terms.</p>
+                                    <div class="dashboard-list scrollable-record-list" data-academic-history-list></div>
+                                </section>
+                            </div>
+
+                            <!-- Sub-view 2: Posted Final Grades (Current Term) -->
+                            <div data-student-grades-view="current" hidden>
+                                <section class="panel dashboard-module" aria-labelledby="grades-title">
+                                    <div class="dashboard-module__heading">
+                                        <div><p class="eyebrow">Academic record</p><h3 id="grades-title">Posted final grades</h3></div>
+                                        <div style="display: flex; gap: 0.75rem; align-items: center;">
+                                            <button class="button button--primary button--compact" type="button" data-open-student-import-modal>+ Submit Academic Records / Credit Evaluation</button>
+                                            <span class="count-badge" data-grade-count></span>
+                                        </div>
+                                    </div>
+                                    <p class="form-intro">Final grades recorded for your currently active enrolled term.</p>
+                                    <div class="dashboard-list scrollable-record-list" data-grade-list></div>
+                                </section>
+                            </div>
+
+                            <!-- Sub-view 3: Academic Record Import & Credit Requests -->
+                            <div data-student-grades-view="requests" hidden>
+                                <section class="panel dashboard-module" aria-labelledby="student-import-requests-title">
+                                    <div class="dashboard-module__heading">
+                                        <div>
+                                            <p class="eyebrow">Credit Evaluation &amp; Transfer</p>
+                                            <h3 id="student-import-requests-title">Academic Record Import Requests</h3>
+                                        </div>
+                                        <div style="display: flex; gap: 0.75rem; align-items: center;">
+                                            <button class="button button--primary button--compact" type="button" data-open-student-import-modal>+ New Evaluation Request</button>
+                                            <button class="button button--quiet button--compact" type="button" data-refresh-student-import-requests>Refresh</button>
+                                        </div>
+                                    </div>
+                                    <p class="form-intro">Track submitted academic records and evaluation status for credit transfer.</p>
+                                    <div class="dashboard-list scrollable-record-list" data-student-import-requests-list></div>
+                                </section>
+                            </div>
                         </div>
 
                         <!-- Student Tab: Clearance -->
@@ -325,7 +372,7 @@
                 </div>
             </section>
 
-            <div class="shell workspace-grid">
+            <div class="shell workspace-grid" data-account-section hidden>
                 <section class="panel" aria-labelledby="account-title">
                     <div class="panel__heading">
                         <div>
@@ -613,7 +660,19 @@
                             </div>
                             <button class="button button--quiet button--small" type="button" data-refresh-dean-grades>Refresh</button>
                         </div>
-                        <div class="table-wrap">
+                        <div class="dean-controls-card">
+                            <div class="sa-toolbar-inputs">
+                                <input type="search" placeholder="Search by offering, subject, section, program, or instructor…" data-dean-grades-search aria-label="Search grade submissions" />
+                                <select data-dean-grades-sort aria-label="Sort grade submissions">
+                                    <option value="newest">Newest Submissions</option>
+                                    <option value="oldest">Oldest Submissions</option>
+                                    <option value="subject">Sort by Subject</option>
+                                    <option value="instructor">Sort by Instructor</option>
+                                    <option value="students">Most Enrolled Students</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-wrap scrollable-record-list">
                             <table>
                                 <thead>
                                     <tr>
@@ -644,15 +703,19 @@
                                 <p class="form-intro">Read-only list of official students enrolled in college programs for the active term.</p>
                             </div>
                         </div>
-                        <div class="filter-bar">
-                            <input type="search" placeholder="Search by name, student number, or program…" data-dean-student-search aria-label="Search students" />
-                            <select data-dean-student-sort aria-label="Sort students">
-                                <option value="name">Sort by Name</option>
-                                <option value="program">Sort by Program</option>
-                                <option value="yearLevel">Sort by Year Level</option>
-                            </select>
+                        <div class="dean-controls-card">
+                            <div class="sa-toolbar-inputs">
+                                <input type="search" placeholder="Search by name, student number, or program…" data-dean-student-search aria-label="Search students" />
+                                <select data-dean-student-sort aria-label="Sort students">
+                                    <option value="name-asc">Sort by Name (A-Z)</option>
+                                    <option value="name-desc">Sort by Name (Z-A)</option>
+                                    <option value="number">Sort by Student Number</option>
+                                    <option value="program">Sort by Program</option>
+                                    <option value="yearLevel">Sort by Year Level</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="table-wrap">
+                        <div class="table-wrap scrollable-record-list">
                             <table>
                                 <thead>
                                     <tr>
@@ -680,7 +743,18 @@
                                 <p class="form-intro">Read-only directory of faculty members assigned to departments in your college.</p>
                             </div>
                         </div>
-                        <div class="table-wrap">
+                        <div class="dean-controls-card">
+                            <div class="sa-toolbar-inputs">
+                                <input type="search" placeholder="Search by employee number, faculty name, department, or email…" data-dean-faculty-search aria-label="Search faculty" />
+                                <select data-dean-faculty-sort aria-label="Sort faculty">
+                                    <option value="name-asc">Sort by Name (A-Z)</option>
+                                    <option value="name-desc">Sort by Name (Z-A)</option>
+                                    <option value="employee">Sort by Employee Number</option>
+                                    <option value="department">Sort by Department</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-wrap scrollable-record-list">
                             <table>
                                 <thead>
                                     <tr>
@@ -709,7 +783,18 @@
                             </div>
                             <button class="button button--quiet button--small" type="button" data-refresh-dean-evaluations>Refresh</button>
                         </div>
-                        <div class="table-wrap">
+                        <div class="dean-controls-card">
+                            <div class="sa-toolbar-inputs">
+                                <input type="search" placeholder="Search by student name, number, program, or term…" data-dean-eval-search aria-label="Search evaluations" />
+                                <select data-dean-eval-sort aria-label="Sort evaluations">
+                                    <option value="newest">Newest Submissions</option>
+                                    <option value="oldest">Oldest Submissions</option>
+                                    <option value="name">Sort by Student Name</option>
+                                    <option value="program">Sort by Program</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-wrap scrollable-record-list">
                             <table>
                                 <thead>
                                     <tr>
@@ -739,7 +824,18 @@
                                 <p class="form-intro">Read-only overview of course offerings, scheduled periods, rooms, and assigned faculty.</p>
                             </div>
                         </div>
-                        <div class="table-wrap">
+                        <div class="dean-controls-card">
+                            <div class="sa-toolbar-inputs">
+                                <input type="search" placeholder="Search by offering code, subject, section, instructor, or room…" data-dean-schedules-search aria-label="Search class schedules" />
+                                <select data-dean-schedules-sort aria-label="Sort class schedules">
+                                    <option value="offering">Sort by Offering Code</option>
+                                    <option value="subject">Sort by Subject Code</option>
+                                    <option value="program">Sort by Program</option>
+                                    <option value="instructor">Sort by Instructor</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-wrap scrollable-record-list">
                             <table>
                                 <thead>
                                     <tr>
@@ -763,7 +859,7 @@
                     <p class="eyebrow">Collegiate Grade Review</p>
                     <h2 id="dean-grade-dialog-title" data-dean-grade-dialog-title>Course Offering Grade Sheet</h2>
                     <p data-dean-grade-dialog-meta></p>
-                    <div class="table-wrap">
+                    <div class="table-wrap scrollable-record-list">
                         <table class="faculty-roster-table">
                             <thead>
                                 <tr>
@@ -876,6 +972,10 @@
                             <div><strong data-registrar-approved>0</strong><span>Approved</span></div>
                             <div><strong data-registrar-rejected>0</strong><span>Rejected</span></div>
                             <div><strong data-registrar-returned>0</strong><span>Returned for correction</span></div>
+                        </div>
+                        <div class="field" style="margin-bottom: 0.75rem;">
+                            <label class="visually-hidden" for="registrar-application-search">Search applications</label>
+                            <input id="registrar-application-search" type="search" maxlength="100" autocomplete="off" placeholder="Search by name, application no., student no., or program…" data-registrar-application-search />
                         </div>
                         <div class="application-filters" role="tablist" aria-label="Filter applications by status">
                             <button class="application-filter-button active" type="button" role="tab" aria-selected="true" data-application-filter="">All</button>
@@ -1031,8 +1131,22 @@
                 <div class="admin-panel__heading"><div><p class="eyebrow">Student Assistant workspace</p><h2 id="student-assistant-title">Subject encoding</h2><p data-sa-department-context>Loading assigned department…</p></div><button class="button button--quiet" type="button" data-refresh-student-assistant>Refresh applications</button></div>
                 <div class="dashboard-metrics"><article class="metric-card"><span>Pending encoding</span><strong data-sa-pending-count>0</strong><small data-sa-filter-pending-count>Applications awaiting encoding</small></article><article class="metric-card"><span>Encoded</span><strong data-sa-encoded-count>0</strong><small data-sa-filter-encoded-count>Completed applications</small></article><article class="metric-card"><span>Programs</span><strong data-sa-programs-count>0</strong><small>Assigned programs</small></article></div>
                 <p class="form-status" role="status" aria-live="polite" data-sa-status></p>
-                <div class="sa-filter-tabs" role="group" aria-label="Application filters"><button class="button button--quiet button--small active" type="button" data-sa-filter="PENDING" aria-pressed="true">Pending</button><button class="button button--quiet button--small" type="button" data-sa-filter="ENCODED" aria-pressed="false">Encoded</button></div>
-                <div class="student-dashboard-grid"><section class="panel"><h3>Applications</h3><div data-sa-applications-list></div></section><section class="panel"><div data-sa-empty-state class="empty-state">Select an application to begin encoding.</div><div data-sa-detail-container hidden><div class="sa-student-card"><div class="sa-student-meta"><h4 data-sa-student-name>Student</h4><p data-sa-student-details>—</p></div><span class="badge" data-sa-student-status>Pending</span></div><div class="sa-footprint-banner" data-sa-footprint-banner hidden><div><strong>Encoding completed</strong><p>Recorded by <span data-sa-encoded-by-text></span> <span data-sa-encoded-at-text></span>.</p></div></div><form data-sa-encode-form><div class="sa-subjects-table-container"><table class="sa-subjects-table"><thead><tr><th>Subject</th><th>Credits</th><th>Class section</th></tr></thead><tbody data-sa-subjects-body></tbody></table></div><p class="form-message form-message--error" role="alert" data-sa-encode-error hidden></p><button class="button button--primary" type="submit" data-sa-submit-encode>Save &amp; Complete Subject Encoding</button></form></div></section></div>
+                <div class="sa-controls-card">
+                    <div class="sa-filter-tabs" role="group" aria-label="Application filters"><button class="button button--quiet button--small active" type="button" data-sa-filter="PENDING" aria-pressed="true">Pending</button><button class="button button--quiet button--small" type="button" data-sa-filter="ENCODED" aria-pressed="false">Encoded</button></div>
+                    <div class="sa-toolbar-inputs">
+                        <label class="visually-hidden" for="sa-search">Search applications</label>
+                        <input id="sa-search" type="search" maxlength="100" autocomplete="off" placeholder="Search by student name, number, or program…" data-sa-search />
+                        <label class="visually-hidden" for="sa-sort">Sort applications</label>
+                        <select id="sa-sort" data-sa-sort aria-label="Sort applications">
+                            <option value="oldest">Oldest submitted first</option>
+                            <option value="newest">Newest submitted first</option>
+                            <option value="name-asc">Name (A–Z)</option>
+                            <option value="name-desc">Name (Z–A)</option>
+                            <option value="subjects">Most subjects first</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="student-dashboard-grid"><section class="panel"><h3>Applications</h3><div data-sa-applications-list class="scrollable-record-list"></div></section><section class="panel"><div data-sa-empty-state class="empty-state">Select an application to begin encoding.</div><div data-sa-detail-container hidden><div class="sa-student-card"><div class="sa-student-meta"><h4 data-sa-student-name>Student</h4><p data-sa-student-details>—</p></div><span class="badge" data-sa-student-status>Pending</span></div><div class="sa-footprint-banner" data-sa-footprint-banner hidden><div><strong>Encoding completed</strong><p>Recorded by <span data-sa-encoded-by-text></span> <span data-sa-encoded-at-text></span>.</p></div></div><form data-sa-encode-form><div class="sa-subjects-table-container"><table class="sa-subjects-table"><thead><tr><th>Subject</th><th>Credits</th><th>Class section</th></tr></thead><tbody data-sa-subjects-body></tbody></table></div><p class="form-message form-message--error" role="alert" data-sa-encode-error hidden></p><button class="button button--primary" type="submit" data-sa-submit-encode>Save &amp; Complete Subject Encoding</button></form></div></section></div>
             </section>
 
             <section class="shell admin-panel" aria-labelledby="admin-title" data-admin-panel hidden>
@@ -1054,6 +1168,11 @@
                     <button class="workspace-tab" type="button" role="tab" aria-selected="false" data-admin-nav="monitoring">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                         System &amp; Security Monitoring
+                    </button>
+                    <button class="workspace-tab" type="button" role="tab" aria-selected="false" data-admin-nav="reports">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        User Reports &amp; Issues
+                        <span class="workspace-tab__badge" data-admin-reports-badge hidden>0</span>
                     </button>
                 </nav>
 
@@ -1130,8 +1249,11 @@
 
                     <section class="panel account-list" aria-labelledby="account-list-title">
                         <div class="account-list__heading">
-                            <h3 id="account-list-title">Project accounts</h3>
-                            <span data-user-count></span>
+                            <div>
+                                <h3 id="account-list-title">Project accounts</h3>
+                                <span data-user-count></span>
+                            </div>
+                            <input type="search" placeholder="Search accounts by name, username, email, or role…" class="admin-search-input" data-user-search aria-label="Search project accounts" />
                         </div>
                         <p class="form-status" role="status" aria-live="polite" data-users-status>
                             Loading accounts…
@@ -1199,6 +1321,7 @@
                             <p class="system-logs-panel__desc">Recent events, errors, and security incidents.</p>
                         </div>
                         <div class="system-logs-panel__controls">
+                            <input type="search" placeholder="Search system logs (message, category, ID)…" class="log-search-input" data-log-search id="log-search-input" aria-label="Search system logs" />
                             <label class="visually-hidden" for="log-severity-filter">Filter by severity</label>
                             <select id="log-severity-filter" class="log-filter-select" data-log-filter>
                                 <option value="">All Severities</option>
@@ -1231,6 +1354,48 @@
                 </section>
             </section><!-- /monitoring-panel section -->
                 </div><!-- /data-admin-view="monitoring" -->
+
+                <!-- Admin Tab: System Reports & Issues -->
+                <div data-admin-view="reports" hidden>
+                    <section class="panel" aria-labelledby="admin-reports-title">
+                        <div class="panel__heading">
+                            <div>
+                                <p class="eyebrow">Alpha Launch Feedback</p>
+                                <h3 id="admin-reports-title">User Issue Reports &amp; Feedback</h3>
+                            </div>
+                            <button class="button button--quiet button--compact" type="button" data-refresh-admin-reports>Refresh reports</button>
+                        </div>
+                        <p class="form-intro">Review user-submitted bug reports, layout issues, and system suggestions. Click a status badge to resolve or update progress.</p>
+                        
+                        <div class="ssc-controls-card" style="margin-bottom: 1rem;">
+                            <div class="sa-filter-tabs">
+                                <button class="button button--quiet button--compact admin-report-filter-btn is-active" type="button" data-report-filter="ALL">All</button>
+                                <button class="button button--quiet button--compact admin-report-filter-btn" type="button" data-report-filter="OPEN">Open</button>
+                                <button class="button button--quiet button--compact admin-report-filter-btn" type="button" data-report-filter="IN_REVIEW">In Review</button>
+                                <button class="button button--quiet button--compact admin-report-filter-btn" type="button" data-report-filter="RESOLVED">Resolved</button>
+                                <button class="button button--quiet button--compact admin-report-filter-btn" type="button" data-report-filter="CLOSED">Closed</button>
+                            </div>
+                        </div>
+
+                        <div class="table-wrap scrollable-record-list">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Date</th>
+                                        <th scope="col">Category</th>
+                                        <th scope="col">Description</th>
+                                        <th scope="col">Context &amp; User</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody data-admin-reports-tbody>
+                                    <tr><td colspan="6" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">Loading user reports…</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
             </section><!-- /admin-panel -->
 
             <!-- ==========================================================
@@ -1281,19 +1446,20 @@
                             <p class="eyebrow">Institutional Directory</p>
                             <h3 id="ssc-directory-title">Recognized Student Organizations</h3>
                         </div>
-                        <div class="filter-group" style="display: flex; gap: 0.4rem;">
+                    </div>
+                    <div class="ssc-controls-card">
+                        <div class="sa-filter-tabs">
                             <button class="button button--quiet button--compact ssc-filter-btn is-active" type="button" data-ssc-filter="ALL">All</button>
                             <button class="button button--quiet button--compact ssc-filter-btn" type="button" data-ssc-filter="ACTIVE">Active</button>
                             <button class="button button--quiet button--compact ssc-filter-btn" type="button" data-ssc-filter="INACTIVE">Inactive</button>
                             <button class="button button--quiet button--compact ssc-filter-btn" type="button" data-ssc-filter="EXPIRED">Expired</button>
                         </div>
+                        <div class="sa-toolbar-inputs">
+                            <input id="ssc-directory-search" type="search" data-ssc-search placeholder="Search code, organization, category, or username…" aria-label="Search recognized organizations">
+                            <button class="button button--quiet button--small" type="button" data-clear-ssc-search>Clear search</button>
+                        </div>
                     </div>
-                    <div class="catalog-toolbar ssc-directory-toolbar">
-                        <label class="sr-only" for="ssc-directory-search">Search recognized organizations</label>
-                        <input id="ssc-directory-search" type="search" data-ssc-search placeholder="Search code, organization, category, or username">
-                        <button class="button button--quiet button--small" type="button" data-clear-ssc-search>Clear search</button>
-                    </div>
-                    <div class="table-container" data-ssc-clubs-table style="overflow-x: auto;">
+                    <div class="table-wrap scrollable-record-list" data-ssc-clubs-table>
                         <table class="table">
                             <thead>
                                 <tr>
@@ -1386,7 +1552,7 @@
                                 <h3>Active Club Officers</h3>
                             </div>
                         </div>
-                        <div class="table-container" style="overflow-x: auto;">
+                        <div class="table-wrap scrollable-record-list">
                             <table class="table">
                                 <thead>
                                     <tr>
@@ -1426,7 +1592,7 @@
                                 <h3>Registered Club Members</h3>
                             </div>
                         </div>
-                        <div class="table-container" style="overflow-x: auto;">
+                        <div class="table-wrap scrollable-record-list">
                             <table class="table">
                                 <thead>
                                     <tr>
@@ -2279,12 +2445,14 @@
 
     <!-- DIALOG: Student Submit Academic Records / Credit Evaluation -->
     <dialog class="portal-dialog" data-student-import-dialog aria-labelledby="student-import-dialog-title" style="max-width: 620px; width: 95vw;">
-        <button class="dialog-close" type="button" data-close-student-import-dialog aria-label="Close">×</button>
         <div class="dialog__heading">
-            <p class="eyebrow">Credit Evaluation Request</p>
-            <h2 id="student-import-dialog-title">Submit Academic Records</h2>
-            <p class="form-intro">Upload your transcript of records, grade slip, or report card from your previous school. Select your target program so the Registrar and AI assistant can evaluate equivalent subjects and credit prerequisites.</p>
+            <div>
+                <p class="eyebrow">Credit Evaluation Request</p>
+                <h2 id="student-import-dialog-title">Submit Academic Records</h2>
+            </div>
+            <button class="dialog__close" type="button" data-close-student-import-dialog aria-label="Close">×</button>
         </div>
+        <p class="form-intro" style="margin-top: 0.5rem; margin-bottom: 1rem;">Upload your transcript of records, grade slip, or report card from your previous school. Select your target program so the Registrar and AI assistant can evaluate equivalent subjects and credit prerequisites.</p>
         <div class="info-callout" style="background: rgba(147, 22, 45, 0.06); border-left: 3px solid var(--maroon, #93162d); padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 1rem; font-size: 0.85rem; color: var(--ink);">
             <strong>Program Evaluation Scope:</strong> Selecting a target program sets the evaluation scope for AI subject matching. It does NOT alter your officially registered degree program without formal shifting approval.
         </div>
@@ -2302,7 +2470,7 @@
             <div class="field">
                 <label for="import-document-file">Academic Record / Transcript Document <span style="color: var(--danger, #dc2626); font-weight: bold;">*</span></label>
                 <input id="import-document-file" name="document" type="file" accept=".pdf,.png,.jpg,.jpeg,.csv,.txt" required />
-                <small class="field-hint" style="color: var(--muted); font-size: 0.8rem; display: block; margin-top: 0.25rem;">Accepted formats: PDF, PNG, JPG, JPEG, CSV, TXT (Max: 10MB)</small>
+                <small class="field-hint" style="color: var(--muted); font-size: 0.8rem; display: block; margin-top: 0.25rem;">Accepted formats: PDF, PNG, JPG, JPEG, CSV, TXT (Max: 50MB)</small>
             </div>
             <div class="field">
                 <label for="import-remarks">Student Notes / Message to Registrar <span class="optional-label">(optional)</span></label>
@@ -2319,10 +2487,12 @@
 
     <!-- DIALOG: Registrar Academic Record Import Review & Resolution Dialog -->
     <dialog class="portal-dialog" data-registrar-import-dialog aria-labelledby="registrar-import-dialog-title" style="max-width: 960px; width: 95vw;">
-        <button class="dialog-close" type="button" data-close-registrar-import-dialog aria-label="Close">×</button>
         <div class="dialog__heading">
-            <p class="eyebrow">Academic Crediting &amp; OCR Matching</p>
-            <h2 id="registrar-import-dialog-title" data-registrar-import-dialog-title>Review Academic Record Import</h2>
+            <div>
+                <p class="eyebrow">Academic Crediting &amp; OCR Matching</p>
+                <h2 id="registrar-import-dialog-title" data-registrar-import-dialog-title>Review Academic Record Import</h2>
+            </div>
+            <button class="dialog__close" type="button" data-close-registrar-import-dialog aria-label="Close">×</button>
         </div>
         <div data-registrar-import-meta style="margin-bottom: 1rem;"></div>
 
@@ -2364,6 +2534,7 @@
                             <tr>
                                 <th>Imported Subject</th>
                                 <th>Extracted Grade</th>
+                                <th>AY &amp; Term</th>
                                 <th>Curriculum Match</th>
                                 <th>Confidence</th>
                                 <th>Resolution / Action</th>
@@ -2387,6 +2558,77 @@
 
         <p class="form-message form-message--error" role="alert" data-registrar-import-dialog-error hidden style="margin-top: 0.75rem;"></p>
         <p class="form-status" role="status" aria-live="polite" data-registrar-import-dialog-status style="margin-top: 0.75rem;"></p>
+    </dialog>
+
+    <!-- Floating Always-Visible Report Issue Button -->
+    <button class="floating-report-btn" type="button" data-open-report-dialog aria-label="Report issue or bug">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>Report Issue</span>
+    </button>
+
+    <!-- Report Issue Modal Dialog -->
+    <dialog class="modal-dialog" data-report-dialog aria-labelledby="report-dialog-title">
+        <div class="modal-dialog__surface">
+            <header class="modal-dialog__header">
+                <div>
+                    <p class="eyebrow">Alpha Feedback &amp; Support</p>
+                    <h2 id="report-dialog-title" style="margin: 0; font-size: 1.25rem;">Report an Issue or Suggestion</h2>
+                </div>
+                <button class="modal-dialog__close" type="button" data-close-report-dialog aria-label="Close report window">&times;</button>
+            </header>
+            <form data-report-form novalidate>
+                <div class="field" style="margin-bottom: 0.85rem;">
+                    <label for="report-category" style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.35rem;">Issue Category</label>
+                    <select id="report-category" name="category" required style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line);">
+                        <option value="BUG">Bug / System Error</option>
+                        <option value="UI_ISSUE">UI / Messy Layout Issue</option>
+                        <option value="SUGGESTION">Feature Suggestion</option>
+                        <option value="OTHER">Other Query</option>
+                    </select>
+                </div>
+                <div class="field" style="margin-bottom: 0.85rem;">
+                    <label for="report-description" style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.35rem;">Description of Issue</label>
+                    <textarea id="report-description" name="description" rows="4" required placeholder="Please describe what happened, what you expected, or steps to reproduce…" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); font-family: inherit;"></textarea>
+                </div>
+                <div class="field" style="margin-bottom: 0.85rem;">
+                    <label for="report-screenshot" style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.35rem;">Attach Screenshot <span class="optional-label">(optional)</span></label>
+                    <input id="report-screenshot" name="screenshot" type="file" accept="image/png,image/jpeg,image/webp" style="font-size: 0.85rem;" />
+                    <small style="color: var(--muted); display: block; margin-top: 0.25rem;">Image files under 5MB. Password or auth credentials are automatically stripped.</small>
+                </div>
+                <p class="form-message form-message--error" role="alert" data-report-error hidden style="margin-top: 0.5rem;"></p>
+                <p class="form-status" role="status" aria-live="polite" data-report-status style="margin-top: 0.5rem;"></p>
+                <footer class="modal-dialog__footer" style="margin-top: 1.25rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+                    <button class="button button--quiet" type="button" data-close-report-dialog>Cancel</button>
+                    <button class="button button--primary" type="submit" data-submit-report-btn>Submit Report</button>
+                </footer>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- Password Reset Request Modal Dialog -->
+    <dialog class="modal-dialog" data-forgot-password-dialog aria-labelledby="forgot-password-title">
+        <div class="modal-dialog__surface">
+            <header class="modal-dialog__header">
+                <div>
+                    <p class="eyebrow">Account Recovery</p>
+                    <h2 id="forgot-password-title" style="margin: 0; font-size: 1.25rem;">Request Password Reset</h2>
+                </div>
+                <button class="modal-dialog__close" type="button" data-close-forgot-password-dialog aria-label="Close window">&times;</button>
+            </header>
+            <form data-forgot-password-form novalidate>
+                <p class="form-intro" style="font-size: 0.88rem; margin-bottom: 1rem;">Enter your username or registered email address. If an account matches, password reset instructions will be sent to your primary email.</p>
+                <div class="field">
+                    <label for="forgot-identifier" style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.35rem;">Username or Email</label>
+                    <input id="forgot-identifier" name="identifier" required placeholder="e.g. j.doe or student@corjesu.edu.ph" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line);" />
+                </div>
+                <p class="form-message form-message--error" role="alert" data-forgot-password-error hidden style="margin-top: 0.5rem;"></p>
+                <p class="form-status" role="status" aria-live="polite" data-forgot-password-status style="margin-top: 0.5rem;"></p>
+                <footer class="modal-dialog__footer" style="margin-top: 1.25rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+                    <button class="button button--quiet" type="button" data-close-forgot-password-dialog>Cancel</button>
+                    <button class="button button--primary" type="submit" data-submit-forgot-btn>Send Reset Link</button>
+                </footer>
+            </form>
+        </div>
     </dialog>
 
     <script src="/auth-client.js" defer></script>

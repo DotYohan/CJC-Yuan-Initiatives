@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { randomUUID } from "node:crypto";
 import { createDatabase } from "../server/db.mjs";
 import { AcademicImportService } from "../server/academic-import-service.mjs";
 import { buildAcademicRecordIndex } from "../server/academic-eligibility.mjs";
+import { EnrollmentApplicationStore } from "../server/enrollment-store.mjs";
+import { StudentDashboardStore } from "../server/student-store.mjs";
 
 function createTextPdfBuffer(textLines = []) {
   const streamBody = textLines.map((line) => `BT /F1 12 Tf (${line}) Tj ET`).join("\n");
@@ -823,7 +826,266 @@ startxref
     // Clean up
     await prisma.academicRecordImportRequest.deleteMany({ where: { studentId: testStudent.id } });
     await prisma.studentDocument.deleteMany({ where: { studentId: testStudent.id } });
+    await prisma.studentObligation.deleteMany({ where: { studentId: testStudent.id } });
     await prisma.student.deleteMany({ where: { id: testStudent.id } });
   }
 });
+
+test("AI-Assisted Academic Record Import: AY & Term Handling, Unclear Period Review & Legacy Fallback", { timeout: 30_000 }, async () => {
+  const prisma = createDatabase();
+  const testUserId = "00000000-0000-0000-0000-000000000999";
+
+  const program = await prisma.program.findFirst({ where: { code: "BSECE" } });
+  assert.ok(program);
+  const curriculum = await prisma.curriculum.findFirst({ where: { programId: program.id } });
+  assert.ok(curriculum);
+  const sub1 = await prisma.subject.findFirst({ where: { OR: [{ code: "EMATH 111" }, { codeNormalized: "emath 111" }] } });
+  assert.ok(sub1);
+  const sub2 = await prisma.subject.findFirst({ where: { OR: [{ code: "ECE 101" }, { codeNormalized: "ece 101" }] } });
+  assert.ok(sub2);
+
+  let testStudent = await prisma.student.findFirst({ where: { userId: testUserId } });
+  if (!testStudent) {
+    testStudent = await prisma.student.create({
+      data: {
+        userId: testUserId,
+        studentNumber: `2026-IMP-TERM-${Date.now().toString().slice(-4)}`,
+        studentNumberNormalized: `2026-imp-term-${Date.now().toString().slice(-4)}`,
+        firstName: "Term",
+        lastName: "Tester",
+        admissionYear: 2026,
+        programId: program.id,
+        curriculumId: curriculum.id
+      }
+    });
+  }
+
+  const inMemoryFiles = new Map();
+  const mockStorage = {
+    generateStoredFileName: (orig, ext) => `stored_${Date.now()}${ext}`,
+    saveFile: async (relPath, buf) => { inMemoryFiles.set(relPath, buf); return relPath; },
+    readFile: async (relPath) => inMemoryFiles.get(relPath) || Buffer.from(""),
+    getMaxFileSize: () => 50 * 1024 * 1024
+  };
+
+  const importService = new AcademicImportService(prisma, mockStorage);
+
+  // 1. Create a document where AY and Term are missing/unclear for one record and present for another
+  const matchResult = await importService.matchExtractedRecords({
+    targetProgramId: program.id,
+    studentId: testStudent.id,
+    extractedRecords: [
+      {
+        academicYear: "2023-2024",
+        term: "1st Semester",
+        subjectCode: "EMATH 111",
+        subjectTitle: "Calculus 1",
+        units: 4.0,
+        grade: "2.00",
+        remarks: "Passed"
+      },
+      {
+        academicYear: "Unclear AY",
+        term: "",
+        subjectCode: "ECE 101",
+        subjectTitle: "Introduction to Electronics Engineering",
+        units: 3.0,
+        grade: "1.75",
+        remarks: "Passed"
+      }
+    ]
+  });
+
+  const records = matchResult.matchedRecords;
+  assert.equal(records[0].periodStatus, "CONFIDENT");
+  assert.equal(records[0].matchStatus, "HIGH_MATCH");
+
+  // Missing/unclear AY & Term must be flagged as UNCLEAR_OR_MISSING & NEEDS_REVIEW
+  assert.equal(records[1].periodStatus, "UNCLEAR_OR_MISSING");
+  assert.equal(records[1].matchStatus, "NEEDS_REVIEW");
+  assert.ok(records[1].periodNote);
+
+  // 2. Test getOrCreateHistoricalTerm directly:
+  // Case A: Confident AY + Term -> maps to 2023-1S historical term
+  const termResA = await prisma.$transaction((tx) =>
+    importService.getOrCreateHistoricalTerm(tx, "2023-2024", "1st Semester")
+  );
+  assert.equal(termResA.academicYear.code, "2023-2024");
+  assert.equal(termResA.academicTerm.code, "2023-1S");
+  assert.equal(termResA.academicTerm.status, "CLOSED");
+
+  // Case B: Explicit "Legacy / Unknown Historical Term" -> maps to LEGACY-CREDIT baseline (startsOn: 2000-08-01, CLOSED)
+  const termResB = await prisma.$transaction((tx) =>
+    importService.getOrCreateHistoricalTerm(tx, "Legacy / Unknown Historical Term", "Legacy")
+  );
+  assert.equal(termResB.academicYear.code, "LEGACY-CREDIT");
+  assert.equal(termResB.academicTerm.status, "CLOSED");
+  assert.equal(termResB.academicTerm.startsOn.getFullYear(), 2000);
+
+  // Clean up
+  await prisma.academicRecordImportRequest.deleteMany({ where: { studentId: testStudent.id } });
+  await prisma.studentDocument.deleteMany({ where: { studentId: testStudent.id } });
+  await prisma.student.deleteMany({ where: { id: testStudent.id } });
+});
+
+test("Legacy Student Onboarding: Credited subjects marked isPassed/alreadyCompleted in options and visible in student academic history", { timeout: 30_000 }, async () => {
+  const prisma = createDatabase();
+
+  const curriculum = await prisma.curriculum.findFirst({
+    where: { program: { code: "BSECE" }, subjects: { some: {} } },
+    include: { program: true, subjects: { include: { subject: true } } }
+  }) || await prisma.curriculum.findFirst({
+    where: { subjects: { some: {} } },
+    include: { program: true, subjects: { include: { subject: true } } }
+  });
+
+  assert.ok(curriculum && curriculum.subjects.length >= 1);
+  const program = curriculum.program;
+
+  const sub1 = curriculum.subjects[0].subject;
+  const sub2 = curriculum.subjects[1]?.subject || null;
+
+  const testUserId = randomUUID();
+  const testStudentNumber = `LEG-${Date.now().toString().slice(-6)}`;
+
+  await prisma.user.create({
+    data: {
+      id: testUserId,
+      email: `${testUserId}@example.com`,
+      emailNormalized: `${testUserId}@example.com`.toLowerCase(),
+      username: `student_${Date.now()}`,
+      usernameNormalized: `student_${Date.now()}`.toLowerCase(),
+      displayName: "Legacy Onboardee",
+      passwordHash: "hash",
+      status: "ACTIVE"
+    }
+  });
+
+  const testStudent = await prisma.student.create({
+    data: {
+      userId: testUserId,
+      studentNumber: testStudentNumber,
+      studentNumberNormalized: testStudentNumber.toLowerCase(),
+      firstName: "Legacy",
+      lastName: "Onboardee",
+      admissionYear: 2023,
+      programId: program.id,
+      curriculumId: curriculum.id,
+      currentYearLevel: 2,
+      status: "ACTIVE"
+    }
+  });
+
+  const inMemoryFiles = new Map();
+  const mockStorage = {
+    generateStoredFileName: (orig, ext) => `stored_${Date.now()}${ext}`,
+    saveFile: async (relPath, buf) => { inMemoryFiles.set(relPath, buf); return relPath; },
+    readFile: async (relPath) => inMemoryFiles.get(relPath) || Buffer.from(""),
+    getMaxFileSize: () => 50 * 1024 * 1024
+  };
+
+  const importService = new AcademicImportService(prisma, mockStorage);
+  const enrollmentStore = new EnrollmentApplicationStore(prisma);
+  const studentDashboardStore = new StudentDashboardStore(prisma);
+
+  // 1. Submit and verify request with sub1 passed
+  const pdfBuffer = createTextPdfBuffer([
+    "Academic Year: 2023-2024",
+    "1st Semester",
+    `${sub1.code}, ${sub1.title}, 3.0, 1.50, Passed`
+  ]);
+
+  const importRequest = await importService.createRequest({
+    studentId: testStudent.id,
+    targetProgramId: program.id,
+    file: { originalName: "transcript.pdf", buffer: pdfBuffer, mimeType: "application/pdf" },
+    userId: testUserId
+  });
+
+  await importService.verifyRequest({
+    requestId: importRequest.id,
+    action: "APPROVE",
+    remarks: "Verified valid historical TOR",
+    reviewerUserId: testUserId
+  });
+
+  await importService.processAI(importRequest.id);
+
+  // Commit import
+  await importService.commitImport({
+    requestId: importRequest.id,
+    resolutions: [
+      {
+        recordIndex: 0,
+        resolutionAction: "USE_UPLOADED",
+        selectedSubjectId: sub1.id,
+        academicYear: "2023-2024",
+        term: "1st Semester"
+      }
+    ],
+    reviewerUserId: testUserId
+  });
+
+  // 2. Verify Enrollment Options has isPassed & alreadyCompleted for sub1, but NOT sub2
+  const options = await enrollmentStore.options(testUserId);
+  assert.ok(options.curriculumSubjects.length > 0);
+
+  const sub1Option = options.curriculumSubjects.find((item) => item.subjectId === sub1.id);
+  const sub2Option = options.curriculumSubjects.find((item) => item.subjectId === sub2.id);
+
+  if (sub1Option) {
+    assert.equal(sub1Option.isPassed, true, "Credited subject must be flagged isPassed: true in enrollment options");
+    assert.equal(sub1Option.alreadyCompleted, true, "Credited subject must be flagged alreadyCompleted: true in enrollment options");
+  }
+
+  if (sub2Option) {
+    assert.equal(sub2Option.isPassed, false, "Untaken subject must be isPassed: false");
+    assert.equal(sub2Option.alreadyCompleted, false, "Untaken subject must be alreadyCompleted: false");
+  }
+
+  // 3. Verify Student Dashboard returns academicHistory grouped with the credited term
+  const dashboard = await studentDashboardStore.forUser(testUserId);
+  assert.ok(dashboard.linked);
+  assert.ok(Array.isArray(dashboard.academicHistory));
+  assert.ok(dashboard.academicHistory.length >= 1, "Must contain at least 1 historical term entry");
+
+  const histEntry = dashboard.academicHistory.find((entry) => entry.academicYear === "2023-2024" || entry.termCode === "2023-1S");
+  assert.ok(histEntry, "Must find 2023-2024 historical term in academicHistory");
+  assert.ok(histEntry.grades.some((g) => g.subjectCode === sub1.code && g.isPassing === true));
+
+  // Create an active current term enrollment for this student (no grades posted yet)
+  const activeTerm = await prisma.academicTerm.findFirst({
+    where: { status: "ACTIVE" }
+  }) || await prisma.academicTerm.findFirst({
+    orderBy: { startsOn: "desc" }
+  });
+
+  if (activeTerm) {
+    const activeEnrollment = await prisma.enrollment.create({
+      data: {
+        studentId: testStudent.id,
+        academicTermId: activeTerm.id,
+        programId: program.id,
+        curriculumId: curriculum.id,
+        yearLevel: 2,
+        status: "ENROLLED",
+        enrolledAt: new Date()
+      }
+    });
+
+    const activeDashboard = await studentDashboardStore.forUser(testUserId);
+    assert.equal(activeDashboard.finalGrades.length, 0, "Current active enrollment has 0 posted final grades");
+    assert.ok(activeDashboard.academicHistory.length >= 1, "Academic history still retains credited historical terms");
+  }
+
+  // Clean up
+  await prisma.grade.deleteMany({ where: { enrollmentItem: { enrollment: { studentId: testStudent.id } } } });
+  await prisma.enrollmentItem.deleteMany({ where: { enrollment: { studentId: testStudent.id } } });
+  await prisma.enrollment.deleteMany({ where: { studentId: testStudent.id } });
+  await prisma.academicRecordImportRequest.deleteMany({ where: { studentId: testStudent.id } });
+  await prisma.studentDocument.deleteMany({ where: { studentId: testStudent.id } });
+  await prisma.studentObligation.deleteMany({ where: { studentId: testStudent.id } });
+});
+
+
 
