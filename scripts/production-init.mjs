@@ -3,7 +3,6 @@ import { createDatabase } from "../server/db.mjs";
 import { createConfig } from "../server/config.mjs";
 import { hashPassword, newId, normalizeIdentifier } from "../server/security.mjs";
 import { seedAuthorizationCatalog } from "../prisma/seed.mjs";
-import { restoreCanonicalPrograms } from "../prisma/seeds/scripts/restore-canonical-programs.mjs";
 
 export async function initializeProductionDatabase(db, config) {
   process.stdout.write("[Init] Ensuring system catalog and canonical reference data...\n");
@@ -13,10 +12,6 @@ export async function initializeProductionDatabase(db, config) {
   process.stdout.write(
     `[Init] Authorization catalog verified: ${catalog.roleCount} roles, ${catalog.permissionCount} permissions.\n`
   );
-
-  // 2. Restore canonical programs (BSECE, BSCOE, BSCE)
-  await restoreCanonicalPrograms(db);
-  process.stdout.write("[Init] Canonical college, department, and academic programs verified.\n");
 
   // 3. Ensure a bootstrap administrator account exists if no admin is present
   const adminRole = await db.role.findUnique({ where: { slug: "administrator" } });

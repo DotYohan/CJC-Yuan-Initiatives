@@ -325,5 +325,5 @@ export async function seedOrganizationAndReferenceData(prisma) {
       documentTypeCount: DOCUMENT_TYPE_SEEDS.length,
       requestTypeCount: REQUEST_TYPE_SEEDS.length
     };
-  });
+  }, { maxWait: 15000, timeout: 60000 });
 }

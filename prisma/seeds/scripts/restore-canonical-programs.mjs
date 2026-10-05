@@ -83,7 +83,7 @@ export async function restoreCanonicalPrograms(database) {
       department: { id: department.id, code: department.code, name: department.name },
       programs: programs.map(({ id, code, name, isActive }) => ({ id, code, name, isActive }))
     };
-  });
+  }, { maxWait: 15000, timeout: 60000 });
 }
 
 async function runCli() {

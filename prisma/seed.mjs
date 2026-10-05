@@ -64,7 +64,7 @@ export async function seedAuthorizationCatalog(prisma) {
     });
 
     return { roleCount: roles.size, permissionCount: permissions.size };
-  });
+  }, { maxWait: 15000, timeout: 60000 });
 
   return { ...authSummary, ...orgSummary };
 }
