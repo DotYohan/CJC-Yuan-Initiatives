@@ -223,7 +223,10 @@ export class AdminFacultyService {
       throw err;
     }
 
-    const rawPassword = data.password ? String(data.password) : `Faculty-${employeeNumber}!`;
+    let rawPassword = data.password ? String(data.password) : `Faculty-${employeeNumber}!`;
+    if (!data.password && rawPassword.length < this.config.passwordMinLength) {
+      rawPassword = `Faculty-${employeeNumber.padEnd(Math.max(1, this.config.passwordMinLength - 9), "0")}!`;
+    }
     const passwordError = validatePassword(rawPassword, this.config);
     if (passwordError) {
       const err = new Error(passwordError);

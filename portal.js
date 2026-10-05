@@ -5058,14 +5058,14 @@
 
         const formData = new FormData(facultyCreateForm);
         const payload = {
-            firstName: formData.get("firstName"),
-            middleName: formData.get("middleName") || undefined,
-            lastName: formData.get("lastName"),
-            suffix: formData.get("suffix") || undefined,
-            employeeNumber: formData.get("employeeNumber"),
-            email: formData.get("email"),
-            collegeId: formData.get("collegeId"),
-            password: formData.get("password") || undefined
+            firstName: String(formData.get("firstName") || "").trim(),
+            middleName: String(formData.get("middleName") || "").trim() || undefined,
+            lastName: String(formData.get("lastName") || "").trim(),
+            suffix: String(formData.get("suffix") || "").trim() || undefined,
+            employeeNumber: String(formData.get("employeeNumber") || "").trim(),
+            email: String(formData.get("email") || "").trim(),
+            collegeId: String(formData.get("collegeId") || "").trim(),
+            password: String(formData.get("password") || "").trim() || undefined
         };
 
         try {

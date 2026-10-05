@@ -1948,7 +1948,7 @@
                 <div class="field"><label for="faculty-employee-number">Employee number</label><input id="faculty-employee-number" name="employeeNumber" required></div>
                 <div class="field"><label for="faculty-email">Institutional email</label><input id="faculty-email" name="email" type="email" required></div>
                 <div class="field"><label for="faculty-college">College</label><select id="faculty-college" name="collegeId" required><option value="">Select college…</option></select></div>
-                <div class="field"><label for="faculty-password">Temporary password</label><input id="faculty-password" name="password" type="password"></div>
+                <div class="field"><label for="faculty-password">Temporary password</label><input id="faculty-password" name="password" type="password" minlength="12" placeholder="Optional (min. 12 chars, or leave blank to auto-generate)"></div>
             </div>
             <p class="form-message form-message--error" role="alert" data-faculty-create-error hidden></p>
             <button class="button button--primary" type="submit">Create faculty account</button>
