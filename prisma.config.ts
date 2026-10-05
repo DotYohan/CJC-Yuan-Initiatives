@@ -10,6 +10,9 @@ export default defineConfig({
   },
 
   datasource: {
-    url: process.env.DATABASE_URL || "postgresql://cjc_app:placeholder@localhost:5432/placeholder",
+    url:
+      process.env.DIRECT_URL ||
+      process.env.DATABASE_URL ||
+      "postgresql://cjc_app:placeholder@localhost:5432/placeholder",
   },
 });

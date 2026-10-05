@@ -13,15 +13,8 @@ services:
       - key: HOST
         value: 0.0.0.0
       - key: DATABASE_URL
-        fromDatabase:
-          name: cjc-database
-          property: connectionString
+        sync: false
+      - key: DIRECT_URL
+        sync: false
       - key: CJC_AUDIT_PEPPER
         generateValue: true
-
-databases:
-  - name: cjc-database
-    plan: free
-    region: singapore
-    databaseName: cor_jesu_sms
-    user: cjc_app
