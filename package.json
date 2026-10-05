@@ -24,7 +24,8 @@
     "repair:program-head": "node --env-file-if-exists=.env prisma/seeds/scripts/repair-program-head-assignments.mjs --commit",
     "import:sqlite:dry": "node --env-file-if-exists=.env scripts/import-sqlite-auth.mjs",
     "import:sqlite:cutover": "node --env-file-if-exists=.env scripts/import-sqlite-auth.mjs --commit --merge-seeded-demos --invalidate-sessions",
-    "test": "node --env-file-if-exists=.env scripts/run-isolated-tests.mjs"
+    "test": "node --env-file-if-exists=.env scripts/run-isolated-tests.mjs",
+    "build": "prisma generate"
   },
   "prisma": {
     "seed": "node --env-file-if-exists=.env prisma/seed.mjs"
@@ -33,9 +34,8 @@
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "dotenv": "^17.4.2",
-    "pg": "^8.16.3"
-  },
-  "devDependencies": {
+    "pg": "^8.16.3",
     "prisma": "^7.10.0"
-  }
+  },
+  "devDependencies": {}
 }

@@ -24,8 +24,8 @@ export function createConfig(overrides = {}) {
   const nodeEnv = overrides.nodeEnv ?? process.env.NODE_ENV ?? "development";
   const isTest = nodeEnv === "test";
   const isProduction = nodeEnv === "production";
-  const appOrigin = origin(overrides.appOrigin ?? process.env.APP_ORIGIN ?? "http://localhost:3000");
-  const host = overrides.host ?? process.env.HOST ?? "127.0.0.1";
+  const appOrigin = origin(overrides.appOrigin ?? process.env.APP_ORIGIN ?? process.env.RENDER_EXTERNAL_URL ?? "http://localhost:3000");
+  const host = overrides.host ?? process.env.HOST ?? (isProduction ? "0.0.0.0" : "127.0.0.1");
   if (typeof host !== "string" || host.length < 1 || host.length > 253 || /[\s/\\]/.test(host)) {
     throw new Error("HOST must be a valid hostname or IP address.");
   }
