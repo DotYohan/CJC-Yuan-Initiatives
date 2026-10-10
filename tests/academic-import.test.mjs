@@ -198,7 +198,7 @@ test("AI-Assisted Academic Record Import: Full Lifecycle, Deterministic Parsing 
     generateStoredFileName: (orig, ext) => `stored_${Date.now()}${ext}`,
     saveFile: async (relPath, buf) => { inMemoryFiles.set(relPath, buf); return relPath; },
     readFile: async (relPath) => inMemoryFiles.get(relPath) || Buffer.from(""),
-    getMaxFileSize: () => 50 * 1024 * 1024
+    getMaxFileSize: () => 10 * 1024 * 1024
   };
 
   const importService = new AcademicImportService(prisma, mockStorage);
@@ -377,7 +377,7 @@ test("AI-Assisted Academic Record Import: Rejection flow, Conflict Actions & Pro
     generateStoredFileName: (orig, ext) => `stored_${Date.now()}${ext}`,
     saveFile: async (relPath, buf) => { inMemoryFiles.set(relPath, buf); return relPath; },
     readFile: async (relPath) => inMemoryFiles.get(relPath) || Buffer.from(""),
-    getMaxFileSize: () => 50 * 1024 * 1024
+    getMaxFileSize: () => 10 * 1024 * 1024
   };
 
   const importService = new AcademicImportService(prisma, mockStorage);
@@ -656,7 +656,7 @@ startxref
     generateStoredFileName: (orig, ext) => `stored_${Date.now()}${ext}`,
     saveFile: async (relPath, buf) => { inMemoryFiles.set(relPath, buf); return relPath; },
     readFile: async (relPath) => inMemoryFiles.get(relPath) || scannedPdfBuffer,
-    getMaxFileSize: () => 50 * 1024 * 1024
+    getMaxFileSize: () => 10 * 1024 * 1024
   };
 
   const importService = new AcademicImportService(prisma, mockStorage);
@@ -867,7 +867,7 @@ test("AI-Assisted Academic Record Import: AY & Term Handling, Unclear Period Rev
     generateStoredFileName: (orig, ext) => `stored_${Date.now()}${ext}`,
     saveFile: async (relPath, buf) => { inMemoryFiles.set(relPath, buf); return relPath; },
     readFile: async (relPath) => inMemoryFiles.get(relPath) || Buffer.from(""),
-    getMaxFileSize: () => 50 * 1024 * 1024
+    getMaxFileSize: () => 10 * 1024 * 1024
   };
 
   const importService = new AcademicImportService(prisma, mockStorage);
@@ -983,7 +983,7 @@ test("Legacy Student Onboarding: Credited subjects marked isPassed/alreadyComple
     generateStoredFileName: (orig, ext) => `stored_${Date.now()}${ext}`,
     saveFile: async (relPath, buf) => { inMemoryFiles.set(relPath, buf); return relPath; },
     readFile: async (relPath) => inMemoryFiles.get(relPath) || Buffer.from(""),
-    getMaxFileSize: () => 50 * 1024 * 1024
+    getMaxFileSize: () => 10 * 1024 * 1024
   };
 
   const importService = new AcademicImportService(prisma, mockStorage);

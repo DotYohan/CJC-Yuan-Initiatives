@@ -56,7 +56,7 @@ function calculateTitleSimilarity(titleA, titleB) {
 
 const ALLOWED_EXTENSIONS = new Set([".pdf", ".png", ".jpg", ".jpeg"]);
 const ALLOWED_MIME_TYPES = new Set(["application/pdf", "image/png", "image/jpeg"]);
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export class AcademicImportService {
   constructor(prisma, storageService) {
@@ -66,7 +66,7 @@ export class AcademicImportService {
 
   /**
    * Validates uploaded academic record file:
-   * - Max 50 MB
+   * - Max 10 MB
    * - Extensions: .pdf, .png, .jpg, .jpeg
    * - Actual magic byte file signature verification
    * - Explicitly rejects executables (MZ, ELF, Mach-O), script headers, and empty files.

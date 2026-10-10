@@ -7851,9 +7851,9 @@
             return;
         }
 
-        if (docFile.size > 50 * 1024 * 1024) {
+        if (docFile.size > 10 * 1024 * 1024) {
             if (studentImportError) {
-                studentImportError.textContent = "Uploaded file size exceeds the 50MB limit.";
+                studentImportError.textContent = "Uploaded file size exceeds the 10MB limit.";
                 studentImportError.hidden = false;
             }
             return;

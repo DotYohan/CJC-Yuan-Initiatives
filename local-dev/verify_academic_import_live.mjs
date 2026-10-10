@@ -83,7 +83,7 @@ async function main() {
             generateStoredFileName: (orig, ext) => `stored_${Date.now()}${ext}`,
             saveFile: async (relPath, buf) => { inMemoryFiles.set(relPath, buf); return relPath; },
             readFile: async (relPath) => inMemoryFiles.get(relPath) || buffer,
-            getMaxFileSize: () => 50 * 1024 * 1024
+            getMaxFileSize: () => 10 * 1024 * 1024
         };
         const importService = new AcademicImportService(prisma, mockStorage);
 
