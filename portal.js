@@ -212,6 +212,12 @@
     const createDocumentForm = select("[data-create-document-form]");
     const documentError = select("[data-document-error]");
     const clubDocumentsBody = select("[data-club-documents-body]");
+    const clubOfficerSearchInput = select("[data-club-officer-search]");
+    const clubMemberSearchInput = select("[data-club-member-search]");
+    const clubMemberFilterGroup = select("[data-club-member-filter-group]");
+    const clubAnnouncementSearchInput = select("[data-club-announcement-search]");
+    const clubDocSearchInput = select("[data-club-doc-search]");
+    const clubDocFilterSelect = select("[data-club-doc-filter-select]");
 
     // Student Clubs DOM Elements
     const studentActiveClubsCount = select("[data-student-active-clubs-count]");
@@ -227,15 +233,23 @@
     const portalRolePill = select("[data-portal-role-pill]");
     const portalExpiredBanner = select("[data-portal-expired-banner]");
     const portalAnnouncementsFeed = select("[data-portal-announcements-feed]");
+    const portalAnnouncementSearchInput = select("[data-portal-announcement-search]");
     const portalDocsBody = select("[data-portal-docs-body]");
     const portalDocFilter = select("[data-portal-doc-filter]");
+    const portalDocSearchInput = select("[data-portal-doc-search]");
     const portalOfficersBody = select("[data-portal-officers-body]");
+    const portalOfficerSearchInput = select("[data-portal-officer-search]");
     const portalMyClearancePill = select("[data-portal-my-clearance-pill]");
     const portalMyClearanceDate = select("[data-portal-my-clearance-date]");
     const portalMyClearanceBy = select("[data-portal-my-clearance-by]");
     const portalMyClearanceRemarks = select("[data-portal-my-clearance-remarks]");
     const portalEvalTab = select("[data-portal-eval-tab]");
     const portalEvalBody = select("[data-portal-eval-body]");
+    const portalEvalSearchInput = select("[data-portal-eval-search]");
+    const portalEvalFilterGroup = select("[data-portal-eval-filter-group]");
+    const portalEvalCountAll = select("[data-portal-eval-count-all]");
+    const portalEvalCountPending = select("[data-portal-eval-count-pending]");
+    const portalEvalCountCleared = select("[data-portal-eval-count-cleared]");
     const evalActionDialog = select("[data-eval-action-dialog]");
     const evalActionForm = select("[data-eval-action-form]");
     const evalActionError = select("[data-eval-action-error]");
@@ -335,6 +349,12 @@
         sscCurrentFilter: "ALL",
         clubLoaded: false,
         clubDashboard: null,
+        clubOfficerSearch: "",
+        clubMemberSearch: "",
+        clubMemberFilter: "ALL",
+        clubAnnouncementSearch: "",
+        clubDocSearch: "",
+        clubDocCategory: "ALL",
         studentClubsLoaded: false,
         studentAvailableClubs: [],
         studentMyClubs: [],
@@ -6092,18 +6112,32 @@
         }
     };
 
-    const renderClubOfficers = (officers) => {
+    const renderClubOfficers = (officers = []) => {
         if (!clubOfficersBody) return;
         clubOfficersBody.replaceChildren();
 
-        if (!officers.length) {
+        const allOfficers = Array.isArray(officers) ? officers : [];
+        const query = (state.clubOfficerSearch || "").trim().toLowerCase();
+
+        const filtered = allOfficers.filter((officer) => {
+            if (!query) return true;
+            const idNumber = String(officer.studentNumber || officer.studentIdNumber || officer.student?.studentNumber || officer.student?.studentIdNumber || "").toLowerCase();
+            const officerName = String(officer.studentName || officer.name || officer.fullName || officer.student?.fullName || officer.student?.name || "").toLowerCase();
+            const position = String(officer.position || "").toLowerCase();
+            return idNumber.includes(query) || officerName.includes(query) || position.includes(query);
+        });
+
+        if (!filtered.length) {
             const tr = document.createElement("tr");
-            tr.innerHTML = '<td colspan="5" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">No officers appointed yet. Use the form above to assign officers.</td>';
+            const emptyMsg = query
+                ? `No officers match search query "${escapeHtml(query)}".`
+                : "No officers appointed yet. Use the form above to assign officers.";
+            tr.innerHTML = `<td colspan="5" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">${emptyMsg}</td>`;
             clubOfficersBody.append(tr);
             return;
         }
 
-        officers.forEach((officer) => {
+        filtered.forEach((officer) => {
             const tr = document.createElement("tr");
             const authBadge = officer.canClearClearance
                 ? '<span class="club-badge club-badge--authority">Clearance Officer (Authorized)</span>'
@@ -6163,21 +6197,43 @@
         });
     };
 
-    const renderClubMembers = (members, summary) => {
+    const renderClubMembers = (members = [], summary = {}) => {
         if (!clubMembersBody) return;
         clubMembersBody.replaceChildren();
+
+        const allMembers = Array.isArray(members) ? members : [];
 
         if (clubClearedCount) clubClearedCount.textContent = summary.clearedMembers || 0;
         if (clubTotalMembersCount) clubTotalMembersCount.textContent = summary.totalMembers || 0;
 
-        if (!members.length) {
+        const query = (state.clubMemberSearch || "").trim().toLowerCase();
+        const filter = state.clubMemberFilter || "ALL";
+
+        const filtered = allMembers.filter((member) => {
+            const clearanceStatus = (member.clearanceStatus || member.clearance?.status || "PENDING").toUpperCase();
+            if (filter !== "ALL" && clearanceStatus !== filter) return false;
+
+            if (!query) return true;
+            const idNumber = String(member.studentNumber || member.studentIdNumber || member.student?.studentNumber || member.student?.studentIdNumber || "").toLowerCase();
+            const memberName = String(member.studentName || member.name || member.fullName || member.student?.fullName || member.student?.name || "").toLowerCase();
+            const programCode = String(member.student?.program?.code || member.program || "").toLowerCase();
+            const remarks = String(member.clearanceRemarks || member.clearance?.remarks || "").toLowerCase();
+            return idNumber.includes(query) || memberName.includes(query) || programCode.includes(query) || remarks.includes(query);
+        });
+
+        if (!filtered.length) {
             const tr = document.createElement("tr");
-            tr.innerHTML = '<td colspan="8" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">No enrolled members yet.</td>';
+            const emptyMsg = query
+                ? `No members match search query "${escapeHtml(query)}".`
+                : filter !== "ALL"
+                    ? `No members with status "${filter}".`
+                    : "No enrolled members yet.";
+            tr.innerHTML = `<td colspan="8" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">${emptyMsg}</td>`;
             clubMembersBody.append(tr);
             return;
         }
 
-        members.forEach((member) => {
+        filtered.forEach((member) => {
             const tr = document.createElement("tr");
             const clearanceStatus = member.clearanceStatus || member.clearance?.status || "PENDING";
             const pillClass = clearanceStatus === "CLEARED" ? "status-pill--active" : "status-pill--pending";
@@ -6185,12 +6241,16 @@
                 ? new Date(member.clearedAt).toLocaleString()
                 : (member.clearance?.clearedAt ? new Date(member.clearance.clearedAt).toLocaleString() : "—");
             const clearedBy = member.clearance?.clearedByOfficer?.fullName || member.clearedBy || "—";
-            const remarks = member.clearanceRemarks || member.clearance?.remarks || "—";
+            const remarksText = member.clearanceRemarks || member.clearance?.remarks || "—";
             const idNumber = member.studentNumber || member.studentIdNumber || member.student?.studentNumber || member.student?.studentIdNumber || "—";
             const memberName = member.studentName || member.name || member.fullName || member.student?.fullName || member.student?.name || "—";
             const programCode = member.student?.program?.code || member.program || "—";
             const yearLevel = member.currentYearLevel || member.student?.currentYearLevel || member.student?.yearLevel || "—";
             const isOfficer = member.role === "OFFICER" || member.isOfficer;
+
+            const remarksBubble = remarksText !== "—"
+                ? `<div class="portal-remarks-bubble" title="${escapeHtml(remarksText)}">${escapeHtml(remarksText)}</div>`
+                : `<span style="color: var(--muted); font-size: 0.82rem;">—</span>`;
 
             tr.innerHTML = `
                 <td><strong>${escapeHtml(idNumber)}</strong></td>
@@ -6200,22 +6260,36 @@
                 <td><span class="status-pill ${pillClass}">${escapeHtml(clearanceStatus)}</span></td>
                 <td>${escapeHtml(clearedAt)}</td>
                 <td>${escapeHtml(clearedBy)}</td>
-                <td><small>${escapeHtml(remarks)}</small></td>
+                <td>${remarksBubble}</td>
             `;
             clubMembersBody.append(tr);
         });
     };
 
-    const renderClubAnnouncements = (announcements) => {
+    const renderClubAnnouncements = (announcements = []) => {
         if (!clubAnnouncementsList) return;
         clubAnnouncementsList.replaceChildren();
 
-        if (!announcements.length) {
-            clubAnnouncementsList.innerHTML = '<div class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">No announcements published yet.</div>';
+        const allItems = Array.isArray(announcements) ? announcements : [];
+        const query = (state.clubAnnouncementSearch || "").trim().toLowerCase();
+
+        const filtered = allItems.filter((item) => {
+            if (!query) return true;
+            const title = String(item.title || "").toLowerCase();
+            const content = String(item.content || "").toLowerCase();
+            const author = String(item.authorName || item.postedBy?.displayName || item.postedBy || "").toLowerCase();
+            return title.includes(query) || content.includes(query) || author.includes(query);
+        });
+
+        if (!filtered.length) {
+            const emptyMsg = query
+                ? `No announcements match search query "${escapeHtml(query)}".`
+                : "No announcements published yet.";
+            clubAnnouncementsList.innerHTML = `<div class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">${emptyMsg}</div>`;
             return;
         }
 
-        announcements.forEach((item) => {
+        filtered.forEach((item) => {
             const card = document.createElement("div");
             card.className = "announcement-card";
             const dateFmt = (item.publishedAt || item.createdAt) ? new Date(item.publishedAt || item.createdAt).toLocaleDateString() : "—";
@@ -6251,18 +6325,38 @@
         });
     };
 
-    const renderClubDocuments = (documents) => {
+    const renderClubDocuments = (documents = []) => {
         if (!clubDocumentsBody) return;
         clubDocumentsBody.replaceChildren();
 
-        if (!documents.length) {
+        const allDocs = Array.isArray(documents) ? documents : [];
+        const query = (state.clubDocSearch || "").trim().toLowerCase();
+        const catFilter = state.clubDocCategory || "ALL";
+
+        const filtered = allDocs.filter((doc) => {
+            const category = (doc.category || "").toUpperCase();
+            if (catFilter !== "ALL" && category !== catFilter) return false;
+
+            if (!query) return true;
+            const title = String(doc.title || "").toLowerCase();
+            const fileName = String(doc.fileName || "").toLowerCase();
+            const uploader = String(doc.uploadedBy?.displayName || doc.uploadedBy || "").toLowerCase();
+            return title.includes(query) || fileName.includes(query) || uploader.includes(query);
+        });
+
+        if (!filtered.length) {
             const tr = document.createElement("tr");
-            tr.innerHTML = '<td colspan="6" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">No documents archived yet.</td>';
+            const emptyMsg = query
+                ? `No documents match search query "${escapeHtml(query)}".`
+                : catFilter !== "ALL"
+                    ? `No documents in category "${catFilter}".`
+                    : "No documents archived yet.";
+            tr.innerHTML = `<td colspan="6" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">${emptyMsg}</td>`;
             clubDocumentsBody.append(tr);
             return;
         }
 
-        documents.forEach((doc) => {
+        filtered.forEach((doc) => {
             const tr = document.createElement("tr");
             const dateFmt = (doc.uploadedAt || doc.createdAt) ? new Date(doc.uploadedAt || doc.createdAt).toLocaleDateString() : "—";
             const documentUrl = safeExternalUrl(doc.fileUrl);
@@ -6422,6 +6516,41 @@
     });
 
     refreshClubBtn?.addEventListener("click", () => void loadClubData());
+
+    // Club Workspace Search & Filter Listeners
+    clubOfficerSearchInput?.addEventListener("input", (e) => {
+        state.clubOfficerSearch = e.target.value;
+        renderClubOfficers(state.clubDashboard?.officers || []);
+    });
+
+    clubMemberSearchInput?.addEventListener("input", (e) => {
+        state.clubMemberSearch = e.target.value;
+        renderClubMembers(state.clubDashboard?.members || [], state.clubDashboard?.clearanceSummary || {});
+    });
+
+    clubMemberFilterGroup?.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-club-member-filter]");
+        if (!btn) return;
+        selectAll("[data-club-member-filter]", clubMemberFilterGroup).forEach((b) => b.classList.remove("filter-pill--active"));
+        btn.classList.add("filter-pill--active");
+        state.clubMemberFilter = btn.getAttribute("data-club-member-filter") || "ALL";
+        renderClubMembers(state.clubDashboard?.members || [], state.clubDashboard?.clearanceSummary || {});
+    });
+
+    clubAnnouncementSearchInput?.addEventListener("input", (e) => {
+        state.clubAnnouncementSearch = e.target.value;
+        renderClubAnnouncements(state.clubDashboard?.announcements || []);
+    });
+
+    clubDocSearchInput?.addEventListener("input", (e) => {
+        state.clubDocSearch = e.target.value;
+        renderClubDocuments(state.clubDashboard?.documents || []);
+    });
+
+    clubDocFilterSelect?.addEventListener("change", (e) => {
+        state.clubDocCategory = e.target.value || "ALL";
+        renderClubDocuments(state.clubDashboard?.documents || []);
+    });
 
     // ==========================================================================
     // STUDENT CLUBS EXPERIENCE LOGIC
@@ -6589,6 +6718,25 @@
             const portal = await auth.getStudentClubPortal(clubId);
             state.studentActiveClubPortal = portal;
 
+            // Reset search & filter states on open
+            state.portalEvalFilter = "ALL";
+            state.portalEvalSearch = "";
+            state.portalDocSearch = "";
+            state.portalOfficerSearch = "";
+            state.portalAnnouncementSearch = "";
+
+            if (portalEvalSearchInput) portalEvalSearchInput.value = "";
+            if (portalDocSearchInput) portalDocSearchInput.value = "";
+            if (portalOfficerSearchInput) portalOfficerSearchInput.value = "";
+            if (portalAnnouncementSearchInput) portalAnnouncementSearchInput.value = "";
+            if (portalDocFilter) portalDocFilter.value = "ALL";
+
+            if (portalEvalFilterGroup) {
+                selectAll("[data-eval-filter]", portalEvalFilterGroup).forEach((btn) => {
+                    btn.classList.toggle("active", btn.getAttribute("data-eval-filter") === "ALL");
+                });
+            }
+
             // Render Header
             if (portalClubName) portalClubName.textContent = `${portal.club.name} (${portal.club.code})`;
             if (portalCategoryLabel) portalCategoryLabel.textContent = `${humanize(portal.club.category)} Organization`;
@@ -6633,7 +6781,6 @@
             renderPortalAnnouncements(portal.announcements || []);
 
             // Render Documents Table
-            if (portalDocFilter) portalDocFilter.value = "ALL";
             renderPortalDocuments(portal.documents || []);
 
             // Render Officers Roster
@@ -6664,12 +6811,24 @@
         if (!portalAnnouncementsFeed) return;
         portalAnnouncementsFeed.replaceChildren();
 
-        if (!announcements.length) {
-            portalAnnouncementsFeed.innerHTML = '<div class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">No announcements published for this club.</div>';
+        const all = Array.isArray(announcements) ? announcements : [];
+        const query = (state.portalAnnouncementSearch || "").trim().toLowerCase();
+
+        const visible = query
+            ? all.filter((a) => {
+                const title = (a.title || "").toLowerCase();
+                const content = (a.content || "").toLowerCase();
+                const author = (a.authorName || a.postedBy?.displayName || a.postedBy || "").toLowerCase();
+                return title.includes(query) || content.includes(query) || author.includes(query);
+            })
+            : all;
+
+        if (!visible.length) {
+            portalAnnouncementsFeed.innerHTML = `<div class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">${query ? 'No announcements match your search.' : 'No announcements published for this club.'}</div>`;
             return;
         }
 
-        announcements.forEach((item) => {
+        visible.forEach((item) => {
             const card = document.createElement("div");
             card.className = "announcement-card";
             const dateFmt = (item.publishedAt || item.createdAt) ? new Date(item.publishedAt || item.createdAt).toLocaleDateString() : "—";
@@ -6691,17 +6850,34 @@
         if (!portalDocsBody) return;
         portalDocsBody.replaceChildren();
 
+        const all = Array.isArray(documents) ? documents : [];
         const selectedCategory = portalDocFilter?.value || "ALL";
-        const visibleDocuments = selectedCategory === "ALL"
-            ? documents
-            : documents.filter((documentRecord) => documentRecord.category === selectedCategory);
+        const query = (state.portalDocSearch || "").trim().toLowerCase();
 
-        if (!visibleDocuments.length) {
-            portalDocsBody.innerHTML = `<tr><td colspan="5" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">${selectedCategory === "ALL" ? "No official documents available." : "No documents match this classification."}</td></tr>`;
+        let visible = selectedCategory === "ALL"
+            ? all
+            : all.filter((documentRecord) => documentRecord.category === selectedCategory);
+
+        if (query) {
+            visible = visible.filter((d) => {
+                const title = (d.title || "").toLowerCase();
+                const ref = (d.fileName || d.referenceNo || "").toLowerCase();
+                const cat = (d.category || "").toLowerCase();
+                return title.includes(query) || ref.includes(query) || cat.includes(query);
+            });
+        }
+
+        if (!visible.length) {
+            const emptyMsg = query
+                ? `No documents match search query "${escapeHtml(query)}".`
+                : selectedCategory === "ALL"
+                    ? "No official documents available."
+                    : "No documents match this classification.";
+            portalDocsBody.innerHTML = `<tr><td colspan="5" class="empty-cell" style="text-align: center; padding: 2.5rem 1rem; color: var(--muted);">${emptyMsg}</td></tr>`;
             return;
         }
 
-        visibleDocuments.forEach((doc) => {
+        visible.forEach((doc) => {
             const tr = document.createElement("tr");
             const dateFmt = (doc.uploadedAt || doc.createdAt) ? new Date(doc.uploadedAt || doc.createdAt).toLocaleDateString() : "—";
             const documentUrl = safeExternalUrl(doc.fileUrl);
@@ -6709,10 +6885,10 @@
             tr.innerHTML = `
                 <td><span class="club-badge" style="background: var(--cream); border: 1px solid var(--line);">${escapeHtml(humanize(doc.category || "Document"))}</span></td>
                 <td><strong>${escapeHtml(doc.title)}</strong></td>
-                <td>${escapeHtml(doc.fileName || "—")}</td>
+                <td>${escapeHtml(doc.fileName || doc.referenceNo || "—")}</td>
                 <td>${escapeHtml(dateFmt)}</td>
-                <td>
-                    ${documentUrl ? `<a class="button button--outline button--compact" href="${escapeHtml(documentUrl)}" target="_blank" rel="noopener noreferrer">View Document</a>` : '<span class="status-pill status-pill--quiet">Unavailable</span>'}
+                <td style="text-align: right;">
+                    ${documentUrl ? `<a class="button button--outline button--compact" href="${escapeHtml(documentUrl)}" target="_blank" rel="noopener noreferrer">View Document ↗</a>` : '<span class="status-pill status-pill--quiet">Unavailable</span>'}
                 </td>
             `;
             portalDocsBody.append(tr);
@@ -6727,12 +6903,23 @@
         if (!portalOfficersBody) return;
         portalOfficersBody.replaceChildren();
 
-        if (!officers.length) {
-            portalOfficersBody.innerHTML = '<tr><td colspan="3" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">No officers listed.</td></tr>';
+        const all = Array.isArray(officers) ? officers : [];
+        const query = (state.portalOfficerSearch || "").trim().toLowerCase();
+
+        const visible = query
+            ? all.filter((o) => {
+                const pos = (o.position || "").toLowerCase();
+                const name = (o.studentName || o.name || o.fullName || o.student?.fullName || o.student?.name || "").toLowerCase();
+                return pos.includes(query) || name.includes(query);
+            })
+            : all;
+
+        if (!visible.length) {
+            portalOfficersBody.innerHTML = `<tr><td colspan="3" class="empty-cell" style="text-align: center; padding: 2.5rem 1rem; color: var(--muted);">${query ? 'No officers match your search query.' : 'No officers listed.'}</td></tr>`;
             return;
         }
 
-        officers.forEach((officer) => {
+        visible.forEach((officer) => {
             const tr = document.createElement("tr");
             const clrBadge = officer.canClearClearance
                 ? '<span class="club-badge club-badge--authority">Clearance Sign-off Authority</span>'
@@ -6748,35 +6935,81 @@
         });
     };
 
-    const renderPortalClearanceEvaluation = (members, clubId) => {
+    const renderPortalClearanceEvaluation = (members = [], clubId) => {
         if (!portalEvalBody) return;
         portalEvalBody.replaceChildren();
 
-        if (!members.length) {
-            portalEvalBody.innerHTML = '<tr><td colspan="7" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">No members to evaluate.</td></tr>';
+        const allMembers = Array.isArray(members) ? members : [];
+
+        // 1. Calculate stats counts
+        const total = allMembers.length;
+        const pendingCount = allMembers.filter((m) => (m.clearanceStatus || m.clearance?.status || "PENDING") === "PENDING").length;
+        const clearedCount = allMembers.filter((m) => (m.clearanceStatus || m.clearance?.status || "PENDING") === "CLEARED").length;
+
+        if (portalEvalCountAll) portalEvalCountAll.textContent = String(total);
+        if (portalEvalCountPending) portalEvalCountPending.textContent = String(pendingCount);
+        if (portalEvalCountCleared) portalEvalCountCleared.textContent = String(clearedCount);
+
+        // 2. Filter by status filter pill & search query
+        const filterStatus = state.portalEvalFilter || "ALL";
+        const query = (state.portalEvalSearch || "").trim().toLowerCase();
+
+        let visibleMembers = allMembers;
+
+        if (filterStatus !== "ALL") {
+            visibleMembers = visibleMembers.filter((m) => {
+                const st = m.clearanceStatus || m.clearance?.status || "PENDING";
+                return st === filterStatus;
+            });
+        }
+
+        if (query) {
+            visibleMembers = visibleMembers.filter((m) => {
+                const sNumber = String(m.studentNumber || m.studentIdNumber || m.student?.studentNumber || m.student?.studentIdNumber || "").toLowerCase();
+                const sName = String(m.studentName || m.name || m.fullName || m.student?.fullName || m.student?.name || "").toLowerCase();
+                return sNumber.includes(query) || sName.includes(query);
+            });
+        }
+
+        if (!visibleMembers.length) {
+            const tr = document.createElement("tr");
+            const emptyMsg = query
+                ? `No members match search query "${escapeHtml(query)}".`
+                : filterStatus !== "ALL"
+                    ? `No members with clearance status "${filterStatus}".`
+                    : "No members to evaluate.";
+            tr.innerHTML = `<td colspan="7" class="empty-cell" style="text-align: center; padding: 2.5rem 1rem; color: var(--muted);">${emptyMsg}</td>`;
+            portalEvalBody.append(tr);
             return;
         }
 
-        members.forEach((m) => {
+        visibleMembers.forEach((m) => {
             const tr = document.createElement("tr");
             const clrStatus = m.clearanceStatus || m.clearance?.status || "PENDING";
             const pillClass = clrStatus === "CLEARED" ? "status-pill--active" : "status-pill--pending";
-            const evaluatedBy = m.clearance?.clearedByOfficer ? `${m.clearance.clearedByOfficer.fullName} (${m.clearance.clearedByOfficer.position || "Officer"})` : (m.clearedBy || "—");
-            const remarks = m.clearanceRemarks || m.clearance?.remarks || "—";
+            const evaluatedBy = m.clearance?.clearedByOfficer
+                ? `${m.clearance.clearedByOfficer.fullName} (${m.clearance.clearedByOfficer.position || "Officer"})`
+                : (m.clearedBy || "—");
+            const remarksText = m.clearanceRemarks || m.clearance?.remarks || "—";
             const studentId = m.studentId || m.student?.id || m.id;
             const studentIdNumber = m.studentNumber || m.studentIdNumber || m.student?.studentNumber || m.student?.studentIdNumber || "—";
             const studentName = m.studentName || m.name || m.fullName || m.student?.fullName || m.student?.name || "—";
             const isOfficer = m.role === "OFFICER" || m.isOfficer;
 
+            // Formatted remarks bubble with tooltip for long text
+            const remarksBubble = remarksText !== "—"
+                ? `<div class="portal-remarks-bubble" title="${escapeHtml(remarksText)}">${escapeHtml(remarksText)}</div>`
+                : `<span style="color: var(--muted); font-size: 0.82rem;">—</span>`;
+
             tr.innerHTML = `
-                <td><strong>${escapeHtml(studentIdNumber)}</strong></td>
-                <td>${escapeHtml(studentName)}</td>
-                <td>${isOfficer ? "Officer" : "Member"}</td>
+                <td><strong class="portal-id-tag">${escapeHtml(studentIdNumber)}</strong></td>
+                <td><span class="portal-member-name">${escapeHtml(studentName)}</span></td>
+                <td><span class="club-badge ${isOfficer ? 'club-badge--authority' : 'club-badge--none'}">${isOfficer ? "Officer" : "Member"}</span></td>
                 <td><span class="status-pill ${pillClass}">${escapeHtml(clrStatus)}</span></td>
-                <td><small>${escapeHtml(evaluatedBy)}</small></td>
-                <td><small>${escapeHtml(remarks)}</small></td>
-                <td>
-                    <button class="button button--primary button--compact" type="button" data-eval-member-btn="${escapeHtml(studentId)}" data-target-name="${escapeHtml(studentName)}" data-current-status="${escapeHtml(clrStatus)}" data-current-remarks="${escapeHtml(remarks)}">
+                <td><small style="color: var(--ink); opacity: 0.85;">${escapeHtml(evaluatedBy)}</small></td>
+                <td>${remarksBubble}</td>
+                <td style="text-align: right;">
+                    <button class="button button--primary button--compact" type="button" data-eval-member-btn="${escapeHtml(studentId)}" data-target-name="${escapeHtml(studentName)}" data-current-status="${escapeHtml(clrStatus)}" data-current-remarks="${escapeHtml(remarksText !== "—" ? remarksText : "")}">
                         Evaluate
                     </button>
                 </td>
@@ -6797,7 +7030,7 @@
                 if (evalFormTargetId) evalFormTargetId.value = targetStudentId;
                 if (evalFormTargetName) evalFormTargetName.textContent = targetName;
                 if (evalFormStatus) evalFormStatus.value = currentStatus === "CLEARED" ? "CLEARED" : "PENDING";
-                if (evalFormRemarks) evalFormRemarks.value = currentRemarks !== "—" ? currentRemarks : "";
+                if (evalFormRemarks) evalFormRemarks.value = currentRemarks;
                 if (evalActionError) evalActionError.hidden = true;
                 if (typeof evalActionDialog?.showModal === "function") {
                     if (!evalActionDialog.open) evalActionDialog.showModal();
@@ -6807,6 +7040,43 @@
             });
         });
     };
+
+    // Toolbar Input Listeners for Club Portal
+    portalEvalSearchInput?.addEventListener("input", (e) => {
+        state.portalEvalSearch = e.target.value;
+        const clubId = state.studentActiveClubPortal?.club?.id;
+        const members = state.studentActiveClubPortal?.members || [];
+        renderPortalClearanceEvaluation(members, clubId);
+    });
+
+    portalEvalFilterGroup?.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-eval-filter]");
+        if (!btn) return;
+        const filterVal = btn.getAttribute("data-eval-filter");
+        state.portalEvalFilter = filterVal;
+
+        selectAll("[data-eval-filter]", portalEvalFilterGroup).forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        const clubId = state.studentActiveClubPortal?.club?.id;
+        const members = state.studentActiveClubPortal?.members || [];
+        renderPortalClearanceEvaluation(members, clubId);
+    });
+
+    portalDocSearchInput?.addEventListener("input", (e) => {
+        state.portalDocSearch = e.target.value;
+        renderPortalDocuments(state.studentActiveClubPortal?.documents || []);
+    });
+
+    portalOfficerSearchInput?.addEventListener("input", (e) => {
+        state.portalOfficerSearch = e.target.value;
+        renderPortalOfficers(state.studentActiveClubPortal?.officers || []);
+    });
+
+    portalAnnouncementSearchInput?.addEventListener("input", (e) => {
+        state.portalAnnouncementSearch = e.target.value;
+        renderPortalAnnouncements(state.studentActiveClubPortal?.announcements || []);
+    });
 
     // Close Dialog Buttons
     selectAll("[data-close-student-portal]").forEach((btn) => {

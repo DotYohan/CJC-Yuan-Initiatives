@@ -2301,8 +2301,7 @@
                             style="background: var(--cream); border: 1px solid var(--line); margin-bottom: 0.5rem;"
                             data-club-header-category>Organization</span>
                         <h2 id="club-title" data-club-header-name>Club Management</h2>
-                        <p data-club-header-lead style="color: var(--muted);">Manage leadership roster, membership
-                            records, announcements, and official documents.</p>
+                        <p data-club-header-lead style="color: var(--muted);">Manage leadership roster, membership records, announcements, and official documents.</p>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
                         <span class="status-pill status-pill--active" data-club-header-status>Active</span>
@@ -2311,7 +2310,7 @@
                 </div>
 
                 <!-- Club Navigation Tabs -->
-                <nav class="workspace-tabs" role="tablist" aria-label="Club Management Navigation"
+                <nav class="workspace-tabs student-club-portal__tabs" role="tablist" aria-label="Club Management Navigation"
                     style="margin-bottom: 1.5rem;">
                     <button class="workspace-tab active" type="button" role="tab" aria-selected="true"
                         data-club-nav="officers">Leadership &amp; Officers</button>
@@ -2332,8 +2331,7 @@
                                 <h3>Appoint Club Officer</h3>
                             </div>
                         </div>
-                        <p class="form-intro">Look up student by exact Student ID Number to appoint to an executive
-                            position and configure clearance authority.</p>
+                        <p class="form-intro">Look up student by exact Student ID Number to appoint to an executive position and configure clearance authority.</p>
                         <form class="admin-form" data-assign-officer-form novalidate>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                                 <div class="field">
@@ -2356,41 +2354,41 @@
                             <div class="field" style="margin-top: 0.5rem;">
                                 <label class="checkbox">
                                     <input type="checkbox" name="canClearClearance" id="officer-clearance-auth" />
-                                    <span>Grant Clearance Authority (Can evaluate and clear club obligations for
-                                        members)</span>
+                                    <span>Grant Clearance Authority (Can evaluate and clear club obligations for members)</span>
                                 </label>
                             </div>
                             <p class="form-message form-message--error" role="alert" data-officer-error hidden></p>
                             <div style="margin-top: 1rem; display: flex; justify-content: flex-end;">
-                                <button class="button button--primary" type="submit" data-submit-officer-btn>Appoint
-                                    Officer</button>
+                                <button class="button button--primary" type="submit" data-submit-officer-btn>Appoint Officer</button>
                             </div>
                         </form>
                     </section>
 
                     <section class="panel">
-                        <div class="panel__heading">
+                        <div class="panel__heading" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
                             <div>
                                 <p class="eyebrow">Leadership Directory</p>
                                 <h3>Active Club Officers</h3>
                             </div>
+                            <div class="portal-toolbar__search">
+                                <input type="search" class="portal-search-input" placeholder="Search officers or position…" data-club-officer-search />
+                            </div>
                         </div>
-                        <div class="table-wrap scrollable-record-list">
-                            <table class="table">
+                        <div class="portal-table-container scrollable-record-list" style="max-height: 420px; overflow-y: auto;">
+                            <table class="table table--sticky">
                                 <thead>
                                     <tr>
-                                        <th scope="col">Student ID</th>
+                                        <th scope="col" style="width: 140px;">Student ID</th>
                                         <th scope="col">Full Name</th>
-                                        <th scope="col">Position</th>
-                                        <th scope="col">Clearance Role</th>
-                                        <th scope="col">Action</th>
+                                        <th scope="col" style="width: 180px;">Position</th>
+                                        <th scope="col" style="width: 220px;">Clearance Role</th>
+                                        <th scope="col" style="width: 180px; text-align: right;">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody data-club-officers-body>
                                     <tr>
                                         <td colspan="5" class="empty-cell"
-                                            style="text-align: center; padding: 2rem; color: var(--muted);">Loading
-                                            officers…</td>
+                                            style="text-align: center; padding: 2rem; color: var(--muted);">Loading officers…</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -2413,31 +2411,38 @@
                         </article>
                     </div>
                     <section class="panel">
-                        <div class="panel__heading">
+                        <div class="panel__heading" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
                             <div>
                                 <p class="eyebrow">Roster &amp; Clearance</p>
                                 <h3>Registered Club Members</h3>
                             </div>
+                            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                <input type="search" class="portal-search-input" placeholder="Search members or ID…" data-club-member-search style="width: 260px;" />
+                                <div class="portal-filter-pills" data-club-member-filter-group>
+                                    <button type="button" class="filter-pill active" data-club-member-filter="ALL">All</button>
+                                    <button type="button" class="filter-pill filter-pill--pending" data-club-member-filter="PENDING">Pending</button>
+                                    <button type="button" class="filter-pill filter-pill--cleared" data-club-member-filter="CLEARED">Cleared</button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="table-wrap scrollable-record-list">
-                            <table class="table">
+                        <div class="portal-table-container scrollable-record-list" style="max-height: 480px; overflow-y: auto;">
+                            <table class="table table--sticky">
                                 <thead>
                                     <tr>
-                                        <th scope="col">Student ID</th>
-                                        <th scope="col">Member Name</th>
-                                        <th scope="col">Program &amp; Year</th>
-                                        <th scope="col">Membership Role</th>
-                                        <th scope="col">Clearance Status</th>
-                                        <th scope="col">Cleared Date</th>
-                                        <th scope="col">Cleared By</th>
+                                        <th scope="col" style="width: 135px;">Student ID</th>
+                                        <th scope="col" style="width: 180px;">Member Name</th>
+                                        <th scope="col" style="width: 140px;">Program &amp; Year</th>
+                                        <th scope="col" style="width: 100px;">Role</th>
+                                        <th scope="col" style="width: 110px;">Status</th>
+                                        <th scope="col" style="width: 150px;">Cleared Date</th>
+                                        <th scope="col" style="width: 160px;">Cleared By</th>
                                         <th scope="col">Remarks</th>
                                     </tr>
                                 </thead>
                                 <tbody data-club-members-body>
                                     <tr>
                                         <td colspan="8" class="empty-cell"
-                                            style="text-align: center; padding: 2rem; color: var(--muted);">Loading
-                                            members…</td>
+                                            style="text-align: center; padding: 2rem; color: var(--muted);">Loading members…</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -2473,13 +2478,16 @@
                     </section>
 
                     <section class="panel">
-                        <div class="panel__heading">
+                        <div class="panel__heading" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
                             <div>
                                 <p class="eyebrow">Broadcast Feed</p>
                                 <h3>Club Bulletin Board</h3>
                             </div>
+                            <div class="portal-toolbar__search">
+                                <input type="search" class="portal-search-input" placeholder="Search announcements…" data-club-announcement-search />
+                            </div>
                         </div>
-                        <div style="display: flex; flex-direction: column; gap: 1rem;" data-club-announcements-list>
+                        <div class="student-club-portal__scroll-area" style="display: flex; flex-direction: column; gap: 1rem; max-height: 450px; overflow-y: auto;" data-club-announcements-list>
                             <div class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">
                                 Loading announcements…</div>
                         </div>
@@ -2532,29 +2540,40 @@
                     </section>
 
                     <section class="panel">
-                        <div class="panel__heading">
+                        <div class="panel__heading" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
                             <div>
                                 <p class="eyebrow">Document Repository</p>
                                 <h3>Archived Official Records</h3>
                             </div>
+                            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                <input type="search" class="portal-search-input" placeholder="Search documents…" data-club-doc-search style="width: 240px;" />
+                                <select class="portal-select-filter" data-club-doc-filter-select>
+                                    <option value="ALL">All Classifications</option>
+                                    <option value="RESOLUTION">Resolutions</option>
+                                    <option value="MEMORANDUM">Memorandums</option>
+                                    <option value="CONSTITUTION_BYLAWS">Constitution &amp; Bylaws</option>
+                                    <option value="FINANCIAL_REPORT">Financial Reports</option>
+                                    <option value="ACTIVITY_PROPOSAL">Activity Proposals</option>
+                                    <option value="OTHER">Other</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="table-container" style="overflow-x: auto;">
-                            <table class="table">
+                        <div class="portal-table-container scrollable-record-list" style="max-height: 440px; overflow-y: auto;">
+                            <table class="table table--sticky">
                                 <thead>
                                     <tr>
-                                        <th scope="col">Classification</th>
+                                        <th scope="col" style="width: 140px;">Classification</th>
                                         <th scope="col">Title</th>
-                                        <th scope="col">Reference</th>
-                                        <th scope="col">Archived By</th>
-                                        <th scope="col">Date</th>
-                                        <th scope="col">Actions</th>
+                                        <th scope="col" style="width: 150px;">Reference</th>
+                                        <th scope="col" style="width: 160px;">Archived By</th>
+                                        <th scope="col" style="width: 110px;">Date</th>
+                                        <th scope="col" style="width: 140px; text-align: right;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody data-club-documents-body>
                                     <tr>
                                         <td colspan="6" class="empty-cell"
-                                            style="text-align: center; padding: 2rem; color: var(--muted);">Loading
-                                            documents…</td>
+                                            style="text-align: center; padding: 2rem; color: var(--muted);">Loading documents…</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -3418,43 +3437,54 @@
         <!-- Sub-View 1: Announcements Feed -->
         <div class="student-club-portal__view" data-portal-view="feed">
             <div class="student-club-portal__view-heading">
-                <h4>Club Announcements</h4>
+                <div>
+                    <h4>Club Announcements</h4>
+                    <p class="student-club-portal__subtext">Official updates and broadcast notices from club leadership</p>
+                </div>
+                <div class="portal-toolbar__search">
+                    <input type="search" class="portal-search-input" placeholder="Search announcements…" data-portal-announcement-search />
+                </div>
             </div>
             <div class="announcements-feed student-club-portal__scroll-area" data-portal-announcements-feed>
-                <div class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">No announcements
-                    published.</div>
+                <div class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">No announcements published.</div>
             </div>
         </div>
 
         <!-- Sub-View 2: Classified Documents -->
         <div class="student-club-portal__view" data-portal-view="docs" hidden>
             <div class="student-club-portal__view-heading">
-                <h4>Official Documents &amp; Publications</h4>
-                <select data-portal-doc-filter>
-                    <option value="ALL">All Classifications</option>
-                    <option value="RESOLUTION">Resolutions</option>
-                    <option value="MEMORANDUM">Memorandums</option>
-                    <option value="CONSTITUTION_BYLAWS">Constitution &amp; Bylaws</option>
-                    <option value="FINANCIAL_REPORT">Financial Reports</option>
-                    <option value="ACTIVITY_PROPOSAL">Activity Proposals</option>
-                    <option value="OTHER">Other</option>
-                </select>
+                <div>
+                    <h4>Official Documents &amp; Publications</h4>
+                    <p class="student-club-portal__subtext">Archived resolutions, financial reports, bylaws, and proposals</p>
+                </div>
+                <div class="portal-toolbar__controls">
+                    <input type="search" class="portal-search-input" placeholder="Search documents…" data-portal-doc-search />
+                    <select data-portal-doc-filter class="portal-select-filter">
+                        <option value="ALL">All Classifications</option>
+                        <option value="RESOLUTION">Resolutions</option>
+                        <option value="MEMORANDUM">Memorandums</option>
+                        <option value="CONSTITUTION_BYLAWS">Constitution &amp; Bylaws</option>
+                        <option value="FINANCIAL_REPORT">Financial Reports</option>
+                        <option value="ACTIVITY_PROPOSAL">Activity Proposals</option>
+                        <option value="OTHER">Other</option>
+                    </select>
+                </div>
             </div>
-            <div class="table-container" style="max-height: 420px; overflow-y: auto;">
-                <table class="table">
+            <div class="portal-table-container scrollable-record-list">
+                <table class="table table--sticky">
                     <thead>
                         <tr>
-                            <th scope="col">Classification</th>
+                            <th scope="col" style="width: 140px;">Classification</th>
                             <th scope="col">Title</th>
-                            <th scope="col">Reference</th>
-                            <th scope="col">Date</th>
-                            <th scope="col">Action</th>
+                            <th scope="col" style="width: 140px;">Reference</th>
+                            <th scope="col" style="width: 110px;">Date</th>
+                            <th scope="col" style="width: 100px; text-align: right;">Action</th>
                         </tr>
                     </thead>
                     <tbody data-portal-docs-body>
                         <tr>
-                            <td colspan="5" class="empty-cell"
-                                style="text-align: center; padding: 2rem; color: var(--muted);">No documents available.
+                            <td colspan="5" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">
+                                No documents available.
                             </td>
                         </tr>
                     </tbody>
@@ -3464,20 +3494,29 @@
 
         <!-- Sub-View 3: Officers Directory -->
         <div class="student-club-portal__view" data-portal-view="officers" hidden>
-            <h4 class="student-club-portal__section-title">Club Executive Board &amp; Officers</h4>
-            <div class="table-container" style="max-height: 420px; overflow-y: auto;">
-                <table class="table">
+            <div class="student-club-portal__view-heading">
+                <div>
+                    <h4>Club Executive Board &amp; Officers</h4>
+                    <p class="student-club-portal__subtext">Appointed student leaders and clearance signatories</p>
+                </div>
+                <div class="portal-toolbar__search">
+                    <input type="search" class="portal-search-input" placeholder="Search officers or position…" data-portal-officer-search />
+                </div>
+            </div>
+            <div class="portal-table-container scrollable-record-list">
+                <table class="table table--sticky">
                     <thead>
                         <tr>
-                            <th scope="col">Position</th>
+                            <th scope="col" style="width: 220px;">Position</th>
                             <th scope="col">Officer Name</th>
-                            <th scope="col">Clearance Role</th>
+                            <th scope="col" style="width: 220px;">Clearance Role</th>
                         </tr>
                     </thead>
                     <tbody data-portal-officers-body>
                         <tr>
-                            <td colspan="3" class="empty-cell"
-                                style="text-align: center; padding: 2rem; color: var(--muted);">No officers listed.</td>
+                            <td colspan="3" class="empty-cell" style="text-align: center; padding: 2rem; color: var(--muted);">
+                                No officers listed.
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -3486,60 +3525,74 @@
 
         <!-- Sub-View 4: My Clearance Status -->
         <div class="student-club-portal__view" data-portal-view="my-clearance" hidden>
-            <div class="panel"
-                style="background: var(--cream); border: 1px solid var(--line); padding: 1.5rem; border-radius: 8px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div class="portal-my-clearance-card">
+                <div class="portal-my-clearance-card__header">
                     <div>
                         <span class="eyebrow">Obligation Record</span>
-                        <h3 style="margin: 0.25rem 0;">My Club Clearance</h3>
+                        <h3>My Club Clearance</h3>
                     </div>
-                    <span class="status-pill" data-portal-my-clearance-pill
-                        style="font-size: 1rem; padding: 0.4rem 1rem;">PENDING</span>
+                    <span class="status-pill" data-portal-my-clearance-pill>PENDING</span>
                 </div>
-                <dl class="account-details"
-                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 0;">
-                    <div>
-                        <dt style="font-size: 0.85rem; color: var(--muted);">Evaluation Date</dt>
-                        <dd data-portal-my-clearance-date style="font-weight: 600; margin: 0.25rem 0 0;">—</dd>
+                <div class="portal-my-clearance-card__grid">
+                    <div class="meta-item">
+                        <span class="meta-label">Evaluation Date</span>
+                        <span class="meta-value" data-portal-my-clearance-date>—</span>
                     </div>
-                    <div>
-                        <dt style="font-size: 0.85rem; color: var(--muted);">Evaluated By</dt>
-                        <dd data-portal-my-clearance-by style="font-weight: 600; margin: 0.25rem 0 0;">—</dd>
+                    <div class="meta-item">
+                        <span class="meta-label">Evaluated By</span>
+                        <span class="meta-value" data-portal-my-clearance-by>—</span>
                     </div>
-                    <div style="grid-column: 1 / -1;">
-                        <dt style="font-size: 0.85rem; color: var(--muted);">Officer Remarks</dt>
-                        <dd data-portal-my-clearance-remarks
-                            style="font-weight: 500; margin: 0.25rem 0 0; color: var(--ink);">No remarks entered.</dd>
+                    <div class="meta-item meta-item--full">
+                        <span class="meta-label">Officer Remarks</span>
+                        <div class="meta-remarks-box" data-portal-my-clearance-remarks>No remarks entered.</div>
                     </div>
-                </dl>
+                </div>
             </div>
         </div>
 
         <!-- Sub-View 5: Clearance Evaluation Panel (TYPE 1 ONLY) -->
-        <div data-portal-view="clearance-eval" style="margin-top: 1rem;" hidden>
-            <div class="form-message form-message--info" style="margin-bottom: 1rem;">
-                <strong>Clearance Authority Granted:</strong> You hold official clearance authority for this club. You
-                can evaluate and update the clearance status of club members and officers. All decisions are immutably
-                logged in the audit trail.
+        <div class="student-club-portal__view" data-portal-view="clearance-eval" hidden>
+            <div class="form-message form-message--info portal-info-banner">
+                <div class="portal-info-banner__icon">🛡️</div>
+                <div>
+                    <strong>Clearance Authority Granted:</strong> You hold official clearance authority for this club. You can evaluate and update the clearance status of club members and officers. All decisions are immutably logged in the audit trail.
+                </div>
             </div>
-            <div class="table-container" style="max-height: 420px; overflow-y: auto;">
-                <table class="table">
+
+            <div class="portal-eval-toolbar">
+                <div class="portal-search-wrapper">
+                    <svg class="portal-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="search" class="portal-search-input" placeholder="Search member name or Student ID…" data-portal-eval-search />
+                </div>
+                <div class="portal-filter-pills" data-portal-eval-filter-group>
+                    <button type="button" class="filter-pill active" data-eval-filter="ALL">
+                        All <span class="filter-pill__count" data-portal-eval-count-all>0</span>
+                    </button>
+                    <button type="button" class="filter-pill filter-pill--pending" data-eval-filter="PENDING">
+                        Pending <span class="filter-pill__count" data-portal-eval-count-pending>0</span>
+                    </button>
+                    <button type="button" class="filter-pill filter-pill--cleared" data-eval-filter="CLEARED">
+                        Cleared <span class="filter-pill__count" data-portal-eval-count-cleared>0</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="portal-table-container scrollable-record-list">
+                <table class="table table--sticky">
                     <thead>
                         <tr>
-                            <th scope="col">Student ID</th>
-                            <th scope="col">Member Name</th>
-                            <th scope="col">Club Role</th>
-                            <th scope="col">Clearance Status</th>
-                            <th scope="col">Evaluated By</th>
+                            <th scope="col" style="width: 140px;">Student ID</th>
+                            <th scope="col" style="width: 200px;">Member Name</th>
+                            <th scope="col" style="width: 95px;">Role</th>
+                            <th scope="col" style="width: 110px;">Status</th>
+                            <th scope="col" style="width: 160px;">Evaluated By</th>
                             <th scope="col">Remarks</th>
-                            <th scope="col">Action</th>
+                            <th scope="col" style="width: 95px; text-align: right;">Action</th>
                         </tr>
                     </thead>
                     <tbody data-portal-eval-body>
                         <tr>
-                            <td colspan="7" class="empty-cell"
-                                style="text-align: center; padding: 2rem; color: var(--muted);">Loading member
-                                clearances…</td>
+                            <td colspan="7" class="empty-cell">Loading member clearances…</td>
                         </tr>
                     </tbody>
                 </table>
