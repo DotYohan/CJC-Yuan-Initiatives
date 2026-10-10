@@ -51,7 +51,10 @@ async function inspect(database, source) {
     throw new Error(`Existing ${curriculum.code} version ${curriculum.version} has a conflicting effective year.`);
   }
   const existingSubjects = await database.subject.findMany({
-    where: { codeNormalized: { in: source.subjects.map((subject) => normalizeIdentifier(subject.code)) } },
+    where: {
+      programId: program.id,
+      codeNormalized: { in: source.subjects.map((subject) => normalizeIdentifier(subject.code)) }
+    },
     select: {
       id: true, code: true, codeNormalized: true, title: true,
       defaultCreditUnits: true, defaultLectureHours: true, defaultLaboratoryHours: true
@@ -92,11 +95,15 @@ export async function seedEceProspectus(database, source) {
 
     for (const subject of source.subjects) {
       const codeNormalized = normalizeIdentifier(subject.code);
-      let record = await transaction.subject.findUnique({ where: { codeNormalized }, select: { id: true } });
+      let record = await transaction.subject.findUnique({
+        where: { programId_codeNormalized: { programId: inspected.program.id, codeNormalized } },
+        select: { id: true }
+      });
       if (!record) {
         record = await transaction.subject.create({
           data: {
             id: newId(), departmentId: inspected.program.departmentId, code: subject.code, codeNormalized,
+            programId: inspected.program.id,
             title: subject.title,
             description: subject.standingRequirement ? `Standing requirement: ${subject.standingRequirement}. Source: BSECE AY 2023-24 prospectus.` : "Source: BSECE AY 2023-24 prospectus.",
             defaultCreditUnits: subject.creditUnits, defaultLectureHours: subject.lectureHours,

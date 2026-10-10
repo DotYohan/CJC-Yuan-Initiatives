@@ -140,6 +140,8 @@ The backend uses Node's built-in HTTP server, Prisma ORM, and PostgreSQL. Before
 
 See [docs/PHASE-2.md](docs/PHASE-2.md) for the database design, API routes, role mappings, manual acceptance checklist, and production recommendations.
 
+For a codebase map and feature-tracing workflow, see the [Developer Guide](docs/DEVELOPER-GUIDE.md).
+
 ## Public-site notes
 
 The public page retains the responsive Phase 1 design, school identity content supplied for this project, local images, keyboard-friendly interactions, reduced-motion support, contact-card hover behavior (including Office Hours), and the independent-project footer disclaimer.

@@ -18,6 +18,8 @@
     "seed:security": "node --env-file-if-exists=.env prisma/seeds/scripts/seed-security-catalog.mjs",
     "seed:ece:dry": "node --env-file-if-exists=.env prisma/seeds/academic/seed-ece-prospectus.mjs",
     "seed:ece": "node --env-file-if-exists=.env prisma/seeds/academic/seed-ece-prospectus.mjs --commit",
+    "seed:engineering:dry": "node --env-file-if-exists=.env prisma/seeds/academic/import-engineering-curricula.mjs",
+    "seed:engineering": "node --env-file-if-exists=.env prisma/seeds/academic/import-engineering-curricula.mjs --commit",
     "seed:prisma": "node --env-file-if-exists=.env prisma/seed.mjs",
     "seed:plan": "node --env-file-if-exists=.env prisma/seeds/seed-plan.mjs",
     "repair:program-head:dry": "node --env-file-if-exists=.env prisma/seeds/scripts/repair-program-head-assignments.mjs",

@@ -199,6 +199,7 @@ test("Faculty Management & Access Control: Complete 9-Phase Verification Workflo
         programA = await transaction.program.create({
           data: {
             id: newId(),
+            programId: programA.id,
             departmentId: deptA.id,
             code: `PROG-A-${suffix}`,
             codeNormalized: normalizeIdentifier(`PROG-A-${suffix}`),
@@ -214,12 +215,13 @@ test("Faculty Management & Access Control: Complete 9-Phase Verification Workflo
 
       // Subject and curriculum for Program A
       let subjectA = await transaction.subject.findFirst({
-        where: { isActive: true }
+        where: { programId: programA.id, isActive: true }
       });
       if (!subjectA) {
         subjectA = await transaction.subject.create({
           data: {
             id: newId(),
+            programId: programA.id,
             departmentId: deptA.id,
             code: `SUBJ-A-${suffix}`,
             codeNormalized: normalizeIdentifier(`SUBJ-A-${suffix}`),

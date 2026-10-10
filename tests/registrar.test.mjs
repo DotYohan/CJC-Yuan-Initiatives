@@ -126,7 +126,7 @@ async function createStudentProfile(transaction, userId, suffix) {
   });
   const subject = await transaction.subject.create({
     data: {
-      id: newId(), departmentId: department.id, code: `SUB-${suffix}`, codeNormalized: normalizeIdentifier(`SUB-${suffix}`),
+      id: newId(), programId: program.id, departmentId: department.id, code: `SUB-${suffix}`, codeNormalized: normalizeIdentifier(`SUB-${suffix}`),
       title: "Test Subject", defaultCreditUnits: 3, defaultLectureHours: 3, status: "ACTIVE"
     }
   });
@@ -138,7 +138,7 @@ async function createStudentProfile(transaction, userId, suffix) {
   });
   const subject2 = await transaction.subject.create({
     data: {
-      id: newId(), departmentId: department.id, code: `SUB2-${suffix}`, codeNormalized: normalizeIdentifier(`SUB2-${suffix}`),
+      id: newId(), programId: program.id, departmentId: department.id, code: `SUB2-${suffix}`, codeNormalized: normalizeIdentifier(`SUB2-${suffix}`),
       title: "Test Subject 2", defaultCreditUnits: 3, defaultLectureHours: 3, status: "ACTIVE"
     }
   });
@@ -225,6 +225,7 @@ test("Student enrollment options include the official DRAFT curriculum for the a
       const subject = await transaction.subject.create({
         data: {
           id: newId(),
+          programId: program.id,
           departmentId: (await transaction.department.findFirstOrThrow({ where: { id: program.departmentId } })).id,
           code: `DRAFT-SUB-${suffix}`,
           codeNormalized: normalizeIdentifier(`DRAFT-SUB-${suffix}`),
@@ -321,6 +322,7 @@ test("Student enrollment accepts curriculum-subject IDs from the selected curric
       const subject = await transaction.subject.create({
         data: {
           id: newId(),
+          programId: program.id,
           departmentId: (await transaction.department.findFirstOrThrow({ where: { id: program.departmentId } })).id,
           code: `LEGACY-SUB-${suffix}`,
           codeNormalized: normalizeIdentifier(`LEGACY-SUB-${suffix}`),

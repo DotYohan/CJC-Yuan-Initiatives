@@ -859,7 +859,7 @@ Do not include markdown code fences or backticks. Return strictly the JSON objec
     });
 
     const existingGradeBySubjectId = new Map();
-    const existingGradeByNormCode = new Map();
+    const existingGradeByProgramCode = new Map();
 
     for (const item of studentHistory) {
       const subject = item.courseOffering?.subject;
@@ -875,7 +875,7 @@ Do not include markdown code fences or backticks. Return strictly the JSON objec
           termName: item.courseOffering.academicTerm?.name
         };
         existingGradeBySubjectId.set(subject.id, gradeSummary);
-        existingGradeByNormCode.set(normalizeString(subject.code), gradeSummary);
+        existingGradeByProgramCode.set(`${subject.programId}:${normalizeString(subject.code)}`, gradeSummary);
       }
     }
 
@@ -924,7 +924,8 @@ Do not include markdown code fences or backticks. Return strictly the JSON objec
       // Check conflict
       let conflict = null;
       if (bestMatch) {
-        const existing = existingGradeBySubjectId.get(bestMatch.id) || existingGradeByNormCode.get(normExtractedCode);
+        const existing = existingGradeBySubjectId.get(bestMatch.id)
+          || existingGradeByProgramCode.get(`${targetProgramId}:${normExtractedCode}`);
         if (existing) {
           conflict = {
             hasConflict: true,
@@ -1316,7 +1317,7 @@ Do not include markdown code fences or backticks. Return strictly the JSON objec
 
         // Verify subject exists
         const subject = await tx.subject.findUnique({ where: { id: subjectIdToImport } });
-        if (!subject) {
+        if (!subject || subject.programId !== request.targetProgramId) {
           skippedSubjects.push({ subjectCode: record.extractedCode, reason: "Subject not found in catalog" });
           continue;
         }

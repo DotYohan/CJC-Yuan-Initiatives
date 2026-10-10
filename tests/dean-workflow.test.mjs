@@ -171,6 +171,7 @@ test("Dean Workflow: Account creation, strict collegiate scoping, multi-tier gra
       const subjectA = await transaction.subject.create({
         data: {
           id: newId(),
+          programId: programA.id,
           departmentId: deptA.id,
           code: `CPE101-${suffix}`,
           codeNormalized: normalizeIdentifier(`CPE101-${suffix}`),
@@ -183,6 +184,7 @@ test("Dean Workflow: Account creation, strict collegiate scoping, multi-tier gra
       const subjectB = await transaction.subject.create({
         data: {
           id: newId(),
+          programId: programB.id,
           departmentId: deptB.id,
           code: `ACC101-${suffix}`,
           codeNormalized: normalizeIdentifier(`ACC101-${suffix}`),

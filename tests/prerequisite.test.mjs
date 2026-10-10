@@ -46,6 +46,25 @@ test("resolves subjectId from courseOffering.subjectId structure", () => {
   assert.equal(prerequisiteEligibility([requirement], records)[0].eligible, true);
 });
 
+test("program-scoped subjects with the same code keep prerequisite results independent", () => {
+  const bseceRequirement = {
+    type: "PREREQUISITE",
+    requiredSubject: { id: "bsece-emath-111", code: "EMath 111", title: "Calculus 1" }
+  };
+  const bsceRequirement = {
+    type: "PREREQUISITE",
+    requiredSubject: { id: "bsce-emath-111", code: "EMath 111", title: "Calculus 1 (Differential Calculus)" }
+  };
+  const records = buildAcademicRecordIndex([
+    { subjectId: "bsece-emath-111", grades: [{ status: "POSTED", letterGrade: "2.00", isPassing: true, updatedAt: "2026-01-01T00:00:00.000Z" }] },
+    { subjectId: "bsce-emath-111", grades: [{ status: "POSTED", letterGrade: "5.00", isPassing: false, updatedAt: "2026-01-01T00:00:00.000Z" }] }
+  ]);
+
+  assert.equal(prerequisiteEligibility([bseceRequirement], records)[0].eligible, true);
+  assert.equal(prerequisiteEligibility([bsceRequirement], records)[0].eligible, false);
+  assert.equal(prerequisiteEligibility([bsceRequirement], records)[0].state, "FAILED");
+});
+
 test("evaluates Philippine collegiate grading scale (1.00 - 3.00 is passing, 5.0 is failing)", () => {
   // 1.00 is highest honor / passing, even if legacy row had isPassing: false
   assert.equal(stateFor({ numericGrade: 1, isPassing: false }).state, "PASSED");

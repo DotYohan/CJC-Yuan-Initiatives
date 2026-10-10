@@ -92,11 +92,12 @@ test("AI-Assisted Academic Record Import: Full Lifecycle, Deterministic Parsing 
 
   // Subject 1: EMATH 111 (Calculus 1, 4 units)
   let sub1 = await prisma.subject.findFirst({
-    where: { OR: [{ code: "EMATH 111" }, { codeNormalized: "emath 111" }] }
+    where: { programId: program.id, OR: [{ code: "EMATH 111" }, { codeNormalized: "emath 111" }] }
   });
   if (!sub1) {
     sub1 = await prisma.subject.create({
       data: {
+        programId: program.id,
         departmentId: dept.id,
         code: "EMATH 111",
         codeNormalized: "emath 111",
@@ -108,11 +109,12 @@ test("AI-Assisted Academic Record Import: Full Lifecycle, Deterministic Parsing 
 
   // Subject 2: ECE 101 (Intro to ECE, 3 units)
   let sub2 = await prisma.subject.findFirst({
-    where: { OR: [{ code: "ECE 101" }, { codeNormalized: "ece 101" }] }
+    where: { programId: program.id, OR: [{ code: "ECE 101" }, { codeNormalized: "ece 101" }] }
   });
   if (!sub2) {
     sub2 = await prisma.subject.create({
       data: {
+        programId: program.id,
         departmentId: dept.id,
         code: "ECE 101",
         codeNormalized: "ece 101",
@@ -351,7 +353,7 @@ test("AI-Assisted Academic Record Import: Rejection flow, Conflict Actions & Pro
   assert.ok(program);
   const curriculum = await prisma.curriculum.findFirst({ where: { programId: program.id } });
   assert.ok(curriculum);
-  const sub1 = await prisma.subject.findFirst({ where: { OR: [{ code: "EMATH 111" }, { codeNormalized: "emath 111" }] } });
+  const sub1 = await prisma.subject.findFirst({ where: { programId: program.id, OR: [{ code: "EMATH 111" }, { codeNormalized: "emath 111" }] } });
   assert.ok(sub1);
 
   let testStudent = await prisma.student.findFirst({ where: { userId: testUserId } });
@@ -839,9 +841,9 @@ test("AI-Assisted Academic Record Import: AY & Term Handling, Unclear Period Rev
   assert.ok(program);
   const curriculum = await prisma.curriculum.findFirst({ where: { programId: program.id } });
   assert.ok(curriculum);
-  const sub1 = await prisma.subject.findFirst({ where: { OR: [{ code: "EMATH 111" }, { codeNormalized: "emath 111" }] } });
+  const sub1 = await prisma.subject.findFirst({ where: { programId: program.id, OR: [{ code: "EMATH 111" }, { codeNormalized: "emath 111" }] } });
   assert.ok(sub1);
-  const sub2 = await prisma.subject.findFirst({ where: { OR: [{ code: "ECE 101" }, { codeNormalized: "ece 101" }] } });
+  const sub2 = await prisma.subject.findFirst({ where: { programId: program.id, OR: [{ code: "ECE 101" }, { codeNormalized: "ece 101" }] } });
   assert.ok(sub2);
 
   let testStudent = await prisma.student.findFirst({ where: { userId: testUserId } });

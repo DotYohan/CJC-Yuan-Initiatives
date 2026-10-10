@@ -135,7 +135,7 @@ model User {
   clubClearanceAudits            ClubClearanceAudit[]                @relation("ClubClearanceAuditedBy")
   collegeAssignments             UserCollegeAssignment[]
   collegeAssignmentsCreated      UserCollegeAssignment[]             @relation("UserCollegeAssignmentCreatedBy")
-  academicRecordImportsReviewed AcademicRecordImportRequest[]       @relation("AcademicRecordImportReviewedBy")
+  academicRecordImportsReviewed  AcademicRecordImportRequest[]       @relation("AcademicRecordImportReviewedBy")
   systemReportsCreated           SystemReport[]                      @relation("SystemReportCreatedBy")
   systemReportsResolved          SystemReport[]                      @relation("SystemReportResolvedBy")
 
@@ -635,8 +635,8 @@ model College {
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  departments Department[]
-  clubs       Club[]
+  departments            Department[]
+  clubs                  Club[]
   userCollegeAssignments UserCollegeAssignment[]
 
   @@index([isActive])
@@ -684,7 +684,8 @@ model Program {
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  department             Department              @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  department             Department                    @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  subjects               Subject[]
   students               Student[]
   curricula              Curriculum[]
   history                ProgramHistory[]
@@ -796,14 +797,15 @@ model Faculty {
   @@map("faculty")
 }
 
-/// Reusable course catalog entry. Scheduling and grade models can reference a
-/// Subject independently of the curriculum version that requires it.
+/// Program-scoped course catalog entry. Scheduling and grade models reference
+/// a Subject independently of the curriculum version that requires it.
 model Subject {
   id                     String        @id @default(uuid()) @db.Uuid
+  programId              String        @map("program_id") @db.Uuid
   departmentId           String        @map("department_id") @db.Uuid
   code                   String        @db.VarChar(32)
   /// PostgreSQL canonicalization trigger overwrites this from `code`.
-  codeNormalized         String        @unique @map("code_normalized") @db.VarChar(32)
+  codeNormalized         String        @map("code_normalized") @db.VarChar(32)
   title                  String        @db.VarChar(200)
   description            String?       @db.Text
   defaultCreditUnits     Decimal       @map("default_credit_units") @db.Decimal(4, 2)
@@ -814,12 +816,15 @@ model Subject {
   createdAt              DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt              DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
+  program             Program              @relation(fields: [programId], references: [id], onDelete: Restrict)
   department          Department           @relation(fields: [departmentId], references: [id], onDelete: Restrict)
   curriculumItems     CurriculumSubject[]
   requirements        SubjectRequirement[] @relation("SubjectRequirements")
   requiredForSubjects SubjectRequirement[] @relation("RequiredForSubjects")
   courseOfferings     CourseOffering[]
 
+  @@unique([programId, codeNormalized])
+  @@index([programId, isActive])
   @@index([departmentId, isActive])
   @@map("subjects")
 }
@@ -1111,12 +1116,12 @@ model StudentDocument {
   createdAt        DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt        DateTime              @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  student              Student                       @relation(fields: [studentId], references: [id], onDelete: Restrict)
-  admissionApplication AdmissionApplication?         @relation(fields: [admissionApplicationId], references: [id], onDelete: Restrict)
-  documentType         DocumentType                  @relation(fields: [documentTypeId], references: [id], onDelete: Restrict)
-  uploadedBy           User                          @relation("StudentDocumentUploadedBy", fields: [uploadedByUserId], references: [id], onDelete: Restrict)
-  verifiedBy           User?                         @relation("StudentDocumentVerifiedBy", fields: [verifiedByUserId], references: [id], onDelete: SetNull)
-  verificationHistory  DocumentVerificationHistory[]
+  student               Student                       @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  admissionApplication  AdmissionApplication?         @relation(fields: [admissionApplicationId], references: [id], onDelete: Restrict)
+  documentType          DocumentType                  @relation(fields: [documentTypeId], references: [id], onDelete: Restrict)
+  uploadedBy            User                          @relation("StudentDocumentUploadedBy", fields: [uploadedByUserId], references: [id], onDelete: Restrict)
+  verifiedBy            User?                         @relation("StudentDocumentVerifiedBy", fields: [verifiedByUserId], references: [id], onDelete: SetNull)
+  verificationHistory   DocumentVerificationHistory[]
   academicRecordImports AcademicRecordImportRequest[]
 
   @@unique([admissionApplicationId, documentTypeId])
@@ -2253,20 +2258,20 @@ enum SystemReportCategory {
 }
 
 model SystemReport {
-  id              String               @id @default(uuid()) @db.Uuid
-  category        SystemReportCategory @default(BUG)
-  description     String               @db.Text
-  screenshotData  String?              @map("screenshot_data") @db.Text
-  status          SystemReportStatus   @default(OPEN)
-  pageUrl         String               @map("page_url") @db.VarChar(512)
-  browserInfo     String?              @map("browser_info") @db.VarChar(512)
-  errorCode       String?              @map("error_code") @db.VarChar(100)
-  userId          String?              @map("user_id") @db.Uuid
-  userRole        String?              @map("user_role") @db.VarChar(64)
-  adminNotes      String?              @map("admin_notes") @db.Text
-  resolvedByUserId String?             @map("resolved_by_user_id") @db.Uuid
-  createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt       DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id               String               @id @default(uuid()) @db.Uuid
+  category         SystemReportCategory @default(BUG)
+  description      String               @db.Text
+  screenshotData   String?              @map("screenshot_data") @db.Text
+  status           SystemReportStatus   @default(OPEN)
+  pageUrl          String               @map("page_url") @db.VarChar(512)
+  browserInfo      String?              @map("browser_info") @db.VarChar(512)
+  errorCode        String?              @map("error_code") @db.VarChar(100)
+  userId           String?              @map("user_id") @db.Uuid
+  userRole         String?              @map("user_role") @db.VarChar(64)
+  adminNotes       String?              @map("admin_notes") @db.Text
+  resolvedByUserId String?              @map("resolved_by_user_id") @db.Uuid
+  createdAt        DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   user       User? @relation("SystemReportCreatedBy", fields: [userId], references: [id], onDelete: SetNull)
   resolvedBy User? @relation("SystemReportResolvedBy", fields: [resolvedByUserId], references: [id], onDelete: SetNull)
@@ -2275,4 +2280,3 @@ model SystemReport {
   @@index([userId])
   @@map("system_reports")
 }
-

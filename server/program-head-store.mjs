@@ -384,11 +384,13 @@ export class ProgramHeadStore {
     const subject = await this.prisma.subject.findUnique({
       where: { id: subjectId },
       select: {
-        id: true, code: true, title: true, defaultCreditUnits: true,
+        id: true, programId: true, code: true, title: true, defaultCreditUnits: true,
         defaultLectureHours: true, defaultLaboratoryHours: true, status: true, isActive: true
       }
     });
-    if (!subject || subject.status !== "ACTIVE" || !subject.isActive) throw new Error("SUBJECT_NOT_FOUND");
+    if (!subject || subject.programId !== assignment.programId || subject.status !== "ACTIVE" || !subject.isActive) {
+      throw new Error("SUBJECT_NOT_FOUND");
+    }
 
     const yearLevel = Number(input?.yearLevel);
     const termNumber = Number(input?.termNumber);
@@ -432,6 +434,7 @@ export class ProgramHeadStore {
     const search = typeof query === "string" ? query.trim().slice(0, 100) : "";
     const subjects = await this.prisma.subject.findMany({
       where: {
+        programId: assignment.programId,
         isActive: true,
         status: "ACTIVE",
         ...(search ? { OR: [
@@ -442,7 +445,7 @@ export class ProgramHeadStore {
       orderBy: { code: "asc" },
       take: 250,
       select: {
-        id: true, departmentId: true, code: true, title: true, description: true,
+        id: true, programId: true, departmentId: true, code: true, title: true, description: true,
         defaultCreditUnits: true, defaultLectureHours: true, defaultLaboratoryHours: true,
         department: { select: { id: true, code: true, name: true } },
         requirements: {
@@ -456,7 +459,7 @@ export class ProgramHeadStore {
       defaultCreditUnits: decimal(subject.defaultCreditUnits),
       defaultLectureHours: decimal(subject.defaultLectureHours),
       defaultLaboratoryHours: decimal(subject.defaultLaboratoryHours),
-      shared: subject.departmentId !== assignment.program.departmentId
+      shared: false
     }));
   }
 
