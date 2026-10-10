@@ -50,7 +50,7 @@ datasource db {
   provider = "postgresql"
 }
 
-enum AccountStatus {`
+enum AccountStatus {
   ACTIVE   @map("active")
   DISABLED @map("disabled")
 
@@ -74,17 +74,21 @@ model User {
   authorizationVersion Int           @default(1) @map("authorization_version")
   passwordChangedAt    DateTime?     @map("password_changed_at") @db.Timestamptz(3)
   lastLoginAt          DateTime?     @map("last_login_at") @db.Timestamptz(3)
+  deletedAt            DateTime?     @map("deleted_at") @db.Timestamptz(3)
   createdAt            DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt            DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   userRoles                      UserRole[]                          @relation("AssignedUserRoles")
   programAssignments             UserProgramAssignment[]
   programAssignmentsCreated      UserProgramAssignment[]             @relation("UserProgramAssignmentCreatedBy")
+  departmentAssignments          UserDepartmentAssignment[]
+  departmentAssignmentsCreated   UserDepartmentAssignment[]          @relation("UserDepartmentAssignmentCreatedBy")
   roleAssignmentsMade            UserRole[]                          @relation("RoleAssignmentsMade")
   permissionGrantsMade           RolePermission[]                    @relation("PermissionGrantsMade")
   sessions                       Session[]
   passwordResetTokens            PasswordResetToken[]
   loginAttempts                  LoginAttempt[]
+  googleAuth                     UserGoogleAuth?
   actorAuditLogs                 AuditLog[]                          @relation("AuditActor")
   targetAuditLogs                AuditLog[]                          @relation("AuditTarget")
   studentProfile                 Student?
@@ -121,7 +125,21 @@ model User {
   requestsProcessed              StudentRequest[]                    @relation("RequestProcessedBy")
   requestStatusChanges           StudentRequestStatusHistory[]       @relation("RequestStatusChangedBy")
   documentVerifications          DocumentVerificationHistory[]       @relation("DocumentVerificationsPerformed")
+  systemLogs                     SystemLog[]                         @relation("SystemLogUser")
+  clubsCreated                   Club[]                              @relation("ClubCreatedBy")
+  clubAccount                    Club?                               @relation("ClubAccountUser")
+  clubOfficersAssigned           ClubOfficer[]                       @relation("ClubOfficerAssignedBy")
+  clubAnnouncementsPosted        ClubAnnouncement[]                  @relation("ClubAnnouncementPostedBy")
+  clubDocumentsUploaded          ClubDocument[]                      @relation("ClubDocumentUploadedBy")
+  clubClearancesActed            ClubClearance[]                     @relation("ClubClearanceActedBy")
+  clubClearanceAudits            ClubClearanceAudit[]                @relation("ClubClearanceAuditedBy")
+  collegeAssignments             UserCollegeAssignment[]
+  collegeAssignmentsCreated      UserCollegeAssignment[]             @relation("UserCollegeAssignmentCreatedBy")
+  academicRecordImportsReviewed  AcademicRecordImportRequest[]       @relation("AcademicRecordImportReviewedBy")
+  systemReportsCreated           SystemReport[]                      @relation("SystemReportCreatedBy")
+  systemReportsResolved          SystemReport[]                      @relation("SystemReportResolvedBy")
 
+  @@index([deletedAt])
   @@map("users")
 }
 
@@ -425,6 +443,7 @@ enum CourseOfferingStatus {
   CLOSED
   CANCELLED
   COMPLETED
+  ARCHIVED
 
   @@map("course_offering_status")
 }
@@ -616,7 +635,9 @@ model College {
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  departments Department[]
+  departments            Department[]
+  clubs                  Club[]
+  userCollegeAssignments UserCollegeAssignment[]
 
   @@index([isActive])
   @@map("colleges")
@@ -632,14 +653,16 @@ model Department {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  college               College                       @relation(fields: [collegeId], references: [id], onDelete: Restrict)
-  programs              Program[]
-  faculty               Faculty[]
-  subjects              Subject[]
-  programHistory        ProgramHistory[]
-  facultyAssignments    FacultyDepartmentAssignment[]
-  rooms                 Room[]
-  clearanceRequirements ClearanceRequirement[]
+  college                   College                       @relation(fields: [collegeId], references: [id], onDelete: Restrict)
+  programs                  Program[]
+  faculty                   Faculty[]
+  subjects                  Subject[]
+  programHistory            ProgramHistory[]
+  facultyAssignments        FacultyDepartmentAssignment[]
+  rooms                     Room[]
+  userDepartmentAssignments UserDepartmentAssignment[]
+  clearanceRequirements     ClearanceRequirement[]
+  clubs                     Club[]
 
   @@unique([collegeId, code])
   @@index([collegeId, isActive])
@@ -661,7 +684,8 @@ model Program {
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  department             Department              @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  department             Department                    @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  subjects               Subject[]
   students               Student[]
   curricula              Curriculum[]
   history                ProgramHistory[]
@@ -672,6 +696,7 @@ model Program {
   enrollmentApplications EnrollmentApplication[]
   classSections          ClassSection[]
   userProgramAssignments UserProgramAssignment[]
+  academicRecordImports  AcademicRecordImportRequest[] @relation("AcademicRecordImportTargetProgram")
 
   @@index([departmentId, isActive])
   @@map("programs")
@@ -716,6 +741,11 @@ model Student {
   obligations            StudentObligation[]
   paymentTransactions    PaymentTransaction[]
   requests               StudentRequest[]
+  clubMemberships        ClubMember[]
+  clubOfficerRoles       ClubOfficer[]
+  clubClearances         ClubClearance[]
+  clubClearanceAudits    ClubClearanceAudit[]
+  academicRecordImports  AcademicRecordImportRequest[]
 
   @@index([programId, status])
   @@index([curriculumId])
@@ -767,14 +797,15 @@ model Faculty {
   @@map("faculty")
 }
 
-/// Reusable course catalog entry. Scheduling and grade models can reference a
-/// Subject independently of the curriculum version that requires it.
+/// Program-scoped course catalog entry. Scheduling and grade models reference
+/// a Subject independently of the curriculum version that requires it.
 model Subject {
   id                     String        @id @default(uuid()) @db.Uuid
+  programId              String        @map("program_id") @db.Uuid
   departmentId           String        @map("department_id") @db.Uuid
   code                   String        @db.VarChar(32)
   /// PostgreSQL canonicalization trigger overwrites this from `code`.
-  codeNormalized         String        @unique @map("code_normalized") @db.VarChar(32)
+  codeNormalized         String        @map("code_normalized") @db.VarChar(32)
   title                  String        @db.VarChar(200)
   description            String?       @db.Text
   defaultCreditUnits     Decimal       @map("default_credit_units") @db.Decimal(4, 2)
@@ -785,12 +816,15 @@ model Subject {
   createdAt              DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt              DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
+  program             Program              @relation(fields: [programId], references: [id], onDelete: Restrict)
   department          Department           @relation(fields: [departmentId], references: [id], onDelete: Restrict)
   curriculumItems     CurriculumSubject[]
   requirements        SubjectRequirement[] @relation("SubjectRequirements")
   requiredForSubjects SubjectRequirement[] @relation("RequiredForSubjects")
   courseOfferings     CourseOffering[]
 
+  @@unique([programId, codeNormalized])
+  @@index([programId, isActive])
   @@index([departmentId, isActive])
   @@map("subjects")
 }
@@ -984,6 +1018,42 @@ model UserProgramAssignment {
   @@map("user_program_assignments")
 }
 
+/// Department assignment for Student Assistant accounts.
+model UserDepartmentAssignment {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @map("user_id") @db.Uuid
+  departmentId     String   @map("department_id") @db.Uuid
+  assignedByUserId String?  @map("assigned_by_user_id") @db.Uuid
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  assignedBy User?      @relation("UserDepartmentAssignmentCreatedBy", fields: [assignedByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([userId])
+  @@index([departmentId])
+  @@index([assignedByUserId])
+  @@map("user_department_assignments")
+}
+
+/// College assignment for Dean accounts.
+model UserCollegeAssignment {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @map("user_id") @db.Uuid
+  collegeId        String   @map("college_id") @db.Uuid
+  assignedByUserId String?  @map("assigned_by_user_id") @db.Uuid
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  college    College @relation(fields: [collegeId], references: [id], onDelete: Restrict)
+  assignedBy User?   @relation("UserCollegeAssignmentCreatedBy", fields: [assignedByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([userId])
+  @@index([collegeId])
+  @@index([assignedByUserId])
+  @@map("user_college_assignments")
+}
+
 model AdmissionApplication {
   id                          String                     @id @default(uuid()) @db.Uuid
   applicationNumber           String                     @map("application_number") @db.VarChar(40)
@@ -1046,12 +1116,13 @@ model StudentDocument {
   createdAt        DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt        DateTime              @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  student              Student                       @relation(fields: [studentId], references: [id], onDelete: Restrict)
-  admissionApplication AdmissionApplication?         @relation(fields: [admissionApplicationId], references: [id], onDelete: Restrict)
-  documentType         DocumentType                  @relation(fields: [documentTypeId], references: [id], onDelete: Restrict)
-  uploadedBy           User                          @relation("StudentDocumentUploadedBy", fields: [uploadedByUserId], references: [id], onDelete: Restrict)
-  verifiedBy           User?                         @relation("StudentDocumentVerifiedBy", fields: [verifiedByUserId], references: [id], onDelete: SetNull)
-  verificationHistory  DocumentVerificationHistory[]
+  student               Student                       @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  admissionApplication  AdmissionApplication?         @relation(fields: [admissionApplicationId], references: [id], onDelete: Restrict)
+  documentType          DocumentType                  @relation(fields: [documentTypeId], references: [id], onDelete: Restrict)
+  uploadedBy            User                          @relation("StudentDocumentUploadedBy", fields: [uploadedByUserId], references: [id], onDelete: Restrict)
+  verifiedBy            User?                         @relation("StudentDocumentVerifiedBy", fields: [verifiedByUserId], references: [id], onDelete: SetNull)
+  verificationHistory   DocumentVerificationHistory[]
+  academicRecordImports AcademicRecordImportRequest[]
 
   @@unique([admissionApplicationId, documentTypeId])
   @@index([admissionApplicationId, status])
@@ -1905,4 +1976,307 @@ model StudentRequestStatusHistory {
   @@index([studentRequestId, changedAt])
   @@index([changedByUserId])
   @@map("student_request_status_history")
+}
+
+/// Platform-level system event log. Records application errors, security
+/// incidents, and telemetry events for the admin monitoring dashboard.
+model SystemLog {
+  id              String   @id @default(uuid()) @db.Uuid
+  errorId         String?  @unique @map("error_id") @db.VarChar(50)
+  requestId       String?  @map("request_id") @db.VarChar(50)
+  sessionId       String?  @map("session_id") @db.VarChar(64)
+  severity        String   @db.VarChar(20)
+  category        String   @db.VarChar(50)
+  module          String?  @db.VarChar(100)
+  userId          String?  @map("user_id") @db.Uuid
+  ipHash          String?  @map("ip_hash") @db.Char(64)
+  userAgent       String?  @map("user_agent") @db.Text
+  requestUrl      String?  @map("request_url") @db.VarChar(500)
+  httpMethod      String?  @map("http_method") @db.VarChar(10)
+  message         String   @db.Text
+  technicalDetail String?  @map("technical_detail") @db.Text
+  stackTrace      String?  @map("stack_trace") @db.Text
+  status          String   @default("OPEN") @db.VarChar(20)
+  durationMs      Int?     @map("duration_ms")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User? @relation("SystemLogUser", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([severity, createdAt])
+  @@index([category, createdAt])
+  @@index([status, createdAt])
+  @@map("system_logs")
+}
+
+enum ClubCategory {
+  ACADEMIC
+  NON_ACADEMIC
+
+  @@map("club_category")
+}
+
+enum ClubStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+
+  @@map("club_status")
+}
+
+enum ClubDocumentCategory {
+  RESOLUTION
+  MEMORANDUM
+  CONSTITUTION_BYLAWS
+  FINANCIAL_REPORT
+  ACTIVITY_PROPOSAL
+  OTHER
+
+  @@map("club_document_category")
+}
+
+enum ClubClearanceStatus {
+  PENDING
+  CLEARED
+  NOT_CLEARED
+
+  @@map("club_clearance_status")
+}
+
+model Club {
+  id                   String       @id @default(uuid()) @db.Uuid
+  code                 String       @unique @db.VarChar(50)
+  name                 String       @unique @db.VarChar(150)
+  description          String?      @db.Text
+  category             ClubCategory @default(ACADEMIC)
+  adviser              String       @db.VarChar(150)
+  collegeId            String?      @map("college_id") @db.Uuid
+  departmentId         String?      @map("department_id") @db.Uuid
+  userId               String?      @unique @map("user_id") @db.Uuid
+  effectivityStartDate DateTime     @map("effectivity_start_date") @db.Timestamptz(3)
+  effectivityEndDate   DateTime     @map("effectivity_end_date") @db.Timestamptz(3)
+  status               ClubStatus   @default(ACTIVE)
+  createdByUserId      String?      @map("created_by_user_id") @db.Uuid
+  createdAt            DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  college         College?             @relation(fields: [collegeId], references: [id], onDelete: SetNull)
+  department      Department?          @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  user            User?                @relation("ClubAccountUser", fields: [userId], references: [id], onDelete: SetNull)
+  createdBy       User?                @relation("ClubCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  members         ClubMember[]
+  officers        ClubOfficer[]
+  announcements   ClubAnnouncement[]
+  documents       ClubDocument[]
+  clearances      ClubClearance[]
+  clearanceAudits ClubClearanceAudit[]
+
+  @@index([status, effectivityStartDate, effectivityEndDate])
+  @@index([collegeId])
+  @@index([departmentId])
+  @@map("clubs")
+}
+
+model ClubMember {
+  id        String   @id @default(uuid()) @db.Uuid
+  clubId    String   @map("club_id") @db.Uuid
+  studentId String   @map("student_id") @db.Uuid
+  status    String   @default("ACTIVE") @db.VarChar(20)
+  joinedAt  DateTime @default(now()) @map("joined_at") @db.Timestamptz(3)
+
+  club    Club    @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@unique([clubId, studentId])
+  @@index([studentId, status])
+  @@map("club_members")
+}
+
+model ClubOfficer {
+  id                String   @id @default(uuid()) @db.Uuid
+  clubId            String   @map("club_id") @db.Uuid
+  studentId         String   @map("student_id") @db.Uuid
+  position          String   @db.VarChar(100)
+  canClearClearance Boolean  @default(false) @map("can_clear_clearance")
+  assignedByUserId  String?  @map("assigned_by_user_id") @db.Uuid
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  club       Club    @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  student    Student @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  assignedBy User?   @relation("ClubOfficerAssignedBy", fields: [assignedByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([clubId, studentId])
+  @@index([studentId])
+  @@map("club_officers")
+}
+
+model ClubAnnouncement {
+  id             String   @id @default(uuid()) @db.Uuid
+  clubId         String   @map("club_id") @db.Uuid
+  title          String   @db.VarChar(200)
+  content        String   @db.Text
+  postedByUserId String?  @map("posted_by_user_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  club     Club  @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  postedBy User? @relation("ClubAnnouncementPostedBy", fields: [postedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([clubId, createdAt])
+  @@map("club_announcements")
+}
+
+model ClubDocument {
+  id               String               @id @default(uuid()) @db.Uuid
+  clubId           String               @map("club_id") @db.Uuid
+  title            String               @db.VarChar(200)
+  category         ClubDocumentCategory @default(OTHER)
+  description      String?              @db.Text
+  fileUrl          String?              @map("file_url") @db.VarChar(500)
+  fileName         String?              @map("file_name") @db.VarChar(255)
+  uploadedByUserId String?              @map("uploaded_by_user_id") @db.Uuid
+  createdAt        DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  club       Club  @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  uploadedBy User? @relation("ClubDocumentUploadedBy", fields: [uploadedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([clubId, category])
+  @@map("club_documents")
+}
+
+model ClubClearance {
+  id              String              @id @default(uuid()) @db.Uuid
+  clubId          String              @map("club_id") @db.Uuid
+  studentId       String              @map("student_id") @db.Uuid
+  status          ClubClearanceStatus @default(PENDING)
+  remarks         String?             @db.Text
+  clearedByUserId String?             @map("cleared_by_user_id") @db.Uuid
+  clearedAt       DateTime?           @map("cleared_at") @db.Timestamptz(3)
+  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  club      Club    @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  clearedBy User?   @relation("ClubClearanceActedBy", fields: [clearedByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([clubId, studentId])
+  @@index([studentId, status])
+  @@map("club_clearances")
+}
+
+model ClubClearanceAudit {
+  id                String              @id @default(uuid()) @db.Uuid
+  clubId            String              @map("club_id") @db.Uuid
+  studentId         String              @map("student_id") @db.Uuid
+  action            ClubClearanceStatus
+  remarks           String?             @db.Text
+  performedByUserId String?             @map("performed_by_user_id") @db.Uuid
+  createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  club        Club    @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  student     Student @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  performedBy User?   @relation("ClubClearanceAuditedBy", fields: [performedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([clubId, studentId, createdAt])
+  @@map("club_clearance_audits")
+}
+
+model UserGoogleAuth {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @unique @map("user_id") @db.Uuid
+  googleSub       String    @unique @map("google_sub") @db.VarChar(255)
+  email           String    @db.VarChar(254)
+  emailNormalized String    @map("email_normalized") @db.VarChar(254)
+  avatarUrl       String?   @map("avatar_url") @db.Text
+  linkedAt        DateTime  @default(now()) @map("linked_at") @db.Timestamptz(3)
+  lastLoginAt     DateTime? @map("last_login_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([emailNormalized])
+  @@map("user_google_auth")
+}
+
+enum AcademicImportRequestStatus {
+  SUBMITTED
+  UNDER_VERIFICATION
+  APPROVED_FOR_AI
+  AI_PROCESSING
+  UNDER_REVIEW
+  IMPORTED
+  REJECTED
+
+  @@map("academic_import_request_status")
+}
+
+model AcademicRecordImportRequest {
+  id                 String                      @id @default(uuid()) @db.Uuid
+  studentId          String                      @map("student_id") @db.Uuid
+  targetProgramId    String                      @map("target_program_id") @db.Uuid
+  documentId         String                      @map("document_id") @db.Uuid
+  status             AcademicImportRequestStatus @default(SUBMITTED)
+  extractedData      Json?                       @map("extracted_data") @db.JsonB
+  matchedData        Json?                       @map("matched_data") @db.JsonB
+  registrarOverrides Json?                       @map("registrar_overrides") @db.JsonB
+  rejectionReason    String?                     @map("rejection_reason") @db.Text
+  reviewedByUserId   String?                     @map("reviewed_by_user_id") @db.Uuid
+  reviewedAt         DateTime?                   @map("reviewed_at") @db.Timestamptz(3)
+  importedAt         DateTime?                   @map("imported_at") @db.Timestamptz(3)
+  importBatchId      String?                     @map("import_batch_id") @db.VarChar(64)
+  createdAt          DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime                    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  student       Student         @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  targetProgram Program         @relation("AcademicRecordImportTargetProgram", fields: [targetProgramId], references: [id], onDelete: Restrict)
+  document      StudentDocument @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  reviewedBy    User?           @relation("AcademicRecordImportReviewedBy", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([studentId, status])
+  @@index([targetProgramId])
+  @@index([status, createdAt])
+  @@index([reviewedByUserId])
+  @@map("academic_record_import_requests")
+}
+
+enum SystemReportStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  CLOSED
+
+  @@map("system_report_status")
+}
+
+enum SystemReportCategory {
+  BUG
+  SUGGESTION
+  UI_ISSUE
+  OTHER
+
+  @@map("system_report_category")
+}
+
+model SystemReport {
+  id               String               @id @default(uuid()) @db.Uuid
+  category         SystemReportCategory @default(BUG)
+  description      String               @db.Text
+  screenshotData   String?              @map("screenshot_data") @db.Text
+  status           SystemReportStatus   @default(OPEN)
+  pageUrl          String               @map("page_url") @db.VarChar(512)
+  browserInfo      String?              @map("browser_info") @db.VarChar(512)
+  errorCode        String?              @map("error_code") @db.VarChar(100)
+  userId           String?              @map("user_id") @db.Uuid
+  userRole         String?              @map("user_role") @db.VarChar(64)
+  adminNotes       String?              @map("admin_notes") @db.Text
+  resolvedByUserId String?              @map("resolved_by_user_id") @db.Uuid
+  createdAt        DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user       User? @relation("SystemReportCreatedBy", fields: [userId], references: [id], onDelete: SetNull)
+  resolvedBy User? @relation("SystemReportResolvedBy", fields: [resolvedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([userId])
+  @@map("system_reports")
 }

@@ -132,6 +132,8 @@ test("Prisma authentication supports login, session validation, logout, and admi
         const denied = await studentClient.request("/api/v1/admin/users");
         assert.equal(denied.response.status, 403, "student admin denial");
         assert.equal(denied.payload.error.code, "FORBIDDEN");
+        const studentHealthDenied = await studentClient.request("/api/v1/admin/monitoring/health");
+        assert.equal(studentHealthDenied.response.status, 403, "student monitoring denial");
 
         const logout = await studentClient.request("/api/v1/auth/logout", { method: "POST", json: {} });
         assert.equal(logout.response.status, 200, "logout");
@@ -144,6 +146,20 @@ test("Prisma authentication supports login, session validation, logout, and admi
         const authorized = await adminClient.request("/api/v1/admin/users");
         assert.equal(authorized.response.status, 200, "administrator authorization");
         assert.ok(Array.isArray(authorized.payload.data.users));
+        const health = await adminClient.request("/api/v1/admin/monitoring/health");
+        assert.equal(health.response.status, 200, "administrator monitoring authorization");
+        assert.equal(health.payload.data.status, "healthy");
+        assert.equal(health.payload.data.database.status, "available");
+        assert.ok(Number.isInteger(health.payload.data.performance.requestsTotal));
+        const selfDelete = await adminClient.request(`/api/v1/admin/users/${administrator.id}`, { method: "DELETE", json: {} });
+        assert.equal(selfDelete.response.status, 409, "administrator self-deletion protection");
+        assert.equal(selfDelete.payload.error.code, "SELF_DELETION_FORBIDDEN");
+        const deletedStudent = await adminClient.request(`/api/v1/admin/users/${student.id}`, { method: "DELETE", json: {} });
+        assert.equal(deletedStudent.response.status, 200, `administrator account deletion: ${JSON.stringify(deletedStudent.payload)}`);
+        assert.equal(deletedStudent.payload.data.success, true);
+        const usersAfterDelete = await adminClient.request("/api/v1/admin/users");
+        assert.equal(usersAfterDelete.response.status, 200);
+        assert.equal(usersAfterDelete.payload.data.users.some((user) => user.id === student.id), false);
         const adminStudentDashboard = await adminClient.request("/api/v1/student/dashboard");
         assert.equal(adminStudentDashboard.response.status, 403, "administrator student-dashboard denial");
       } finally {

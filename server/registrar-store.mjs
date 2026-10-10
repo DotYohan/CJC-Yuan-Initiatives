@@ -1,5 +1,6 @@
 import { newId } from "./security.mjs";
 import { buildApplicationReview, applicationOfferingChoices } from "./enrollment-review.mjs";
+import { CourseOfferingService } from "./course-offering-service.mjs";
 
 const dateTime = (value) => value instanceof Date ? value.toISOString() : null;
 const dateOnly = (value) => value instanceof Date ? value.toISOString().slice(0, 10) : null;
@@ -9,6 +10,10 @@ const requiredDocuments = Object.freeze([
 ]);
 const reviewableStatuses = new Set(["PENDING", "UNDER_REVIEW"]);
 const decisionStatuses = new Set(["APPROVED", "RETURNED_FOR_CORRECTION", "REJECTED"]);
+const hasCompleteSaEncoding = (formData, expectedSubjectCount) => {
+  const assignments = formData?.encoding?.assignments;
+  return Array.isArray(assignments) && assignments.length > 0 && assignments.length === expectedSubjectCount;
+};
 const periodInclude = {
   academicYear: { select: { code: true, name: true } },
   academicTerm: { select: { id: true, code: true, name: true } }
@@ -628,7 +633,7 @@ export class RegistrarStore {
   }
 
   async visibleApplications(filter) {
-    const where = filter ? { status: filter === "PENDING" ? { in: ["PENDING", "UNDER_REVIEW"] } : filter } : {};
+    const where = filter ? { status: filter === "PENDING" ? { in: ["PENDING", "UNDER_REVIEW"] } : filter } : { status: { not: "DRAFT" } };
     const applications = await this.prisma.admissionApplication.findMany({
       where,
       orderBy: [{ submittedAt: "desc" }, { createdAt: "desc" }],
@@ -644,13 +649,35 @@ export class RegistrarStore {
     const linked = applications.filter((item) => item.convertedStudentId && reviewableStatuses.has(item.status));
     const enrollments = linked.length ? await this.prisma.enrollmentApplication.findMany({
       where: { OR: linked.map((item) => ({ studentId: item.convertedStudentId, academicTermId: item.academicTermId })) },
-      select: { studentId: true, academicTermId: true, status: true }
+      select: {
+        studentId: true,
+        academicTermId: true,
+        status: true,
+        formData: true,
+        program: {
+          select: {
+            department: {
+              select: {
+                userDepartmentAssignments: { select: { id: true }, take: 1 }
+              }
+            }
+          }
+        }
+      }
     }) : [];
     const byStudentTerm = new Map(enrollments.map((item) => [`${item.studentId}:${item.academicTermId}`, item]));
     return applications.filter((item) => {
       if (!reviewableStatuses.has(item.status)) return true;
       const enrollment = byStudentTerm.get(`${item.convertedStudentId}:${item.academicTermId}`);
-      return !enrollment || enrollment.status === "UNDER_REVIEW";
+      if (!enrollment) return true;
+      if (enrollment.status !== "UNDER_REVIEW") return false;
+      const expectedSubjectCount = Array.isArray(enrollment.formData?.selection?.subjectIds)
+        ? enrollment.formData.selection.subjectIds.length
+        : 0;
+      const isCompleteEncoding = hasCompleteSaEncoding(enrollment.formData, expectedSubjectCount);
+
+      // Every Program Head-approved enrollment must pass through SA encoding first.
+      return isCompleteEncoding;
     });
   }
 
@@ -743,7 +770,8 @@ export class RegistrarStore {
         applicationId: enrollmentApplication.id, status: enrollmentApplication.status,
         curriculum: enrollmentReview.curriculum, items: enrollmentReview.items,
         totalUnits: enrollmentReview.totalUnits, offeringChoices,
-        requiresSectionAssignments: enrollmentApplication.status === "UNDER_REVIEW"
+        requiresSectionAssignments: enrollmentApplication.status === "UNDER_REVIEW",
+        saEncoding: enrollmentApplication.formData?.encoding ?? null
       } : null,
       application: {
         id: application.id,
@@ -819,7 +847,7 @@ export class RegistrarStore {
       const current = await transaction.admissionApplication.findUnique({
         where: { id },
         select: {
-          id: true, status: true, convertedStudentId: true, academicTermId: true,
+          id: true, status: true, convertedStudentId: true, academicTermId: true, intendedProgramId: true,
           academicTerm: {
             select: {
               academicYearId: true,
@@ -833,7 +861,15 @@ export class RegistrarStore {
       const enrollmentApplication = current.convertedStudentId ? await transaction.enrollmentApplication.findUnique({
         where: { studentId_academicTermId: { studentId: current.convertedStudentId, academicTermId: current.academicTermId } }
       }) : null;
-      if (enrollmentApplication && enrollmentApplication.status !== "UNDER_REVIEW") throw new Error("PROGRAM_HEAD_APPROVAL_REQUIRED");
+      if (status === "APPROVED" && enrollmentApplication && enrollmentApplication.status !== "UNDER_REVIEW") throw new Error("PROGRAM_HEAD_APPROVAL_REQUIRED");
+      if (status === "APPROVED" && enrollmentApplication) {
+        const expectedSubjectCount = Array.isArray(enrollmentApplication.formData?.selection?.subjectIds)
+          ? enrollmentApplication.formData.selection.subjectIds.length
+          : 0;
+        if (!hasCompleteSaEncoding(enrollmentApplication.formData, expectedSubjectCount)) {
+          throw new Error("STUDENT_ASSISTANT_ENCODING_REQUIRED");
+        }
+      }
 
       if (status === "APPROVED" && current.convertedStudentId) {
         const entranceFee = await transaction.paymentType.findFirst({
@@ -877,9 +913,15 @@ export class RegistrarStore {
       if (changed.count !== 1) throw new Error("APPLICATION_CONFLICT");
 
       let enrollmentId = null;
+      let review = null;
       if (status === "APPROVED" && enrollmentApplication) {
-        const review = await buildApplicationReview(transaction, enrollmentApplication.id);
-        const assignments = Array.isArray(sectionAssignments) ? sectionAssignments : [];
+        review = await buildApplicationReview(transaction, enrollmentApplication.id);
+        const encodedAssignments = enrollmentApplication.formData?.encoding?.assignments;
+        const assignments = Array.isArray(sectionAssignments) && sectionAssignments.length
+          ? sectionAssignments
+          : Array.isArray(encodedAssignments) && encodedAssignments.length
+            ? encodedAssignments
+            : [];
         if (!review.curriculum || !review.items.length || review.items.length !== (review.application.formData?.selection?.subjectIds?.length ?? 0)
           || assignments.length !== review.items.length
           || new Set(assignments.map((item) => item?.curriculumSubjectId)).size !== assignments.length
@@ -901,13 +943,16 @@ export class RegistrarStore {
         const existing = await transaction.enrollment.findUnique({
           where: { studentId_academicTermId: { studentId: current.convertedStudentId, academicTermId: current.academicTermId } }, select: { id: true }
         });
-        if (existing || enrollmentApplication.enrollmentId) throw new Error("ENROLLMENT_ALREADY_EXISTS");
+        const saName = enrollmentApplication.formData?.encoding?.encodedByDisplayName;
+        const saReason = saName
+          ? `Subject offerings encoded by Student Assistant ${saName}; verified and approved by Registrar.`
+          : "Program Head evaluation and Registrar verification completed.";
         const enrollment = await transaction.enrollment.create({ data: {
           studentId: current.convertedStudentId, academicTermId: current.academicTermId,
           programId: enrollmentApplication.programId, curriculumId: review.curriculum.id, yearLevel: enrollmentApplication.yearLevel,
           status: "ENROLLED", enrolledAt: now, processedByUserId: userId,
           items: { create: assignments.map((item) => ({ courseOfferingId: item.courseOfferingId, status: "ENROLLED" })) },
-          statusHistory: { create: { toStatus: "ENROLLED", changedByUserId: userId, reason: "Program Head evaluation and Registrar verification completed." } }
+          statusHistory: { create: { toStatus: "ENROLLED", changedByUserId: userId, reason: saReason } }
         }, select: { id: true } });
         enrollmentId = enrollment.id;
       }
@@ -928,10 +973,41 @@ export class RegistrarStore {
           }
         });
         if (status === "APPROVED") {
+          const studentUpdateData = { status: "ACTIVE" };
+          if (enrollmentApplication && review?.curriculum) {
+            studentUpdateData.programId = enrollmentApplication.programId;
+            studentUpdateData.curriculumId = review.curriculum.id;
+            studentUpdateData.currentYearLevel = enrollmentApplication.yearLevel;
+          } else if (current.intendedProgramId) {
+            studentUpdateData.programId = current.intendedProgramId;
+          }
           await transaction.student.update({
             where: { id: current.convertedStudentId },
-            data: { status: "ACTIVE" }
+            data: studentUpdateData
           });
+
+          if (enrollmentApplication && review?.curriculum) {
+            await transaction.studentProgramHistory.create({
+              data: {
+                studentId: current.convertedStudentId,
+                programId: enrollmentApplication.programId,
+                academicTermId: current.academicTermId,
+                startsOn: now,
+                reason: "Initial program assignment upon registrar approval",
+                assignedByUserId: userId
+              }
+            });
+
+            await transaction.studentCurriculumAssignment.create({
+              data: {
+                studentId: current.convertedStudentId,
+                curriculumId: review.curriculum.id,
+                startsOn: now,
+                reason: "Initial curriculum assignment upon registrar approval",
+                assignedByUserId: userId
+              }
+            });
+          }
 
           const entranceFee = await transaction.paymentType.findFirst({
             where: { name: "Entrance Fee", isActive: true },
@@ -1047,4 +1123,178 @@ export class RegistrarStore {
       return updated;
     });
   }
+
+  async overrideStudentProgram(arg1, arg2, arg3, arg4) {
+    let actorUserId, actorRole, studentId, input;
+    if (typeof arg4 === "object" && arg4 !== null) {
+      if (typeof arg2 === "string" && ["admin", "administrator", "registrar", "student", "program_head"].includes(arg2.toLowerCase())) {
+        actorUserId = arg1;
+        actorRole = arg2;
+        studentId = arg3;
+        input = arg4;
+      } else {
+        studentId = arg1;
+        actorUserId = arg2;
+        actorRole = arg3;
+        input = arg4;
+      }
+    } else {
+      studentId = arg1;
+      actorUserId = arg2;
+      actorRole = arg3;
+      input = arg4;
+    }
+
+    const normalizedRole = String(actorRole || "").toLowerCase();
+    if (!["registrar", "admin", "administrator"].includes(normalizedRole)) {
+      throw new Error("UNAUTHORIZED");
+    }
+
+    const reason = typeof input?.reason === "string" ? input.reason.trim() : "";
+    if (!reason) throw new Error("OVERRIDE_REASON_REQUIRED");
+    const programId = input?.programId;
+    if (!programId) throw new Error("PROGRAM_AND_CURRICULUM_REQUIRED");
+    const curriculumId = input?.curriculumId;
+
+    return this.transaction(async (transaction) => {
+      const student = await transaction.student.findUnique({
+        where: { id: studentId },
+        include: {
+          program: { select: { id: true, code: true, name: true } },
+          curriculum: { select: { id: true, code: true, name: true, version: true } }
+        }
+      });
+      if (!student) throw new Error("STUDENT_NOT_FOUND");
+
+      const newProgram = await transaction.program.findFirst({
+        where: { id: programId, isActive: true },
+        select: { id: true, code: true, name: true }
+      });
+      if (!newProgram) throw new Error("PROGRAM_INVALID");
+
+      let newCurriculum = null;
+      if (curriculumId) {
+        newCurriculum = await transaction.curriculum.findFirst({
+          where: { id: curriculumId, programId: programId, status: { in: ["ACTIVE", "DRAFT"] } },
+          select: { id: true, code: true, name: true, version: true }
+        });
+      } else {
+        newCurriculum = await transaction.curriculum.findFirst({
+          where: { programId: programId, status: { in: ["ACTIVE", "DRAFT"] } },
+          orderBy: [{ effectiveFromYear: "desc" }, { version: "desc" }],
+          select: { id: true, code: true, name: true, version: true }
+        });
+      }
+      if (!newCurriculum) throw new Error("CURRICULUM_INVALID");
+
+      const now = new Date();
+
+      await transaction.studentProgramHistory.updateMany({
+        where: { studentId: student.id, endsOn: null },
+        data: { endsOn: now }
+      });
+
+      await transaction.studentProgramHistory.create({
+        data: {
+          studentId: student.id,
+          programId: newProgram.id,
+          startsOn: now,
+          reason,
+          assignedByUserId: actorUserId
+        }
+      });
+
+      await transaction.studentCurriculumAssignment.updateMany({
+        where: { studentId: student.id, endsOn: null },
+        data: { endsOn: now }
+      });
+
+      await transaction.studentCurriculumAssignment.create({
+        data: {
+          studentId: student.id,
+          curriculumId: newCurriculum.id,
+          startsOn: now,
+          reason,
+          assignedByUserId: actorUserId
+        }
+      });
+
+      const updated = await transaction.student.update({
+        where: { id: student.id },
+        data: {
+          programId: newProgram.id,
+          curriculumId: newCurriculum.id
+        },
+        include: {
+          program: { select: { id: true, code: true, name: true } },
+          curriculum: { select: { id: true, code: true, name: true, version: true } }
+        }
+      });
+
+      return {
+        student: updated,
+        oldProgram: student.program,
+        newProgram,
+        oldCurriculum: student.curriculum,
+        newCurriculum,
+        overrideLog: {
+          action: "Program Change Override",
+          oldProgram: student.program?.code ?? "None",
+          newProgram: newProgram.code,
+          reason,
+          changedBy: actorUserId,
+          date: now
+        }
+      };
+    });
+  }
+
+  async listSubjects(filters = {}) {
+    return CourseOfferingService.listCurriculumSubjects(this.prisma, filters, { programScope: null });
+  }
+
+  async listOfferings(filters = {}) {
+    return CourseOfferingService.listOfferings(this.prisma, filters, { programScope: null });
+  }
+
+  async offeringFormData() {
+    return CourseOfferingService.offeringFormData(this.prisma, { programScope: null });
+  }
+
+  async createOffering(input, actorUserId) {
+    return this.transaction(async (transaction) => {
+      return CourseOfferingService.validateAndCreateCourseOffering(transaction, input, { programScope: null });
+    });
+  }
+
+  async updateOffering(offeringId, input, actorUserId) {
+    return this.transaction(async (transaction) => {
+      return CourseOfferingService.updateCourseOffering(transaction, offeringId, input, { programScope: null });
+    });
+  }
+
+  async closeOffering(offeringId, actorUserId) {
+    return this.transaction(async (transaction) => {
+      return CourseOfferingService.closeCourseOffering(transaction, offeringId, { programScope: null });
+    });
+  }
+
+  async archiveOffering(offeringId, actorUserId) {
+    return this.transaction(async (transaction) => {
+      return CourseOfferingService.archiveCourseOffering(transaction, offeringId, { programScope: null });
+    });
+  }
+
+  async unarchiveOffering(offeringId, actorUserId) {
+    return this.transaction(async (transaction) => {
+      return CourseOfferingService.unarchiveCourseOffering(transaction, offeringId, { programScope: null });
+    });
+  }
+
+  async deleteOffering(offeringId, actorUserId) {
+    return this.transaction(async (transaction) => {
+      return CourseOfferingService.deleteCourseOffering(transaction, offeringId, { programScope: null });
+    });
+  }
 }
+

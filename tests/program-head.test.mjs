@@ -132,6 +132,7 @@ test("Program head can view the ECE curriculum dashboard and assign a default cu
     const subject = await transaction.subject.create({
       data: {
         id: newId(),
+        programId: program.id,
         departmentId: department.id,
         code: `ECE${suffix}101`,
         codeNormalized: normalizeIdentifier(`ECE${suffix}101`),
@@ -276,13 +277,13 @@ test("Admin-created Program Head is assigned to one program and cannot see anoth
       });
       const eceSubject = await transaction.subject.create({
         data: {
-          id: newId(), departmentId: eceDepartment.id, code: `ECE101${suffix}`,
+          id: newId(), programId: eceProgram.id, departmentId: eceDepartment.id, code: `ECE101${suffix}`,
           codeNormalized: normalizeIdentifier(`ECE101${suffix}`), title: "ECE Fundamentals", defaultCreditUnits: 3
         }
       });
       const ceSubject = await transaction.subject.create({
         data: {
-          id: newId(), departmentId: ceDepartment.id, code: `CE101${suffix}`,
+          id: newId(), programId: ceProgram.id, departmentId: ceDepartment.id, code: `CE101${suffix}`,
           codeNormalized: normalizeIdentifier(`CE101${suffix}`), title: "CE Fundamentals", defaultCreditUnits: 3
         }
       });
@@ -426,13 +427,13 @@ test("Program Head workflow opens scoped offerings and enforces enrollment acade
         data: { id: newId(), programId: program.id, code: `WFC${suffix}`, name: "Workflow Curriculum", version: 1, effectiveFromYear: 2034 }
       });
       const prerequisite = await transaction.subject.create({
-        data: { id: newId(), departmentId: department.id, code: `PRE${suffix}`, codeNormalized: normalizeIdentifier(`PRE${suffix}`), title: "Prerequisite", defaultCreditUnits: 3 }
+        data: { id: newId(), programId: program.id, departmentId: department.id, code: `PRE${suffix}`, codeNormalized: normalizeIdentifier(`PRE${suffix}`), title: "Prerequisite", defaultCreditUnits: 3 }
       });
       const advanced = await transaction.subject.create({
-        data: { id: newId(), departmentId: department.id, code: `ADV${suffix}`, codeNormalized: normalizeIdentifier(`ADV${suffix}`), title: "Advanced Subject", defaultCreditUnits: 3 }
+        data: { id: newId(), programId: program.id, departmentId: department.id, code: `ADV${suffix}`, codeNormalized: normalizeIdentifier(`ADV${suffix}`), title: "Advanced Subject", defaultCreditUnits: 3 }
       });
       const overload = await transaction.subject.create({
-        data: { id: newId(), departmentId: department.id, code: `MAX${suffix}`, codeNormalized: normalizeIdentifier(`MAX${suffix}`), title: "Overload Subject", defaultCreditUnits: 30 }
+        data: { id: newId(), programId: program.id, departmentId: department.id, code: `MAX${suffix}`, codeNormalized: normalizeIdentifier(`MAX${suffix}`), title: "Overload Subject", defaultCreditUnits: 30 }
       });
       await transaction.curriculumSubject.createMany({ data: [
         { id: newId(), curriculumId: curriculum.id, subjectId: prerequisite.id, yearLevel: 1, termNumber: 1, creditUnits: 3 },

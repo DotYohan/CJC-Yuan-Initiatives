@@ -182,3 +182,44 @@
         display: none;
     }
 }
+
+/* ── Panel Card & Common Form Styles ── */
+.panel {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+.panel__heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+}
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 750;
+    background: var(--cream);
+    color: var(--red-900);
+}
+
+.optional-label {
+    color: var(--muted);
+    font-weight: normal;
+    font-size: 0.85em;
+}
+
+.form-status {
+    margin-top: 12px;
+    font-size: 0.85rem;
+    color: var(--muted);
+}

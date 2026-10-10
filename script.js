@@ -154,12 +154,22 @@
         const passwordInput = select("#login-password");
         const signInHeading = select("[data-signin-heading]");
         const authWarning = select("[data-auth-warning]");
+        const googleAuthSection = select("[data-google-auth-section]");
+        const googleSignInBtn = select("[data-google-signin]");
+        const googleBtnText = select("[data-google-btn-text]");
+        const googleTypeSelection = select("[data-google-type-selection]");
+        const googleStaffNotice = select("[data-google-staff-notice]");
+        const googleStudentOnboarding = select("[data-google-student-onboarding]");
+        const googleStudentForm = select("[data-google-student-form]");
+        const googleOnboardError = select("[data-google-onboard-error]");
+        const googleOnboardStatus = select("[data-google-onboard-status]");
         const recoveryView = select("[data-recovery-view]");
         const recoveryForm = select("[data-recovery-form]");
         const recoveryInput = select("#recovery-identifier");
         const recoveryError = select("[data-recovery-error]");
         const recoveryAlert = select("[data-recovery-alert]");
         const recoveryStatus = select("[data-recovery-status]");
+        let pendingGoogleRegistration = null;
         const state = { status: "loading", user: null, landingPath: "/portal.html" };
         let dialogRequest = null;
 
@@ -238,6 +248,16 @@
             toggle?.setAttribute("aria-label", "Show password");
             toggle?.setAttribute("aria-pressed", "false");
         };
+        const resetGoogleStudentPasswordField = () => {
+            const googlePasswordInput = select("#google-student-password", googleStudentForm);
+            if (!googlePasswordInput) return;
+            googlePasswordInput.value = "";
+            googlePasswordInput.type = "password";
+            const toggle = select("[data-password-target='google-student-password']", googleStudentForm);
+            toggle?.closest(".password-field")?.classList.remove("is-visible");
+            toggle?.setAttribute("aria-label", "Show password");
+            toggle?.setAttribute("aria-pressed", "false");
+        };
         const setFormBusy = (form, busy) => {
             if (!form) return;
             form.setAttribute("aria-busy", String(busy));
@@ -246,17 +266,72 @@
             });
             select("[type='submit']", form)?.classList.toggle("is-busy", busy);
         };
+        const hideAllGoogleViews = () => {
+            if (googleTypeSelection) googleTypeSelection.hidden = true;
+            if (googleStaffNotice) googleStaffNotice.hidden = true;
+            if (googleStudentOnboarding) googleStudentOnboarding.hidden = true;
+        };
         const showSignIn = () => {
             signInHeading?.removeAttribute("hidden");
             authWarning?.removeAttribute("hidden");
+            googleAuthSection?.removeAttribute("hidden");
             loginForm?.removeAttribute("hidden");
             if (recoveryView) recoveryView.hidden = true;
+            hideAllGoogleViews();
+            resetGoogleStudentPasswordField();
             loginDialog?.setAttribute("aria-labelledby", "login-title");
+        };
+        const showGoogleTypeSelection = (data) => {
+            pendingGoogleRegistration = data;
+            signInHeading?.setAttribute("hidden", "true");
+            authWarning?.setAttribute("hidden", "true");
+            googleAuthSection?.setAttribute("hidden", "true");
+            loginForm?.setAttribute("hidden", "true");
+            if (recoveryView) recoveryView.hidden = true;
+            hideAllGoogleViews();
+            if (googleTypeSelection) {
+                googleTypeSelection.hidden = false;
+                loginDialog?.setAttribute("aria-labelledby", "google-type-title");
+            }
+        };
+        const showGoogleStaffNotice = () => {
+            signInHeading?.setAttribute("hidden", "true");
+            authWarning?.setAttribute("hidden", "true");
+            googleAuthSection?.setAttribute("hidden", "true");
+            loginForm?.setAttribute("hidden", "true");
+            if (recoveryView) recoveryView.hidden = true;
+            hideAllGoogleViews();
+            if (googleStaffNotice) {
+                googleStaffNotice.hidden = false;
+                loginDialog?.setAttribute("aria-labelledby", "staff-notice-title");
+            }
+        };
+        const showGoogleStudentOnboarding = () => {
+            signInHeading?.setAttribute("hidden", "true");
+            authWarning?.setAttribute("hidden", "true");
+            googleAuthSection?.setAttribute("hidden", "true");
+            loginForm?.setAttribute("hidden", "true");
+            if (recoveryView) recoveryView.hidden = true;
+            hideAllGoogleViews();
+            if (googleStudentOnboarding) {
+                googleStudentOnboarding.hidden = false;
+                loginDialog?.setAttribute("aria-labelledby", "student-onboard-title");
+                const profile = pendingGoogleRegistration?.profile || {};
+                const emailInput = select("#google-student-email", googleStudentForm);
+                const firstInput = select("#google-student-first", googleStudentForm);
+                const lastInput = select("#google-student-last", googleStudentForm);
+                if (emailInput) emailInput.value = profile.email || "";
+                if (firstInput) firstInput.value = profile.givenName || "";
+                if (lastInput) lastInput.value = profile.familyName || "";
+            }
         };
         const resetLogin = () => {
             loginForm?.reset();
             recoveryForm?.reset();
+            googleStudentForm?.reset();
+            pendingGoogleRegistration = null;
             resetPasswordField();
+            resetGoogleStudentPasswordField();
             clearLoginErrors();
             if (loginStatus) loginStatus.textContent = "";
             if (recoveryError) recoveryError.textContent = "";
@@ -265,8 +340,14 @@
                 recoveryAlert.hidden = true;
             }
             if (recoveryStatus) recoveryStatus.textContent = "";
+            if (googleOnboardError) {
+                googleOnboardError.textContent = "";
+                googleOnboardError.hidden = true;
+            }
+            if (googleOnboardStatus) googleOnboardStatus.textContent = "";
             setFormBusy(loginForm, false);
             setFormBusy(recoveryForm, false);
+            setFormBusy(googleStudentForm, false);
             showSignIn();
         };
         const openLogin = () => {
@@ -384,7 +465,9 @@
             if (recoveryInput && identifierInput) recoveryInput.value = identifierInput.value.trim();
             signInHeading?.setAttribute("hidden", "");
             authWarning?.setAttribute("hidden", "");
+            googleAuthSection?.setAttribute("hidden", "");
             loginForm?.setAttribute("hidden", "");
+            hideAllGoogleViews();
             if (recoveryView) recoveryView.hidden = false;
             loginDialog?.setAttribute("aria-labelledby", "recovery-title");
             window.setTimeout(() => recoveryInput?.focus(), 0);
@@ -437,6 +520,244 @@
             } finally {
                 dialogRequest = null;
                 setFormBusy(recoveryForm, false);
+            }
+        });
+
+        // ── Google Workspace Authentication Handlers ─────────────────
+        const handleGoogleCredential = async (credential) => {
+            try {
+                if (loginStatus) loginStatus.textContent = "Verifying CJC Workspace account…";
+                const result = await auth.googleAuthVerify(credential);
+                if (result.status === "LOGGED_IN") {
+                    setAuthState({ user: result.user, landingPath: result.landingPath });
+                    const toast = select("[data-toast]");
+                    const toastMsg = select("[data-toast-message]");
+                    if (toast && toastMsg) {
+                        toastMsg.textContent = `Welcome back, ${result.user.displayName}!`;
+                        toast.classList.add("is-visible");
+                    }
+                    const destination = auth.safeLandingPath(result.landingPath || state.landingPath, requestedReturn);
+                    window.location.assign(destination);
+                } else if (result.status === "ACCOUNT_NOT_FOUND") {
+                    if (loginStatus) loginStatus.textContent = "";
+                    showGoogleTypeSelection(result);
+                }
+            } catch (err) {
+                if (loginStatus) loginStatus.textContent = "";
+                if (loginAlert) {
+                    loginAlert.textContent = err.message || "Google authentication failed.";
+                    loginAlert.hidden = false;
+                }
+            }
+        };
+
+        let googleAuthConfig = null;
+        let gisInitialized = false;
+
+        const initGIS = () => {
+            if (!window.google?.accounts?.id) return false;
+            if (gisInitialized) return true;
+            if (!googleAuthConfig?.clientId) return false;
+
+            try {
+                window.google.accounts.id.initialize({
+                    client_id: googleAuthConfig.clientId,
+                    callback: async (response) => {
+                        if (response && response.credential) {
+                            await handleGoogleCredential(response.credential);
+                        }
+                    },
+                    auto_select: false,
+                    cancel_on_tap_outside: true,
+                    context: "signin",
+                    ux_mode: "popup",
+                    itp_support: true
+                });
+
+                const container = select("[data-google-btn-container]");
+                if (container) {
+                    const containerWidth = Math.min(380, Math.max(260, container.offsetWidth || 340));
+                    window.google.accounts.id.renderButton(container, {
+                        type: "standard",
+                        shape: "rectangular",
+                        theme: "outline",
+                        text: "signin_with",
+                        size: "large",
+                        logo_alignment: "left",
+                        width: containerWidth
+                    });
+                    if (googleSignInBtn) {
+                        googleSignInBtn.hidden = true;
+                    }
+                }
+                gisInitialized = true;
+                return true;
+            } catch (err) {
+                console.error("[GoogleAuth] Error initializing Google Identity Services:", err);
+                return false;
+            }
+        };
+
+        const setupGoogleAuth = async () => {
+            if (!auth) return;
+            try {
+                googleAuthConfig = await auth.getGoogleAuthConfig();
+            } catch (err) {
+                console.warn("[GoogleAuth] Could not fetch Google auth configuration:", err);
+                return;
+            }
+
+            if (!googleAuthConfig?.clientId) {
+                // Not configured on server. Custom button remains visible to inform user if clicked.
+                return;
+            }
+
+            if (!initGIS()) {
+                const interval = setInterval(() => {
+                    if (initGIS()) clearInterval(interval);
+                }, 100);
+                setTimeout(() => clearInterval(interval), 5000);
+            }
+        };
+
+        // Initialize Google Auth on script load
+        setupGoogleAuth();
+
+        googleSignInBtn?.addEventListener("click", async () => {
+            if (!auth || googleSignInBtn.disabled) return;
+            clearLoginErrors();
+            if (loginAlert) loginAlert.hidden = true;
+
+            if (!googleAuthConfig) {
+                try {
+                    googleAuthConfig = await auth.getGoogleAuthConfig();
+                } catch {
+                    // ignore
+                }
+            }
+
+            if (!googleAuthConfig?.clientId) {
+                // Report missing configuration clearly without prompting or faking credentials
+                if (loginAlert) {
+                    loginAlert.textContent = "Google Workspace sign-in is not configured. Missing GOOGLE_CLIENT_ID environment variable on the server.";
+                    loginAlert.hidden = false;
+                }
+                return;
+            }
+
+            // Google Client ID is configured on server
+            if (window.google?.accounts?.id) {
+                googleSignInBtn.disabled = true;
+                if (googleBtnText) googleBtnText.textContent = "Connecting to Google…";
+                try {
+                    window.google.accounts.id.prompt((notification) => {
+                        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                            console.info("[GoogleAuth] Prompt status:", notification.getNotDisplayedReason?.() || notification.getSkippedReason?.());
+                        }
+                    });
+                } finally {
+                    googleSignInBtn.disabled = false;
+                    if (googleBtnText) googleBtnText.textContent = "Sign in with CJC Google Account";
+                }
+                return;
+            }
+
+            if (loginAlert) {
+                loginAlert.textContent = "Unable to connect to Google Identity Services. Please check your internet connection or ad blocker.";
+                loginAlert.hidden = false;
+            }
+        });
+
+        selectAll("[data-google-type-choice]").forEach((button) => {
+            button.addEventListener("click", () => {
+                const choice = button.dataset.googleTypeChoice;
+                if (choice === "faculty_staff") {
+                    showGoogleStaffNotice();
+                } else if (choice === "student") {
+                    showGoogleStudentOnboarding();
+                }
+            });
+        });
+
+        selectAll("[data-google-back-to-signin]").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                showSignIn();
+            });
+        });
+
+        select("[data-google-back-to-type]")?.addEventListener("click", () => {
+            if (pendingGoogleRegistration) {
+                showGoogleTypeSelection(pendingGoogleRegistration);
+            } else {
+                showSignIn();
+            }
+        });
+
+        googleStudentForm?.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            if (!auth || googleStudentForm.getAttribute("aria-busy") === "true") return;
+
+            if (googleOnboardError) {
+                googleOnboardError.textContent = "";
+                googleOnboardError.hidden = true;
+            }
+            if (googleOnboardStatus) googleOnboardStatus.textContent = "";
+
+            const formData = new FormData(googleStudentForm);
+            const birthDate = (formData.get("birthDate") || "").trim();
+            const mobileNumber = (formData.get("mobileNumber") || "").trim();
+            const firstName = (formData.get("firstName") || "").trim();
+            const lastName = (formData.get("lastName") || "").trim();
+            const middleName = (formData.get("middleName") || "").trim();
+            const password = (formData.get("password") || "").trim();
+
+            let errorMsg = null;
+            if (!birthDate) errorMsg = "Date of Birth is required.";
+            else if (!mobileNumber) errorMsg = "Mobile number is required.";
+            else if (!firstName) errorMsg = "First name is required.";
+            else if (!lastName) errorMsg = "Last name is required.";
+
+            if (errorMsg) {
+                if (googleOnboardError) {
+                    googleOnboardError.textContent = errorMsg;
+                    googleOnboardError.hidden = false;
+                }
+                return;
+            }
+
+            setFormBusy(googleStudentForm, true);
+            if (googleOnboardStatus) googleOnboardStatus.textContent = "Setting up your student account…";
+
+            try {
+                const payload = {
+                    registrationToken: pendingGoogleRegistration.registrationToken,
+                    firstName,
+                    lastName,
+                    middleName: middleName || undefined,
+                    birthDate,
+                    mobileNumber,
+                    password: password || undefined
+                };
+                const result = await auth.googleRegisterStudent(payload);
+                if (result.status === "LOGGED_IN") {
+                    setAuthState({ user: result.user, landingPath: result.landingPath });
+                    const toast = select("[data-toast]");
+                    const toastMsg = select("[data-toast-message]");
+                    if (toast && toastMsg) {
+                        toastMsg.textContent = `Welcome to CJC, ${result.user.displayName}!`;
+                        toast.classList.add("is-visible");
+                    }
+                    const destination = auth.safeLandingPath(result.landingPath || state.landingPath, "/portal/student");
+                    window.location.assign(destination);
+                }
+            } catch (err) {
+                if (googleOnboardStatus) googleOnboardStatus.textContent = "";
+                if (googleOnboardError) {
+                    googleOnboardError.textContent = err.message || "Failed to complete registration.";
+                    googleOnboardError.hidden = false;
+                }
+            } finally {
+                setFormBusy(googleStudentForm, false);
             }
         });
 

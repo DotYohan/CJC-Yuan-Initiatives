@@ -22,4 +22,11 @@ recovery-staging/
 verification/private/
 test-output.txt
 
+# Canonical academic seed sources are versioned under prisma/academic/data.
+!prisma/academic/
+!prisma/academic/data/
+!prisma/academic/data/*.json
+!prisma/seeds/academic/data/
+!prisma/seeds/academic/data/*.json
+
 /generated/prisma

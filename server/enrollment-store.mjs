@@ -1,9 +1,36 @@
 import { newId, normalizeIdentifier } from "./security.mjs";
-import { buildAcademicRecordIndex, prerequisiteEligibility } from "./academic-eligibility.mjs";
+import { buildAcademicRecordIndex, requirementEligibility } from "./academic-eligibility.mjs";
 
 const dateOnly = (value) => value instanceof Date ? value.toISOString().slice(0, 10) : null;
 const fullName = (student) => [student.firstName, student.middleName, student.lastName, student.suffix].filter(Boolean).join(" ");
 const allowedStatuses = new Set(["DRAFT", "RETURNED_FOR_CORRECTION", "REJECTED"]);
+
+function academicYearNumber(term) {
+  const value = term?.academicYear?.startsOn ?? term?.startsOn;
+  if (value) {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) return parsed.getUTCFullYear();
+  }
+  return null;
+}
+
+function assignmentApplies(assignment, term) {
+  if (!term?.startsOn) return false;
+  const startsOn = new Date(assignment.startsOn);
+  const termStartsOn = new Date(term.startsOn);
+  const endsOn = assignment.endsOn ? new Date(assignment.endsOn) : null;
+  return startsOn <= termStartsOn && (!endsOn || endsOn >= termStartsOn);
+}
+
+function curriculumForTerm(student, curricula, term) {
+  const assignedId = student.curriculumAssignments?.find((assignment) => assignmentApplies(assignment, term))?.curriculumId
+    ?? student.curriculumId;
+  if (assignedId) return curricula.find((curriculum) => curriculum.id === assignedId) ?? null;
+  const year = academicYearNumber(term);
+  return curricula.find((curriculum) => year != null
+    && curriculum.effectiveFromYear <= year
+    && (curriculum.effectiveToYear == null || curriculum.effectiveToYear >= year)) ?? null;
+}
 
 const formFields = {
   personal: ["fullName", "birthday", "sex", "civilStatus", "nationality", "religion", "placeOfBirth"],
@@ -55,15 +82,50 @@ export class EnrollmentApplicationStore {
   }
 
   async options(userId) {
-    const [programs, terms, curricula, history] = await Promise.all([
-      this.prisma.program.findMany({
+    const student = userId ? await this.prisma.student.findUnique({
+      where: { userId },
+      select: {
+        id: true, programId: true, curriculumId: true, currentYearLevel: true,
+        program: {
+          select: { id: true, code: true, name: true, credential: true, durationYears: true, termsPerYear: true, isActive: true,
+            department: { select: { isActive: true, college: { select: { isActive: true } } } } }
+        },
+        curriculumAssignments: {
+          orderBy: { startsOn: "desc" },
+          select: { curriculumId: true, startsOn: true, endsOn: true }
+        }
+      }
+    }) : null;
+    let programs = [];
+    if (student?.programId) {
+      const programAvailable = Boolean(student.program?.isActive && student.program.department?.isActive && student.program.department?.college?.isActive);
+      programs = programAvailable ? [{
+        id: student.program.id,
+        code: student.program.code,
+        name: student.program.name,
+        credential: student.program.credential,
+        durationYears: student.program.durationYears,
+        termsPerYear: student.program.termsPerYear
+      }] : [];
+    } else {
+      const allActivePrograms = await this.prisma.program.findMany({
         where: {
           isActive: true,
           department: { is: { isActive: true, college: { is: { isActive: true } } } }
         },
-        select: { id: true, code: true, name: true, credential: true },
-        orderBy: { name: "asc" }
-      }),
+        orderBy: [{ code: "asc" }, { name: "asc" }],
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          credential: true,
+          durationYears: true,
+          termsPerYear: true
+        }
+      });
+      programs = allActivePrograms;
+    }
+    const [terms, curricula, history] = await Promise.all([
       this.prisma.academicTerm.findMany({
         where: {
           status: { not: "ARCHIVED" },
@@ -71,7 +133,7 @@ export class EnrollmentApplicationStore {
         },
         select: {
           id: true, academicYearId: true, code: true, name: true, termNumber: true, startsOn: true, endsOn: true, status: true,
-          academicYear: { select: { code: true, name: true } },
+          academicYear: { select: { code: true, name: true, startsOn: true } },
           enrollmentPeriods: { select: { id: true, status: true } }
         },
         orderBy: { startsOn: "desc" }
@@ -79,14 +141,11 @@ export class EnrollmentApplicationStore {
       this.prisma.curriculum.findMany({
         where: {
           status: { in: ["ACTIVE", "DRAFT"] },
-          program: {
-            is: {
-              isActive: true,
-              department: { is: { isActive: true, college: { is: { isActive: true } } } }
-            }
-          }
+          ...(student?.programId ? { programId: student.programId } : {
+            program: { is: { isActive: true, department: { is: { isActive: true, college: { is: { isActive: true } } } } } }
+          })
         },
-        orderBy: [{ effectiveFromYear: "desc" }, { version: "desc" }],
+        orderBy: [{ effectiveFromYear: "desc" }, { version: "desc" }, { createdAt: "desc" }],
         select: {
           id: true,
           programId: true,
@@ -94,8 +153,10 @@ export class EnrollmentApplicationStore {
           name: true,
           version: true,
           effectiveFromYear: true,
+          effectiveToYear: true,
           status: true,
           subjects: {
+            where: { subject: { is: { status: "ACTIVE", isActive: true } } },
             orderBy: [{ yearLevel: "asc" }, { termNumber: "asc" }, { sortOrder: "asc" }, { subject: { code: "asc" } }],
             select: {
               id: true,
@@ -116,72 +177,114 @@ export class EnrollmentApplicationStore {
                   description: true,
                   status: true,
                   isActive: true,
-                  requirements: {
-                    where: { type: "PREREQUISITE" },
-                    select: { type: true, requiredSubject: { select: { id: true, code: true, title: true } } }
-                  }
+                  requirements: { select: { type: true, requiredSubject: { select: { id: true, code: true, title: true } } } }
                 }
               }
             }
           }
         }
       }),
-      userId ? this.prisma.student.findUnique({
-        where: { userId },
-        select: {
-          enrollments: {
+      student ? this.prisma.student.findUnique({
+        where: { id: student.id },
+        select: { enrollments: {
             where: { status: { in: ["PENDING", "ASSESSED", "ENROLLED", "COMPLETED"] } },
             select: {
               items: {
                 select: {
-                  courseOffering: { select: { subjectId: true } },
+                  courseOffering: { select: { subjectId: true, subject: { select: { id: true, code: true } } } },
                   grades: {
                     where: { status: { in: ["APPROVED", "POSTED"] }, OR: [{ gradingPeriod: { isFinal: true } }, { gradingPeriod: { type: "COMPLETION" } }] },
-                    select: { status: true, isPassing: true, letterGrade: true, remarks: true, updatedAt: true }
+                    select: { status: true, isPassing: true, numericGrade: true, letterGrade: true, remarks: true, updatedAt: true }
                   }
                 }
               }
             }
-          }
-        }
+          } }
       }) : Promise.resolve(null)
     ]);
 
     const academicRecords = buildAcademicRecordIndex((history?.enrollments || []).flatMap((enrollment) => enrollment.items));
 
-    const latestCurriculaByProgram = new Map();
-    for (const curriculum of curricula) {
-      const current = latestCurriculaByProgram.get(curriculum.programId);
-      if (!current || curriculum.effectiveFromYear > current.effectiveFromYear || (curriculum.effectiveFromYear === current.effectiveFromYear && curriculum.version > current.version)) {
-        latestCurriculaByProgram.set(curriculum.programId, curriculum);
+    const curriculumSubjects = terms.flatMap((term) => {
+      if (student?.programId) {
+        const curriculum = curriculumForTerm(student ?? {}, curricula, term);
+        if (!curriculum) return [];
+        return curriculum.subjects.map((item) => {
+          const recStatus = academicRecords instanceof Map ? (academicRecords.get(item.subjectId) || null) : (academicRecords?.[item.subjectId] || null);
+          const isPassed = recStatus === "PASSED";
+          return {
+            id: item.id,
+            academicTermId: term.id,
+            curriculumId: curriculum.id,
+            programId: curriculum.programId,
+            curriculumCode: curriculum.code,
+            curriculumName: curriculum.name,
+            yearLevel: item.yearLevel,
+            termNumber: item.termNumber,
+            subjectId: item.subjectId,
+            subjectCode: item.subject.code,
+            subjectTitle: item.subject.title,
+            subjectDescription: item.subject.description,
+            creditUnits: Number(item.creditUnits),
+            lectureHours: Number(item.lectureHours),
+            laboratoryHours: Number(item.laboratoryHours),
+            type: item.type,
+            isRequired: item.isRequired,
+            sortOrder: item.sortOrder,
+            isPassed,
+            alreadyCompleted: isPassed,
+            recordStatus: recStatus,
+            requirements: requirementEligibility(item.subject.requirements, academicRecords),
+            prerequisites: requirementEligibility(item.subject.requirements, academicRecords).filter((requirement) => requirement.type === "PREREQUISITE")
+          };
+        });
       }
-    }
-
-    const curriculumSubjects = [...latestCurriculaByProgram.values()].flatMap((curriculum) => curriculum.subjects.map((item) => ({
-      id: item.id,
-      curriculumId: curriculum.id,
-      programId: curriculum.programId,
-      curriculumCode: curriculum.code,
-      curriculumName: curriculum.name,
-      yearLevel: item.yearLevel,
-      termNumber: item.termNumber,
-      subjectId: item.subjectId,
-      subjectCode: item.subject.code,
-      subjectTitle: item.subject.title,
-      subjectDescription: item.subject.description,
-      creditUnits: Number(item.creditUnits),
-      lectureHours: Number(item.lectureHours),
-      laboratoryHours: Number(item.laboratoryHours),
-      type: item.type,
-      isRequired: item.isRequired,
-      sortOrder: item.sortOrder,
-      prerequisites: prerequisiteEligibility(item.subject.requirements, academicRecords)
-    })));
+      return programs.flatMap((prog) => {
+        const progCurricula = curricula.filter((c) => c.programId === prog.id);
+        const curriculum = curriculumForTerm({ programId: prog.id }, progCurricula, term);
+        if (!curriculum) return [];
+        return curriculum.subjects.map((item) => {
+          const recStatus = academicRecords instanceof Map ? (academicRecords.get(item.subjectId) || null) : (academicRecords?.[item.subjectId] || null);
+          const isPassed = recStatus === "PASSED";
+          return {
+            id: item.id,
+            academicTermId: term.id,
+            curriculumId: curriculum.id,
+            programId: curriculum.programId,
+            curriculumCode: curriculum.code,
+            curriculumName: curriculum.name,
+            yearLevel: item.yearLevel,
+            termNumber: item.termNumber,
+            subjectId: item.subjectId,
+            subjectCode: item.subject.code,
+            subjectTitle: item.subject.title,
+            subjectDescription: item.subject.description,
+            creditUnits: Number(item.creditUnits),
+            lectureHours: Number(item.lectureHours),
+            laboratoryHours: Number(item.laboratoryHours),
+            type: item.type,
+            isRequired: item.isRequired,
+            sortOrder: item.sortOrder,
+            isPassed,
+            alreadyCompleted: isPassed,
+            recordStatus: recStatus,
+            requirements: requirementEligibility(item.subject.requirements, academicRecords),
+            prerequisites: requirementEligibility(item.subject.requirements, academicRecords).filter((requirement) => requirement.type === "PREREQUISITE")
+          };
+        });
+      });
+  });
 
     return {
       programs,
+      studentContext: student ? {
+        programId: student.programId,
+        curriculumId: student.curriculumId,
+        currentYearLevel: student.currentYearLevel
+      } : null,
       terms: terms.map((term) => ({
         ...term,
+        academicYear: { ...term.academicYear, startsOn: dateOnly(term.academicYear.startsOn) },
         startsOn: dateOnly(term.startsOn),
         endsOn: dateOnly(term.endsOn),
         periodStatus: term.enrollmentPeriods[0]?.status ?? null,
@@ -216,8 +319,14 @@ export class EnrollmentApplicationStore {
         status: true, formData: true, submittedAt: true, reviewedAt: true, reviewRemarks: true
       }
     });
-    const admission = await this.prisma.admissionApplication.findFirst({
-      where: { convertedStudentId: student.id, ...(openPeriod ? { academicTermId: openPeriod.academicTermId } : application ? { academicTermId: application.academicTermId } : {}) },
+    let admission = await this.prisma.admissionApplication.findFirst({
+      where: {
+        OR: [
+          { convertedStudentId: student.id },
+          { applicantUserId: student.userId }
+        ],
+        ...(openPeriod ? { academicTermId: openPeriod.academicTermId } : application ? { academicTermId: application.academicTermId } : {})
+      },
       orderBy: { createdAt: "desc" },
       select: {
         id: true, applicationNumber: true, status: true, attemptNumber: true,
@@ -229,6 +338,64 @@ export class EnrollmentApplicationStore {
         }
       }
     });
+
+    if (!admission) {
+      admission = await this.prisma.admissionApplication.findFirst({
+        where: {
+          OR: [
+            { convertedStudentId: student.id },
+            { applicantUserId: student.userId }
+          ]
+        },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true, applicationNumber: true, status: true, attemptNumber: true,
+          decisionNotes: true, decidedAt: true, academicTermId: true,
+          history: {
+            where: { actionType: { in: ["RETURN_FOR_CORRECTION", "REJECT"] } },
+            orderBy: { changedAt: "desc" },
+            select: { actionType: true, remarks: true, changedAt: true }
+          }
+        }
+      });
+    }
+
+    if (!admission) {
+      const termId = openPeriod?.academicTermId || application?.academicTermId || (await this.prisma.academicTerm.findFirst({ where: { isCurrent: true } }))?.id || (await this.prisma.academicTerm.findFirst({ orderBy: { startDate: "desc" } }))?.id;
+      const fallbackProgram = (await this.prisma.program.findFirst({ where: { isActive: true } })) || (await this.prisma.program.findFirst());
+      if (termId && fallbackProgram) {
+        const applicationId = newId();
+        const applicationNumber = `APP-${student.admissionYear || new Date().getFullYear()}-${applicationId.slice(0, 8).toUpperCase()}`;
+        admission = await this.prisma.admissionApplication.create({
+          data: {
+            id: applicationId,
+            applicationNumber,
+            applicationNumberNormalized: normalizeIdentifier(applicationNumber),
+            applicantUserId: student.userId,
+            intendedProgramId: fallbackProgram.id,
+            academicTermId: termId,
+            convertedStudentId: student.id,
+            firstName: student.firstName,
+            middleName: student.middleName || null,
+            lastName: student.lastName,
+            suffix: student.suffix || null,
+            birthDate: student.dateOfBirth,
+            email: student.institutionalEmail,
+            status: "DRAFT",
+            attemptNumber: 1
+          },
+          select: {
+            id: true, applicationNumber: true, status: true, attemptNumber: true,
+            decisionNotes: true, decidedAt: true, academicTermId: true,
+            history: {
+              where: { actionType: { in: ["RETURN_FOR_CORRECTION", "REJECT"] } },
+              orderBy: { changedAt: "desc" },
+              select: { actionType: true, remarks: true, changedAt: true }
+            }
+          }
+        });
+      }
+    }
     return {
       profile: profileData(student),
       application,
@@ -253,7 +420,8 @@ export class EnrollmentApplicationStore {
       where: { userId },
       select: {
         id: true, studentNumber: true, firstName: true, middleName: true, lastName: true,
-        suffix: true, dateOfBirth: true, institutionalEmail: true, admissionYear: true
+        suffix: true, dateOfBirth: true, institutionalEmail: true, admissionYear: true,
+        programId: true, curriculumId: true, currentYearLevel: true
       }
     });
     if (!student) throw new Error("STUDENT_PROFILE_REQUIRED");
@@ -263,7 +431,7 @@ export class EnrollmentApplicationStore {
         isActive: true,
         department: { is: { isActive: true, college: { is: { isActive: true } } } }
       },
-      select: { id: true }
+      select: { id: true, durationYears: true }
     });
     const term = await this.prisma.academicTerm.findFirst({
       where: { id: input.academicTermId, status: { not: "ARCHIVED" } },
@@ -275,6 +443,7 @@ export class EnrollmentApplicationStore {
       }
     });
     if (!program) throw new Error("PROGRAM_INVALID");
+    if (student.programId && program.id !== student.programId) throw new Error("STUDENT_PROGRAM_MISMATCH");
     if (!term) throw new Error("TERM_INVALID");
     const existing = await this.prisma.enrollmentApplication.findUnique({
       where: { studentId_academicTermId: { studentId: student.id, academicTermId: term.id } }
@@ -282,7 +451,7 @@ export class EnrollmentApplicationStore {
     if (existing && !allowedStatuses.has(existing.status)) throw new Error("APPLICATION_LOCKED");
     if (submit && term.enrollmentPeriods[0]?.status !== "OPEN") throw new Error("ENROLLMENT_CLOSED");
     const yearLevel = Number(input.yearLevel);
-    if (!Number.isInteger(yearLevel) || yearLevel < 1 || yearLevel > 8) throw new Error("YEAR_LEVEL_INVALID");
+    if (!Number.isInteger(yearLevel) || yearLevel < 1 || yearLevel > (program.durationYears || 8)) throw new Error("YEAR_LEVEL_INVALID");
     const selectedSubjectIds = [...new Set(Array.isArray(input.selectedSubjectIds) ? input.selectedSubjectIds.filter((id) => typeof id === "string" && id.trim()).map((id) => id.trim()) : [])];
     const formData = copyFormData(input.formData, selectedSubjectIds);
     let curriculumId = existing?.programId === program.id ? existing.curriculumId : null;
@@ -323,16 +492,30 @@ export class EnrollmentApplicationStore {
       }
 
       const options = await this.options(userId);
-      const selected = options.curriculumSubjects.filter((item) => item.programId === program.id && item.yearLevel === yearLevel && item.termNumber === term.termNumber);
+      const selected = options.curriculumSubjects.filter((item) => item.academicTermId === term.id && item.programId === program.id && item.yearLevel === yearLevel && item.termNumber === term.termNumber);
       const selectedSet = new Set(selectedSubjectIds);
       const invalidSelection = selectedSubjectIds.some((subjectId) => !selected.some((item) => item.subjectId === subjectId || item.id === subjectId));
       const validSelected = selected.filter((item) => selectedSet.has(item.subjectId) || selectedSet.has(item.id));
-      const blocked = validSelected.flatMap((item) => item.prerequisites.filter((requirement) => !requirement.eligible));
+      const selectedCatalogSubjectIds = new Set(validSelected.map((item) => item.subjectId));
+      const blockedPrerequisites = validSelected.flatMap((item) => item.requirements.filter((requirement) => requirement.type === "PREREQUISITE" && !requirement.eligible));
+      const blockedCorequisites = validSelected.flatMap((item) => item.requirements.filter((requirement) => requirement.type === "COREQUISITE"
+        && !requirement.eligible && !selectedCatalogSubjectIds.has(requirement.requiredSubject.id)));
+      const totalUnits = validSelected.reduce((sum, item) => sum + Number(item.creditUnits), 0);
       if (invalidSelection) throw new Error("SUBJECT_SELECTION_INVALID");
       if (!validSelected.length) throw new Error("SUBJECT_SELECTION_REQUIRED");
       if (validSelected.length !== selectedSubjectIds.length) throw new Error("SUBJECT_SELECTION_INVALID");
-      if (blocked.length) throw new Error("PREREQUISITE_NOT_MET");
+      if (blockedPrerequisites.length) throw new Error("PREREQUISITE_NOT_MET");
+      if (blockedCorequisites.length) throw new Error("COREQUISITE_NOT_MET");
+      if (totalUnits > 29) throw new Error("MAX_UNITS_EXCEEDED");
       curriculumId = validSelected[0].curriculumId;
+      formData.selection.subjectIds = validSelected.map((item) => item.id);
+    } else if (selectedSubjectIds.length) {
+      const options = await this.options(userId);
+      const eligible = options.curriculumSubjects.filter((item) => item.academicTermId === term.id && item.programId === program.id && item.yearLevel === yearLevel && item.termNumber === term.termNumber);
+      const selectedSet = new Set(selectedSubjectIds);
+      const validSelected = eligible.filter((item) => selectedSet.has(item.subjectId) || selectedSet.has(item.id));
+      if (validSelected.length !== selectedSubjectIds.length) throw new Error("SUBJECT_SELECTION_INVALID");
+      curriculumId = validSelected[0]?.curriculumId ?? curriculumId;
       formData.selection.subjectIds = validSelected.map((item) => item.id);
     }
     const values = {
@@ -345,13 +528,19 @@ export class EnrollmentApplicationStore {
       submittedAt: submit ? new Date() : existing?.submittedAt ?? null,
       reviewRemarks: submit ? null : existing?.reviewRemarks ?? null
     };
-    const admission = await this.prisma.admissionApplication.findFirst({
-      where: { convertedStudentId: student.id, academicTermId: term.id },
+    let admission = await this.prisma.admissionApplication.findFirst({
+      where: {
+        OR: [
+          { convertedStudentId: student.id },
+          { applicantUserId: student.userId }
+        ],
+        academicTermId: term.id
+      },
       orderBy: { createdAt: "desc" },
       select: { id: true, status: true, attemptNumber: true, academicTermId: true }
     });
-    const admissionForTerm = admission?.academicTermId === term.id ? admission : null;
-    if (admissionForTerm?.status === "APPROVED") {
+
+    if (admission?.status === "APPROVED") {
       throw new Error("APPLICATION_LOCKED");
     }
 
@@ -362,68 +551,90 @@ export class EnrollmentApplicationStore {
         create: { id: newId(), studentId: student.id, ...values }
       });
 
-      if (submit && (!admissionForTerm || admissionForTerm.status === "REJECTED")) {
-        const applicationId = newId();
-        const applicationNumber = `APP-${student.admissionYear}-${applicationId.slice(0, 8).toUpperCase()}`;
-        await transaction.admissionApplication.create({
-          data: {
-            id: applicationId,
-            applicationNumber,
-            applicationNumberNormalized: normalizeIdentifier(applicationNumber),
-            applicantUserId: userId,
-            intendedProgramId: program.id,
-            academicTermId: term.id,
-            convertedStudentId: student.id,
-            firstName: student.firstName,
-            middleName: student.middleName,
-            lastName: student.lastName,
-            suffix: student.suffix,
-            birthDate: student.dateOfBirth,
-            email: formData.contact?.personalEmail || student.institutionalEmail,
-            phone: formData.contact?.mobileNumber || null,
-            status: "PENDING",
-            submittedAt: new Date(),
-            metadata: { formData },
-            attemptNumber: 1,
-            history: {
-              create: {
-                toStatus: "PENDING",
-                actionType: "STUDENT_SUBMIT",
-                changedByUserId: userId,
-                changedByRole: "student",
-                remarks: admissionForTerm ? "New application after a previous rejection" : "Submitted for Program Head review"
+      let targetApplicationId;
+      if (submit) {
+        if (admission && admission.status !== "REJECTED") {
+          targetApplicationId = admission.id;
+          const isResubmission = admission.status === "RETURNED_FOR_CORRECTION";
+          const attemptNumber = isResubmission ? (admission.attemptNumber + 1) : (admission.attemptNumber || 1);
+          await transaction.admissionApplication.update({
+            where: { id: admission.id },
+            data: {
+              status: "PENDING",
+              academicTermId: term.id,
+              intendedProgramId: program.id,
+              attemptNumber,
+              metadata: { formData },
+              submittedAt: new Date(),
+              decidedAt: null,
+              decisionByUserId: null,
+              decisionNotes: null
+            }
+          });
+          await transaction.admissionApplicationStatusHistory.create({
+            data: {
+              applicationId: admission.id,
+              fromStatus: admission.status,
+              toStatus: "PENDING",
+              actionType: isResubmission ? "STUDENT_RESUBMIT" : "STUDENT_SUBMIT",
+              changedByUserId: userId,
+              changedByRole: "student",
+              remarks: isResubmission ? `Resubmission attempt ${attemptNumber}` : "Submitted for Program Head review"
+            }
+          });
+        } else {
+          targetApplicationId = newId();
+          const applicationNumber = `APP-${student.admissionYear || new Date().getFullYear()}-${targetApplicationId.slice(0, 8).toUpperCase()}`;
+          const attemptNumber = admission ? (admission.attemptNumber || 1) + 1 : 1;
+          await transaction.admissionApplication.create({
+            data: {
+              id: targetApplicationId,
+              applicationNumber,
+              applicationNumberNormalized: normalizeIdentifier(applicationNumber),
+              applicantUserId: userId,
+              intendedProgramId: program.id,
+              academicTermId: term.id,
+              convertedStudentId: student.id,
+              firstName: student.firstName,
+              middleName: student.middleName || null,
+              lastName: student.lastName,
+              suffix: student.suffix || null,
+              birthDate: student.dateOfBirth,
+              email: formData.contact?.personalEmail || student.institutionalEmail,
+              phone: formData.contact?.mobileNumber || null,
+              status: "PENDING",
+              submittedAt: new Date(),
+              metadata: { formData },
+              attemptNumber,
+              history: {
+                create: {
+                  toStatus: "PENDING",
+                  actionType: admission ? "STUDENT_RESUBMIT" : "STUDENT_SUBMIT",
+                  changedByUserId: userId,
+                  changedByRole: "student",
+                  remarks: admission ? `Resubmission attempt ${attemptNumber}` : "Submitted for Program Head review"
+                }
               }
             }
-          }
+          });
+        }
+
+        // Re-link all uploaded student documents to targetApplicationId
+        await transaction.studentDocument.updateMany({
+          where: { studentId: student.id },
+          data: { admissionApplicationId: targetApplicationId }
         });
-      } else if (submit && admissionForTerm) {
-        const isResubmission = admissionForTerm.status === "RETURNED_FOR_CORRECTION";
-        const attemptNumber = isResubmission ? admissionForTerm.attemptNumber + 1 : admissionForTerm.attemptNumber;
+      } else if (admission && !["APPROVED", "REJECTED"].includes(admission.status)) {
         await transaction.admissionApplication.update({
-          where: { id: admissionForTerm.id },
+          where: { id: admission.id },
           data: {
-            status: "PENDING",
+            academicTermId: term.id,
             intendedProgramId: program.id,
-            attemptNumber,
-            metadata: { formData },
-            submittedAt: new Date(),
-            decidedAt: null,
-            decisionByUserId: null,
-            decisionNotes: null
-          }
-        });
-        await transaction.admissionApplicationStatusHistory.create({
-          data: {
-            applicationId: admissionForTerm.id,
-            fromStatus: admissionForTerm.status,
-            toStatus: "PENDING",
-            actionType: isResubmission ? "STUDENT_RESUBMIT" : "STUDENT_SUBMIT",
-            changedByUserId: userId,
-            changedByRole: "student",
-            remarks: isResubmission ? `Resubmission attempt ${attemptNumber}` : null
+            metadata: { formData }
           }
         });
       }
+
       return application;
     });
   }

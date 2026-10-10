@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { newId, normalizeIdentifier, hashPassword } from "./security.mjs";
+import { newId, normalizeIdentifier, hashPassword, randomToken } from "./security.mjs";
 
 const emailPart = (value) => String(value || "")
   .normalize("NFKD")
@@ -74,9 +74,14 @@ export class AdmissionStore {
     if (!fallbackProgram) throw new Error("PROGRAM_INVALID");
 
     return this.prisma.$transaction(async (transaction) => {
-      const email = await uniqueSchoolEmail(transaction, input.firstName, input.lastName);
+      const email = input.institutionalEmail
+        ? input.institutionalEmail.trim().toLowerCase()
+        : await uniqueSchoolEmail(transaction, input.firstName, input.lastName);
       const studentNumber = await nextStudentNumber(transaction, input.admissionYear);
-      const passwordHash = await hashPassword(input.password, config.scrypt);
+      const rawPassword = input.password && typeof input.password === "string" && input.password.length >= 8
+        ? input.password
+        : randomToken(32);
+      const passwordHash = await hashPassword(rawPassword, config.scrypt);
       const user = await transaction.user.create({
         data: {
           id: newId(),
@@ -91,6 +96,20 @@ export class AdmissionStore {
           userRoles: { create: { roleId: role.id, isPrimary: true } }
         }
       });
+      if (input.googleProfile) {
+        await transaction.userGoogleAuth.create({
+          data: {
+            id: newId(),
+            userId: user.id,
+            googleSub: input.googleProfile.googleSub,
+            email,
+            emailNormalized: normalizeIdentifier(email),
+            avatarUrl: input.googleProfile.picture || null,
+            linkedAt: new Date(),
+            lastLoginAt: new Date()
+          }
+        });
+      }
       const student = await transaction.student.create({
         data: {
           userId: user.id,
@@ -137,21 +156,22 @@ export class AdmissionStore {
           middleName: input.middleName || null,
           lastName: input.lastName,
           birthDate: input.birthDate ? new Date(input.birthDate) : null,
-          email: input.personalEmail,
+          email: input.personalEmail || email,
           phone: input.mobileNumber,
-          status: "PENDING",
-          submittedAt: new Date(),
+          status: "DRAFT",
+          submittedAt: null,
           history: {
             create: {
-              toStatus: "PENDING",
-              actionType: "STUDENT_SUBMIT",
+              toStatus: "DRAFT",
+              actionType: "REGISTER_STUDENT",
               changedByUserId: user.id,
-              changedByRole: "student"
+              changedByRole: "student",
+              remarks: "Student self-registration completed (Draft)."
             }
           }
         }
       });
-      return { studentNumber, schoolEmail: email, applicationNumber };
+      return { studentNumber, schoolEmail: email, applicationNumber, userId: user.id };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   }
 }

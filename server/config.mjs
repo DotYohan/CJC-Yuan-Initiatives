@@ -24,8 +24,8 @@ export function createConfig(overrides = {}) {
   const nodeEnv = overrides.nodeEnv ?? process.env.NODE_ENV ?? "development";
   const isTest = nodeEnv === "test";
   const isProduction = nodeEnv === "production";
-  const appOrigin = origin(overrides.appOrigin ?? process.env.APP_ORIGIN ?? "http://localhost:3000");
-  const host = overrides.host ?? process.env.HOST ?? "127.0.0.1";
+  const appOrigin = origin(overrides.appOrigin ?? process.env.APP_ORIGIN ?? process.env.RENDER_EXTERNAL_URL ?? "http://localhost:3000");
+  const host = overrides.host ?? process.env.HOST ?? (isProduction ? "0.0.0.0" : "127.0.0.1");
   if (typeof host !== "string" || host.length < 1 || host.length > 253 || /[\s/\\]/.test(host)) {
     throw new Error("HOST must be a valid hostname or IP address.");
   }
@@ -107,6 +107,11 @@ export function createConfig(overrides = {}) {
       250,
       "cleanupBatchSize"
     ),
+    slowRequestThresholdMs: integer(
+      overrides.slowRequestThresholdMs ?? process.env.CJC_SLOW_REQUEST_MS,
+      1_000,
+      "slowRequestThresholdMs"
+    ),
     revokedSessionRetentionMs: integer(
       overrides.revokedSessionRetentionMs ?? process.env.CJC_REVOKED_SESSION_RETENTION_MS,
       24 * 60 * 60 * 1000,
@@ -123,6 +128,22 @@ export function createConfig(overrides = {}) {
       "authHistoryRetentionMs"
     ),
     forgotResponseFloorMs: integer(overrides.forgotResponseFloorMs, isTest ? 1 : 250, "forgotResponseFloorMs"),
+    googleClientId: overrides.googleClientId ?? process.env.GOOGLE_CLIENT_ID ?? process.env.CJC_GOOGLE_CLIENT_ID ?? "",
+    googleClientSecret: overrides.googleClientSecret ?? process.env.GOOGLE_CLIENT_SECRET ?? process.env.CJC_GOOGLE_CLIENT_SECRET ?? "",
+    googleAllowedDomains: Object.freeze(
+      (overrides.googleAllowedDomains ?? process.env.GOOGLE_WORKSPACE_DOMAINS ?? process.env.CJC_GOOGLE_WORKSPACE_DOMAINS ?? "g.cjc.edu.ph,cjc.edu.ph")
+        .split(",")
+        .map((d) => d.trim().toLowerCase())
+        .filter(Boolean)
+    ),
+    googleCallbackUrl: overrides.googleCallbackUrl ?? process.env.GOOGLE_CALLBACK_URL ?? process.env.CJC_GOOGLE_CALLBACK_URL ?? `${appOrigin}/api/v1/auth/google/callback`,
+    googleTokenExpiryMs: integer(
+      overrides.googleTokenExpiryMs ?? process.env.GOOGLE_TOKEN_EXPIRY_MS ?? process.env.CJC_GOOGLE_TOKEN_EXPIRY_MS,
+      15 * 60 * 1000,
+      "googleTokenExpiryMs"
+    ),
+    brevoApiKey: overrides.brevoApiKey ?? process.env.BREVO_API_KEY ?? "",
+    emailFrom: overrides.emailFrom ?? process.env.EMAIL_FROM ?? "CJC Portal <no-reply@cjc.edu.ph>",
     now: overrides.now ?? (() => Date.now())
   });
 }

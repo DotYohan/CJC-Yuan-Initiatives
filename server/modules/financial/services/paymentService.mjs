@@ -2,7 +2,7 @@ import { newId } from "../../../security.mjs";
 import { simulatedGateway } from "../gateway/simulatedGateway.mjs";
 
 const decimalText = (value) => value == null ? "0.00" : value.toString();
-const STALE_SIMULATED_PAYMENT_MS = 2 * 60 * 1000;
+const STALE_SIMULATED_PAYMENT_MS = 5 * 1000;
 
 export class PaymentService {
   constructor(prisma, gateway = simulatedGateway) {

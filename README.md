@@ -1,6 +1,13 @@
 # Cor Jesu College Student Services Portal
 
-This repository contains the completed Phase 1 public website, deployed Phase 2 authentication/database foundation, and the Phase 3 Student Dashboard. The Student workspace now reads the signed-in account's linked profile, enrollment, schedule, posted final grades, clearance, recent requests, payments, and ledger-derived balance from PostgreSQL. Transactional student workflows remain later phases.
+This repository contains the completed **Phases 1–5** and **Phase 6 (in progress)** of the CJC Student Services Portal:
+
+- **Phase 1**: Public website (responsive HTML/CSS/JS)
+- **Phase 2**: Authentication/DB foundation (RBAC, scrypt, sessions, CSRF, audit, password reset)
+- **Phase 3**: Student Dashboard (read-only: profile, enrollment, schedule, grades, clearance, balance)
+- **Phase 4**: Student Admission Signup (self-registration, student number, school email, admission app)
+- **Phase 5**: Registrar Foundation (enrollment periods, application/document review, open/close enrollment)
+- **Phase 6**: Enrollment Approval Hierarchy (Student → Program Head → Registrar) — *partially implemented, needs regression testing*
 
 > This is an independent student project by Naldrelle Yuan Briones. It is not affiliated with or endorsed by Cor Jesu College, Inc. and is not an official source of information. Never enter or reuse credentials from an official CJC service here.
 
@@ -24,28 +31,41 @@ The protected workspaces confirm the signed-in account and role only. Operationa
 ## Requirements
 
 - Node.js 24 or newer
-- PostgreSQL with the approved authentication migration applied
-- Prisma Client 6.12.0 (`npm.cmd install` installs project dependencies)
+- PostgreSQL 16+ (tested with 18.6)
+- Prisma Client 7.10.0 (`npm.cmd install` installs project dependencies)
 
 Phase 2 must run through the included Node server. Opening `index.html` directly or using CodeSwing alone cannot provide the same-origin cookies, CSRF tokens, API, and database required for authentication.
 
 ## Run locally
 
-From this folder in PowerShell:
+**Prerequisites**: Install PostgreSQL 16+ and create the database:
+
+```powershell
+# As PostgreSQL superuser (postgres):
+psql -U postgres -c "CREATE ROLE cjc_app WITH LOGIN PASSWORD 'your_secure_password';"
+psql -U postgres -c "CREATE DATABASE cor_jesu_sms OWNER cjc_app;"
+```
+
+Then in PowerShell from this folder:
 
 ```powershell
 Copy-Item .env.example .env
+# Edit .env with your DATABASE_URL and CJC_AUDIT_PEPPER
+npx prisma migrate deploy
 npm.cmd run seed:term
+npm.cmd run seed:registrar
 npm.cmd start
 ```
 
 Then open `http://localhost:3000`.
 
-The PostgreSQL authentication catalog and cutover data must already exist. Optional demo seeding remains guarded by `NODE_ENV != production` and `ALLOW_DEMO_SEED=true`.
-
 For local admission testing, `npm.cmd run seed:term` creates the development academic-year/term fixture used by the public Student Enrollment signup page.
 
 For local password recovery, request a reset in the sign-in dialog and copy the development-only reset link printed in the server terminal. A production deployment must send reset links through an approved delivery service instead.
+
+**Demo accounts** (after seeding):
+- `registrar.demo` / `Cjc123456!!!` (Registrar role)
+- Student accounts created via `/signup.html` landing page
 
 ## Test
 
@@ -67,6 +87,7 @@ Project/
 ├── auth-client.js
 ├── portal.html, portal.css, portal.js
 ├── reset-password.html, reset-password.js
+├── signup.html, signup.js, signup.css
 ├── assets/images/
 ├── server/
 │   ├── app.mjs
@@ -74,9 +95,39 @@ Project/
 │   ├── db.mjs
 │   ├── security.mjs
 │   ├── seed.mjs
-│   └── server.mjs
-├── tests/auth.test.mjs
-├── docs/PHASE-2.md
+│   ├── server.mjs
+│   ├── admission-store.mjs
+│   ├── auth-store.mjs
+│   ├── enrollment-store.mjs
+│   ├── enrollment-review.mjs
+│   ├── program-head-store.mjs
+│   ├── registrar-store.mjs
+│   ├── student-store.mjs
+│   └── modules/financial/
+├── tests/
+│   ├── auth.test.mjs
+│   ├── auth-client.test.mjs
+│   ├── admission.test.mjs
+│   ├── registrar.test.mjs
+│   ├── program-head.test.mjs
+│   ├── prerequisite.test.mjs
+│   ├── financial.test.mjs
+│   └── document-store.test.mjs
+├── prisma/
+│   ├── schema.prisma
+│   ├── config.ts
+│   ├── seeds/
+│   └── migrations/
+├── scripts/
+│   └── database-refactor/
+├── docs/
+│   ├── PHASE-2.md
+│   ├── PHASE-3.md
+│   ├── PHASE-4-ADMISSION.md
+│   ├── PHASE-5-REGISTRAR.md
+│   ├── PHASE-2-BACKEND-FOUNDATION.md
+│   ├── RECOVERY-HANDOFF.md
+│   └── database-refactor-progress.md
 ├── .env.example
 └── package.json
 ```
@@ -88,6 +139,8 @@ PostgreSQL credentials belong in the ignored `.env` file and are consumed throug
 The backend uses Node's built-in HTTP server, Prisma ORM, and PostgreSQL. Before storing real student, academic, identity, or financial data, obtain institutional authorization and move to approved single sign-on, managed hosting, TLS, secret management, backups, monitoring, MFA for privileged accounts, and a formal privacy/security review.
 
 See [docs/PHASE-2.md](docs/PHASE-2.md) for the database design, API routes, role mappings, manual acceptance checklist, and production recommendations.
+
+For a codebase map and feature-tracing workflow, see the [Developer Guide](docs/DEVELOPER-GUIDE.md).
 
 ## Public-site notes
 
