@@ -97,6 +97,9 @@ export class AdmissionStore {
         }
       });
       if (input.googleProfile) {
+        await transaction.userGoogleAuth.deleteMany({
+          where: { googleSub: input.googleProfile.googleSub }
+        });
         await transaction.userGoogleAuth.create({
           data: {
             id: newId(),

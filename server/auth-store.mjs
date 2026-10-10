@@ -177,6 +177,11 @@ export class AuthenticationStore {
   async linkGoogleAuth(userId, { googleSub, email, picture }) {
     const now = asDate(this.config.now());
     const normalized = (email || "").trim().toLowerCase();
+    if (googleSub) {
+      await this.prisma.userGoogleAuth.deleteMany({
+        where: { googleSub, userId: { not: userId } }
+      });
+    }
     return this.prisma.userGoogleAuth.upsert({
       where: { userId },
       update: {
@@ -513,6 +518,17 @@ export class AuthenticationStore {
       const now = store.config.now();
       const tombstone = `deleted-${userId.replace(/-/g, "")}`.slice(0, 64);
       await store.revokeUserSessions(userId, now);
+      await store.prisma.userGoogleAuth.deleteMany({
+        where: { OR: [{ userId }, { user: { deletedAt: { not: null } } }] }
+      });
+      await store.prisma.student.updateMany({
+        where: { userId },
+        data: { userId: null }
+      });
+      await store.prisma.faculty.updateMany({
+        where: { userId },
+        data: { userId: null }
+      });
       await store.prisma.user.update({
         where: { id: userId },
         data: {
